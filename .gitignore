@@ -1,7 +1,16 @@
-# Xcode
+
+
+
+## Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+Package.resolved
 
+## Jetbrains
+.idea/
+
+## OSX
+.DS_Store
 ## User settings
 xcuserdata/
 
