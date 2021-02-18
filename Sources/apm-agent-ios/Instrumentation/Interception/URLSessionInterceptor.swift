@@ -40,22 +40,6 @@ public class URLSessionInterceptor: URLSessionInterceptorType {
 
     // MARK: - Initialization
 
-//    init(
-//        dateProvider: DateProvider
-//    ) {
-//        let handler: URLSessionInterceptionHandler
-//
-//        if configuration.instrumentRUM {
-//            handler = URLSessionRUMResourcesHandler(dateProvider: dateProvider)
-//        } else {
-//        }
-
-        
-        //todo : trace handler
-
-//        self.init(handler: handler)
-        
-//    }
 
     init(
         tracer: TracerSdk
@@ -206,7 +190,7 @@ public class URLSessionInterceptor: URLSessionInterceptorType {
         
         //
 
-        //
+        
         var newRequest = firstPartyRequest
         writer.inject(spanContext: spanContext)
         writer.tracePropagationHTTPHeaders.forEach { field, value in
