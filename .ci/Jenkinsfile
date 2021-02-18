@@ -40,7 +40,7 @@ pipeline {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}"){
-              sh 'xcodebuild -scheme apm-agent-ios'
+              sh 'xcodebuild -scheme iOSAgent'
             }
           }
         }
