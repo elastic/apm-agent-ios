@@ -53,7 +53,7 @@ pipeline {
               unstash 'source'
               dir("${BASE_DIR}"){
                 sh "xcodebuild -list"
-                sh "xcodebuild -scheme iOSAgent -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test"
+                sh "xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test"
               }
             }
           }
