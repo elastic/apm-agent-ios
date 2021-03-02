@@ -44,6 +44,15 @@ pipeline {
             }
           }
         }
+        stage('Test') {
+          steps {
+            deleteDir()
+            unstash 'source'
+            dir("${BASE_DIR}"){
+              sh "xcodebuild -scheme apm-agent-iosTests -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test"
+            }
+          }
+        }
       }
     }
   }
