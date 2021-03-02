@@ -52,6 +52,7 @@ pipeline {
               deleteDir()
               unstash 'source'
               dir("${BASE_DIR}"){
+                sh "xcodebuild -list"
                 sh "xcodebuild -scheme apm-agent-iosTests -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test"
               }
             }
