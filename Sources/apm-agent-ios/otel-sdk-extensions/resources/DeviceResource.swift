@@ -18,9 +18,6 @@ class DeviceResource : ResourceProvider {
         return ProcessInfo.processInfo.operatingSystemVersionString
     }
     
-    
-    
-    
     func deviceModel() -> String? {
         let hwName : UnsafeMutablePointer<Int32> = UnsafeMutablePointer<Int32>.allocate(capacity: 2)
         hwName[0] = CTL_HW
@@ -38,7 +35,6 @@ class DeviceResource : ResourceProvider {
         return machineName
     }
     
-    
     func applicationVersion() -> String? {
         if let mainVersion = shortBundleVersion() {
             var VersionString = ""
@@ -48,7 +44,6 @@ class DeviceResource : ResourceProvider {
             }
             return VersionString
         }
-        
         return bundleVersion()
     }
     
@@ -79,6 +74,8 @@ class DeviceResource : ResourceProvider {
 
         
         var attributes = [String : AttributeValue]()
+        
+        attributes["agent.name"] = AttributeValue.string("Swift")
         
         attributes["os.type"] = AttributeValue.string(UIDevice.current.systemName)
         
