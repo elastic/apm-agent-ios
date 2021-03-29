@@ -15,22 +15,34 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other package.
         .library(name: "iOSAgent", type: .dynamic, targets: ["iOSAgent"]),
         .library(name: "libiOSAgent", type: .static, targets: ["iOSAgent"]),
+
+        .library(name: "NetworkStatus", type: .dynamic, targets: ["NetworkStatus"]),
+        .library(name: "libNetworkStatus", type: .static, targets: ["NetworkStatus"]),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("bryce/trace-constants")),
+        .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("network-instrumentation")),
+        .package(name: "Reachability", url: "git@github.com:ashleymills/Reachability.swift.git", .branch("master")),
     ],
     targets: [
+        .target(name: "NetworkStatus",
+                dependencies: [],
+                path: "Sources/Instrumentation/NetworkInfo"),
         .target(
             name: "iOSAgent",
             dependencies: [
-                .product(name: "OpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
+                .product(name: "libOpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
+                .product(name: "libURLSessionInstrumentation", package: "opentelemetry-swift"),
+                .product(name: "Reachability", package: "Reachability"),
+                "NetworkStatus"
             ],
             path: "Sources/apm-agent-ios"
         ),
         .testTarget(
             name: "apm-agent-iosTests",
             dependencies: ["iOSAgent"],
-            path: "Tests/apm-agent-iosTests"
-        ),
+            path: "Sources/Tests/apm-agent-iosTests"),
+        .testTarget(name: "network-status-tests",
+                    dependencies: ["NetworkStatus"],
+                    path: "Sources/Tests/network-status-tests")
     ]
 )

@@ -13,13 +13,10 @@
 //   limitations under the License.
 
 import Foundation
-import UIKit
-class OperatingSystemDataSource: IOperatingSystemDataSource {
-    var description: String {
-        ProcessInfo.processInfo.operatingSystemVersionString
-    }
+import CoreTelephony
+import Network
 
-    var type: String {
-        UIDevice.current.systemName
-    }
+
+struct NetworkStats {
+    public private(set) var networkInfo : CTTelephonyNetworkInfo = CTTelephonyNetworkInfo()
 }

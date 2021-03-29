@@ -12,24 +12,15 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-import Foundation
-import OpenTelemetryApi
-import OpenTelemetrySdk
-import UIKit
+import XCTest
+@testable import iOSAgent
 
-class OSResourceProvider: ResourceProvider {
-    let osDataSource: IOperatingSystemDataSource
-
-    init(source: IOperatingSystemDataSource) {
-        osDataSource = source
-    }
-
-    override var attributes: [String: AttributeValue] {
-        var attributes = [String: AttributeValue]()
-
-        attributes["os.type"] = AttributeValue.string(osDataSource.type)
-        attributes["os.description"] = AttributeValue.string(osDataSource.description)
-
-        return attributes
+final class InstrumentorTests: XCTestCase {
+    func test() {
+    
+        
+        
+        
     }
 }
+
