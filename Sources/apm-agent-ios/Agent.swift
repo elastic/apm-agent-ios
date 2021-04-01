@@ -24,7 +24,6 @@ public class Agent {
     var metricChannel : ClientConnection
     var traceChannel : ClientConnection
 
-    let autoInstrumenter: URLSessionAutoInstrumentation?
     
     private init(collectorHost host: String, collectorPort port: Int) {
         _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
@@ -34,21 +33,7 @@ public class Agent {
         Agent.initializeMetrics(grpcClient: metricChannel)
         Agent.initializeTracing(grpcClient: traceChannel)
         
-        autoInstrumenter = URLSessionAutoInstrumentation(dateProvider: SystemDateProvider())
-        URLSessionAutoInstrumentation.instance = autoInstrumenter
-        autoInstrumenter?.swizzler.swizzle()
         print("Initializing Elastic iOS Agent.")
-
-      
-
- 
-        
-        
-        var meter = OpenTelemetry.instance.meterProvider.get(instrumentationName: "ElasticAgent",instrumentationVersion: nil)
-        
-        var counter = meter.createIntCounter(name: "helloworld")
-        counter.add(value: 1, labels: [String:String]())
-        
     }
     deinit {
           try! group.syncShutdownGracefully()
@@ -66,7 +51,7 @@ public class Agent {
         let mse = MultiSpanExporter(spanExporters: [e, stdout])
     
         let p = SimpleSpanProcessor(spanExporter: mse)
-        let tracerProvider = TracerSdkProvider(clock: MillisClock(), idsGenerator: RandomIdsGenerator(), resource: DeviceResource().create())
+        let tracerProvider = TracerSdkProvider(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: DeviceResource().create())
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(p)
     }

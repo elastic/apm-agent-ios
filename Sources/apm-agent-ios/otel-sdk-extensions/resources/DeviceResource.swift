@@ -30,7 +30,7 @@ class DeviceResource : ResourceProvider {
 
         let error = sysctl(hwName, 2, machine, len, nil, 0)
         if error != 0 {
-            print("error #\(errno): \(String(utf8String: strerror(errno)))")
+            print("error #\(errno): \(String(describing: String(utf8String: strerror(errno))))")
 
             return nil
         }
