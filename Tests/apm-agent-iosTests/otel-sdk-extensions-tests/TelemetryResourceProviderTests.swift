@@ -13,34 +13,31 @@
 //   limitations under the License.
 
 import Foundation
-import XCTest
+@testable import iOSAgent
 import OpenTelemetryApi
 import OpenTelemetrySdk
-@testable import iOSAgent
+import XCTest
 
-
-class TelemetryResourceProviderTests : XCTestCase {
+class TelemetryResourceProviderTests: XCTestCase {
     func testContents() {
         let mock = MockTelemetryDataSource(name: "testAgent", language: "swift", version: "1.2.3")
         let provider = TelemetryResourceProvider(source: mock)
-        
+
         let resource = provider.create()
-        
+
         XCTAssertTrue(resource.attributes["telemetry.sdk.name"]?.description == mock.name)
         XCTAssertTrue(resource.attributes["telemetry.sdk.language"]?.description == mock.language)
         XCTAssertTrue(resource.attributes["telemetry.sdk.version"]?.description == mock.version)
     }
+
     func testNils() {
-            let mock = MockTelemetryDataSource(name: "testAgent", language: "swift", version: nil)
-            let provider = TelemetryResourceProvider(source: mock)
-            
-            let resource = provider.create()
-            
-            XCTAssertTrue(resource.attributes["telemetry.sdk.name"]?.description == mock.name)
-            XCTAssertTrue(resource.attributes["telemetry.sdk.language"]?.description == mock.language)
-            XCTAssertNil(resource.attributes["telemetry.sdk.version"])
-        }
+        let mock = MockTelemetryDataSource(name: "testAgent", language: "swift", version: nil)
+        let provider = TelemetryResourceProvider(source: mock)
+
+        let resource = provider.create()
+
+        XCTAssertTrue(resource.attributes["telemetry.sdk.name"]?.description == mock.name)
+        XCTAssertTrue(resource.attributes["telemetry.sdk.language"]?.description == mock.language)
+        XCTAssertNil(resource.attributes["telemetry.sdk.version"])
     }
-
-
-
+}

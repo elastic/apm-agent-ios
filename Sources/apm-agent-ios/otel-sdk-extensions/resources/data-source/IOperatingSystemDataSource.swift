@@ -15,6 +15,6 @@
 import Foundation
 
 protocol IOperatingSystemDataSource {
-    var type : String { get }
-    var description : String { get }
+    var type: String { get }
+    var description: String { get }
 }

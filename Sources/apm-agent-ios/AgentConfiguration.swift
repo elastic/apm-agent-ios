@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Bryce Buchanan on 1/27/21.
-//
-
 import Foundation
 
 public struct AgentConfiguration {

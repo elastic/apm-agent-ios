@@ -14,10 +14,9 @@
 
 import Foundation
 
-
 protocol IApplicationDataSource {
-    var name : String? {get}
-    var identifier : String? {get}
-    var version : String? {get}
-    var build : String? {get}
+    var name: String? { get }
+    var identifier: String? { get }
+    var version: String? { get }
+    var build: String? { get }
 }

@@ -1,5 +1,5 @@
-import XCTest
 @testable import iOSAgent
+import XCTest
 
 final class apm_agent_iosTests: XCTestCase {
     func testExample() {

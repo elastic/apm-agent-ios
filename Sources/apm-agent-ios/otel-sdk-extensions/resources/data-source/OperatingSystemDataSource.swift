@@ -14,11 +14,11 @@
 
 import Foundation
 import UIKit
-class OperatingSystemDataSource : IOperatingSystemDataSource {
+class OperatingSystemDataSource: IOperatingSystemDataSource {
     var description: String {
         ProcessInfo.processInfo.operatingSystemVersionString
     }
-    
+
     var type: String {
         UIDevice.current.systemName
     }

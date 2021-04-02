@@ -14,20 +14,17 @@
 
 import Foundation
 
-import XCTest
-import OpenTelemetrySdk
 @testable import iOSAgent
+import OpenTelemetrySdk
+import XCTest
 
-
-
-
-class OSResourceProviderTests : XCTestCase {
+class OSResourceProviderTests: XCTestCase {
     func testContents() {
-        let mock = MockOperatingSystemDataSource(type:"swift", description: "test version string")
-        let provider = OSResourceProvider(source:  mock)
-        
+        let mock = MockOperatingSystemDataSource(type: "swift", description: "test version string")
+        let provider = OSResourceProvider(source: mock)
+
         let resource = provider.create()
-    
+
         XCTAssertTrue(resource.attributes["os.type"]?.description == mock.type)
         XCTAssertTrue(resource.attributes["os.description"]?.description == mock.description)
     }

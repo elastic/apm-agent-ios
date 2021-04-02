@@ -16,27 +16,24 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-class TelemetryResourceProvider : ResourceProvider {
-    let telemetrySource : ITelemetryDataSource
-    
+class TelemetryResourceProvider: ResourceProvider {
+    let telemetrySource: ITelemetryDataSource
+
     init(source: ITelemetryDataSource) {
-        self.telemetrySource = source
+        telemetrySource = source
     }
 
-    override var attributes: [String : AttributeValue] {
+    override var attributes: [String: AttributeValue] {
+        var attributes = [String: AttributeValue]()
 
-        
-        var attributes = [String : AttributeValue]()
-        
         attributes["telemetry.sdk.name"] = AttributeValue.string(telemetrySource.name)
-    
+
         attributes["telemetry.sdk.language"] = AttributeValue.string(telemetrySource.language)
-        
-        if  let frameworkVersion = telemetrySource.version {
+
+        if let frameworkVersion = telemetrySource.version {
             attributes["telemetry.sdk.version"] = AttributeValue.string(frameworkVersion)
         }
-        
+
         return attributes
     }
-    
 }

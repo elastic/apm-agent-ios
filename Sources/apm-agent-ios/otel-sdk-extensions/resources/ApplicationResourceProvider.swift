@@ -16,36 +16,31 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-class ApplicationResourceProvidier : ResourceProvider {
-    
-    let applicationDataSource : IApplicationDataSource
-    
-    init(source : IApplicationDataSource) {
-        self.applicationDataSource = source
+class ApplicationResourceProvidier: ResourceProvider {
+    let applicationDataSource: IApplicationDataSource
+
+    init(source: IApplicationDataSource) {
+        applicationDataSource = source
     }
-    
-    override var attributes: [String : AttributeValue] {
-        
-        var attributes = [String : AttributeValue]()
-        
+
+    override var attributes: [String: AttributeValue] {
+        var attributes = [String: AttributeValue]()
+
         if let bundleName = applicationDataSource.name {
             attributes[ResourceConstants.serviceName.rawValue] = AttributeValue.string(bundleName)
         }
-        
+
         if let version = applicationVersion() {
             attributes[ResourceConstants.serviceVersion.rawValue] = AttributeValue.string(version)
         }
-        
+
         if let bundleId = applicationDataSource.identifier {
             attributes[ResourceConstants.serviceNamespace.rawValue] = AttributeValue.string(bundleId)
         }
-        
-        
+
         return attributes
     }
-    
-    
-    
+
     func applicationVersion() -> String? {
         if let build = applicationDataSource.build {
             if let version = applicationDataSource.version {
@@ -56,5 +51,4 @@ class ApplicationResourceProvidier : ResourceProvider {
             return applicationDataSource.version
         }
     }
-    
 }

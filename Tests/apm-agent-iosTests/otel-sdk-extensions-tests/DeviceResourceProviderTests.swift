@@ -13,19 +13,18 @@
 //   limitations under the License.
 
 import Foundation
-import XCTest
+@testable import iOSAgent
 import OpenTelemetryApi
 import OpenTelemetrySdk
-@testable import iOSAgent
+import XCTest
 
-
-class DeviceResourceProviderTests : XCTestCase {
+class DeviceResourceProviderTests: XCTestCase {
     func testContents() {
         let mock = MockDeviceDataSource(identifier: "00000-0000-000-00000000", model: "testPhone1,0")
         let provider = DeviceResourceProvider(source: mock)
-        
+
         let resource = provider.create()
-        
+
         XCTAssertTrue(resource.attributes["device.model"]?.description == mock.model)
         XCTAssertTrue(resource.attributes[ResourceConstants.hostId.rawValue]?.description == mock.identifier)
     }

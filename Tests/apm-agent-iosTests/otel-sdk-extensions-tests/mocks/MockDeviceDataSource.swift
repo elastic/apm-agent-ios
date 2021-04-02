@@ -15,14 +15,11 @@
 import Foundation
 @testable import iOSAgent
 
-
-class MockDeviceDataSource : IDeviceDataSource {
-    
+class MockDeviceDataSource: IDeviceDataSource {
     var identifier: String?
     var model: String?
-    
-    init(identifier: String?, model: String?)
-    {
+
+    init(identifier: String?, model: String?) {
         self.identifier = identifier
         self.model = model
     }

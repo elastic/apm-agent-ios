@@ -14,8 +14,7 @@
 
 import Foundation
 
-
 protocol IDeviceDataSource {
-    var identifier : String? { get }
-    var model : String? { get }
+    var identifier: String? { get }
+    var model: String? { get }
 }

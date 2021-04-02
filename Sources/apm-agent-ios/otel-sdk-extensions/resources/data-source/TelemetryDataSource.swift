@@ -14,17 +14,17 @@
 
 import Foundation
 
-class TelemetryDataSource : ITelemetryDataSource {
+class TelemetryDataSource: ITelemetryDataSource {
     var language: String {
         "swift"
     }
-    
+
     var name: String {
         "iOS"
     }
-    
+
     var version: String? {
-        //This may not work if this agent is statically built
+        // This may not work if this agent is statically built
         Bundle(for: type(of: self)).infoDictionary?["CFBundleShortVersionString"] as? String
     }
 }
