@@ -15,10 +15,10 @@
 import Foundation
 @testable import iOSAgent
 
-class MockOperatingSystemDataSource : IOperatingSystemDataSource {
-    private(set) var type : String
+class MockOperatingSystemDataSource: IOperatingSystemDataSource {
+    private(set) var type: String
     private(set) var description: String
-    
+
     init(type: String, description: String) {
         self.type = type
         self.description = description

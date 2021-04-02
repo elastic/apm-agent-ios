@@ -13,28 +13,23 @@
 //   limitations under the License.
 
 import Foundation
-import UIKit
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import UIKit
 
+class OSResourceProvider: ResourceProvider {
+    let osDataSource: IOperatingSystemDataSource
 
-class OSResourceProvider : ResourceProvider {
-    let osDataSource : IOperatingSystemDataSource
-    
     init(source: IOperatingSystemDataSource) {
         osDataSource = source
     }
-    
-    override var attributes: [String : AttributeValue] {
-        
-        var attributes = [String : AttributeValue]()
-        
+
+    override var attributes: [String: AttributeValue] {
+        var attributes = [String: AttributeValue]()
+
         attributes["os.type"] = AttributeValue.string(osDataSource.type)
         attributes["os.description"] = AttributeValue.string(osDataSource.description)
-        
+
         return attributes
     }
-    
-    
-
 }

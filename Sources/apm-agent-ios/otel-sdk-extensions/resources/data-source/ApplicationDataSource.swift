@@ -14,18 +14,20 @@
 
 import Foundation
 
-class ApplicationDataSource : IApplicationDataSource   {
-    
-    var name : String? {
+class ApplicationDataSource: IApplicationDataSource {
+    var name: String? {
         Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String
     }
-    var identifier : String? {
+
+    var identifier: String? {
         Bundle.main.infoDictionary?[kCFBundleIdentifierKey as String] as? String
     }
-    var version : String? {
+
+    var version: String? {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
     }
-    var build : String? {
+
+    var build: String? {
         Bundle.main.infoDictionary?[kCFBundleVersionKey as String] as? String
     }
 }

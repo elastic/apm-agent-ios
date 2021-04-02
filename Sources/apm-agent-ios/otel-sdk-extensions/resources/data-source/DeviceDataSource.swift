@@ -15,18 +15,17 @@
 import Foundation
 import UIKit
 
-
-class DeviceDataSource : IDeviceDataSource {
+class DeviceDataSource: IDeviceDataSource {
     var model: String? {
-        let hwName : UnsafeMutablePointer<Int32> = UnsafeMutablePointer<Int32>.allocate(capacity: 2)
+        let hwName = UnsafeMutablePointer<Int32>.allocate(capacity: 2)
         hwName[0] = CTL_HW
         hwName[1] = HW_MACHINE
-        let machine : UnsafeMutablePointer<CChar> = UnsafeMutablePointer<CChar>.allocate(capacity: 255)
-        let len : UnsafeMutablePointer<Int>! = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+        let machine = UnsafeMutablePointer<CChar>.allocate(capacity: 255)
+        let len: UnsafeMutablePointer<Int>! = UnsafeMutablePointer<Int>.allocate(capacity: 1)
 
         let error = sysctl(hwName, 2, machine, len, nil, 0)
         if error != 0 {
-            //TODO: better error log
+            // TODO: better error log
             print("error #\(errno): \(String(describing: String(utf8String: strerror(errno))))")
 
             return nil
@@ -34,8 +33,8 @@ class DeviceDataSource : IDeviceDataSource {
         let machineName = String(cString: machine)
         return machineName
     }
-    
+
     var identifier: String? {
-       UIDevice.current.identifierForVendor?.uuidString
+        UIDevice.current.identifierForVendor?.uuidString
     }
 }

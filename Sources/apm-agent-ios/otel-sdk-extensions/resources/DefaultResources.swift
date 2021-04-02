@@ -21,8 +21,7 @@ class DefaultResources {
     let device = DeviceResourceProvider(source: DeviceDataSource())
     let os = OSResourceProvider(source: OperatingSystemDataSource())
     let telemetry = TelemetryResourceProvider(source: TelemetryDataSource())
-    
-    
+
     func get() -> Resource {
         var resource = Resource()
         let mirror = Mirror(reflecting: self)
