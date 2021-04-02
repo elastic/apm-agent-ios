@@ -21,17 +21,16 @@ public class Agent {
     }
     
     var group: MultiThreadedEventLoopGroup
-    var metricChannel : ClientConnection
-    var traceChannel : ClientConnection
+    var channel : ClientConnection
 
     
     private init(collectorHost host: String, collectorPort port: Int) {
         _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        metricChannel = ClientConnection.insecure(group: group).connect(host: host, port: port)
-        traceChannel = ClientConnection.insecure(group: group).connect(host: host, port: port)
-        Agent.initializeMetrics(grpcClient: metricChannel)
-        Agent.initializeTracing(grpcClient: traceChannel)
+        channel = ClientConnection.insecure(group: group).connect(host: host, port: port)
+        
+        Agent.initializeMetrics(grpcClient: channel)
+        Agent.initializeTracing(grpcClient: channel)
         
         print("Initializing Elastic iOS Agent.")
     }
@@ -42,8 +41,7 @@ public class Agent {
     static private func initializeMetrics(grpcClient: ClientConnection) {
         _ = OpenTelemetry.instance
         OpenTelemetry.registerMeterProvider(meterProvider: MeterSdkProvider(metricProcessor: MetricSdkProcessor(), metricExporter: OtelpMetricExporter(channel:grpcClient)))
-
-    }
+    }   
     static private func initializeTracing(grpcClient: ClientConnection) {
         let e = OtlpTraceExporter(channel: grpcClient)
         
@@ -51,7 +49,7 @@ public class Agent {
         let mse = MultiSpanExporter(spanExporters: [e, stdout])
     
         let p = SimpleSpanProcessor(spanExporter: mse)
-        let tracerProvider = TracerSdkProvider(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: DeviceResource().create())
+        let tracerProvider = TracerSdkProvider(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: DefaultResources().get())
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(p)
     }
