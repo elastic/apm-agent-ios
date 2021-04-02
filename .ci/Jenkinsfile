@@ -37,10 +37,24 @@ pipeline {
         }
         stage('Build') {
           steps {
-            deleteDir()
-            unstash 'source'
-            dir("${BASE_DIR}"){
-            sh script: './.ci/scripts/build.sh', label: 'Build'
+            withGithubNotify(context: 'Build') {
+              deleteDir()
+              unstash 'source'
+              dir("${BASE_DIR}"){
+                sh script: './.ci/scripts/build.sh', label: 'Build'
+              }
+            }
+          }
+        }
+        stage('Test') {
+          steps {
+            withGithubNotify(context: 'Test') {
+              deleteDir()
+              unstash 'source'
+              dir("${BASE_DIR}"){
+                sh "xcodebuild -list"
+                sh "xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test"
+              }
             }
           }
         }
