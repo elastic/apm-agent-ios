@@ -17,7 +17,7 @@ let package = Package(
         .library(name: "libiOSAgent", type: .static, targets: ["iOSAgent"])
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", .branch("main")),
+        .package(name: "opentelemetry-swift", url: "git@github.com:open-telemetry/opentelemetry-swift.git", .branch("main")),
     ],
     targets: [
         .target(

@@ -20,31 +20,39 @@ public class Agent {
         return instance
     }
     
-    var exporter : MultiSpanExporter
-    var processor: SimpleSpanProcessor
     var group: MultiThreadedEventLoopGroup
+    var metricChannel : ClientConnection
+    var traceChannel : ClientConnection
 
-    let autoInstrumenter: URLSessionAutoInstrumentation?
     
     private init(collectorHost host: String, collectorPort port: Int) {
-        autoInstrumenter = URLSessionAutoInstrumentation(dateProvider: SystemDateProvider())
-        URLSessionAutoInstrumentation.instance = autoInstrumenter
-        autoInstrumenter?.swizzler.swizzle()
-        print("Initializing Elastic iOS Agent.")
-
-         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let  b = ClientConnection.insecure(group: group)
-
-        let e = OtlpTraceExporter(channel: b.connect(host: host,
-                                                            port: port))
+        _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
+        group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        metricChannel = ClientConnection.insecure(group: group).connect(host: host, port: port)
+        traceChannel = ClientConnection.insecure(group: group).connect(host: host, port: port)
+        Agent.initializeMetrics(grpcClient: metricChannel)
+        Agent.initializeTracing(grpcClient: traceChannel)
         
-        let stdout = StdoutExporter()
-        exporter = MultiSpanExporter(spanExporters: [e, stdout])
-    
-        processor = SimpleSpanProcessor(spanExporter: exporter)
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(processor)
+        print("Initializing Elastic iOS Agent.")
     }
     deinit {
           try! group.syncShutdownGracefully()
+    }
+    
+    static private func initializeMetrics(grpcClient: ClientConnection) {
+        _ = OpenTelemetry.instance
+        OpenTelemetry.registerMeterProvider(meterProvider: MeterSdkProvider(metricProcessor: MetricSdkProcessor(), metricExporter: OtelpMetricExporter(channel:grpcClient)))
+
+    }
+    static private func initializeTracing(grpcClient: ClientConnection) {
+        let e = OtlpTraceExporter(channel: grpcClient)
+        
+        let stdout = StdoutExporter()
+        let mse = MultiSpanExporter(spanExporters: [e, stdout])
+    
+        let p = SimpleSpanProcessor(spanExporter: mse)
+        let tracerProvider = TracerSdkProvider(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: DeviceResource().create())
+        OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
+        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(p)
     }
 }

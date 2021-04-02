@@ -40,7 +40,7 @@ pipeline {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}"){
-              sh 'xcodebuild -scheme iOSAgent'
+            sh script: './.ci/scripts/build.sh', label: 'Build'
             }
           }
         }
