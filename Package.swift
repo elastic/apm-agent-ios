@@ -20,18 +20,19 @@ let package = Package(
         .library(name: "libNetworkStatus", type: .static, targets: ["NetworkStatus"]),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("network-instrumentation")),
+        .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("customize-span-builder")),
         .package(name: "Reachability", url: "git@github.com:ashleymills/Reachability.swift.git", .branch("master")),
     ],
     targets: [
         .target(name: "NetworkStatus",
-                dependencies: [],
+                dependencies: ["Reachability"],
                 path: "Sources/Instrumentation/NetworkInfo"),
         .target(
             name: "iOSAgent",
             dependencies: [
                 .product(name: "libOpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
                 .product(name: "libURLSessionInstrumentation", package: "opentelemetry-swift"),
+                .product(name: "libResourceExtension", package: "opentelemetry-swift"),
                 .product(name: "Reachability", package: "Reachability"),
                 "NetworkStatus"
             ],

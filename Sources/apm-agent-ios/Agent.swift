@@ -1,3 +1,7 @@
+import OpenTelemetryApi
+import OpenTelemetrySdk
+import ResourceExtension
+import OpenTelemetryProtocolExporter
 import Foundation
 import URLSessionInstrumentation
 import Reachability
@@ -12,6 +16,7 @@ public class Agent {
 
     public static func start(with configuaration: AgentConfiguration) {
         instance = Agent(collectorHost: configuaration.otelCollectorAddress, collectorPort: configuaration.otelCollectorPort)
+        instance?.initialize()
     }
 
     public static func start() {
@@ -31,27 +36,28 @@ public class Agent {
     
     #if os(iOS)
     var vcInstrumentation : ViewControllerInstrumentation?
-    var urlSessionInstrumentation : URLSessionInstrumentation
     #endif
     
-    var reachability: Reachability? = nil
-    var networkStatus: NetworkStats = NetworkStats()
-
+    var urlSessionInstrumentation : URLSessionInstrumentation?
+    
+    var netstatInjector : NetworkStatusInjector?
     
     private init(collectorHost host: String, collectorPort port: Int) {
         _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-
-        do {
-            try reachability = Reachability(hostname: host)
-        } catch {
-            print("failed to start reachability.")
-        }
+    
         channel = ClientConnection.insecure(group: group).connect(host: host, port: port)
 
         Agent.initializeMetrics(grpcClient: channel)
         Agent.initializeTracing(grpcClient: channel)
-//
+               
+        
+        print("Initializing Elastic iOS Agent.")
+    }
+    
+    
+    
+    private func initialize() {
         #if os(iOS)
         do {
             try vcInstrumentation = ViewControllerInstrumentation.init()
@@ -63,40 +69,48 @@ public class Agent {
         }
         #endif
         
-        let config = URLSessionConfiguration.init { (session) -> (Bool)? in
-            true
-        } shouldInstrument: { (request) -> (Bool)? in
-            true
-        } shouldInjectTracingHeaders: { (request) -> (Bool)? in
-            true
-        } createdRequest: { [reachability] (request, builder) in
-            if let connection = reachability {
-//                builder.setAttribute(key: "network.connection", value: reachability?.connection)
-                
-            }
-            
-        } receivedResponse: { (response, dataOrFile, span) in
-            
-        } receivedError: { (error, dataOrFile, status, span) in
-            span.addEvent(name: SemanticAttributes.exception.rawValue,
-                          attributes: [SemanticAttributes.exceptionType.rawValue : AttributeValue.string(String(describing: type(of:error))),
-                                       SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
-                                       SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(error.localizedDescription)])
+        initializeNetworkInstrumentation()
+    }
+    
+    private func initializeNetworkInstrumentation() {
+        do {
+            let netstats = try NetworkStatus()
+            self.netstatInjector = NetworkStatusInjector(netstat: netstats)
+        } catch {
+            print ("failed to initialize network connection status \(error)")
         }
+        
+        
+        let config = URLSessionInstrumentationConfiguration.init(shouldRecordPayload: nil,
+                                                                 shouldInstrument: nil,
+                                                                 nameSpan:{ request in
+                                                                    if let host = request.url?.host, let method = request.httpMethod {
+                                                                        return "\(method) \(host)"
+                                                                    }
+                                                                   return nil
+                                                                 } ,
+                                                                 shouldInjectTracingHeaders: nil,
+                                                                 createdRequest: { (request, span) in
+                                                                    if let injector = self.netstatInjector {
+                                                                        injector.inject(span: span)
+                                                                    }
+                                                                },
+                                                                 receivedResponse: nil,
+                                                                 receivedError: { (error, dataOrFile, status, span) in
+                                                                    span.addEvent(name: SemanticAttributes.exception.rawValue,
+                                                                                  attributes: [SemanticAttributes.exceptionType.rawValue : AttributeValue.string(String(describing: type(of:error))),
+                                                                                               SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
+                                                                                               SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(error.localizedDescription)])
+                                                                })
+        
 
         
         urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
-        
-    
-        
-        print("Initializing Elastic iOS Agent.")
-        
-//        NotificationCenter.default.addObserver(self, selector: #selector(appEnteredBackground), name: UIApplication.willResignActiveNotification, object: nil)
-        
     }
 
+    
     deinit {
-        try! group.syncShutdownGracefully()
+          try! group.syncShutdownGracefully()
     }
 
     private static func initializeMetrics(grpcClient: ClientConnection) {
@@ -109,17 +123,13 @@ public class Agent {
         let stdout = StdoutExporter()
         let mse = MultiSpanExporter(spanExporters: [e, stdout])
 
-        let p = SimpleSpanProcessor(spanExporter: mse)
         let b = BatchSpanProcessor(spanExporter: mse)
-        let tracerProvider = TracerProviderSdk(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: Resource())
+        let tracerProvider = TracerProviderSdk(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: DefaultResources().get())
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(b)
     }
     
     
     @objc func appEnteredBackground() {
-//        if let activeSpan = OpenTelemetryContext.activeSpan {
-//            activeSpan.end()
-//        }
     }
 }

@@ -23,13 +23,12 @@ class TraceLogger {
         guard let _ = objc_getAssociatedObject(associatedObject, &Self.associatedObjectKey) as? OpenTelemetryApi.Span else {
            let builder = tracer.spanBuilder(spanName: "\(name)")
             .setSpanKind(spanKind: .server)
+    
             
-            if let parent = OpenTelemetryContext.activeSpan {
-                builder.setParent(parent)
-            }
             
             let span = builder.startSpan()
-            OpenTelemetryContext.setActiveSpan(span)
+            
+            
             print("Started Span \"\(name)\" (\(span.context.traceId.hexString)-\(span.context.spanId.hexString))")
             objc_setAssociatedObject(associatedObject, &Self.associatedObjectKey, span, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
             return
