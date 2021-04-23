@@ -24,7 +24,7 @@ public class NetworkStatusInjector {
     }
     
     public func inject(span: Span) {
-        let (type, carrier) = netstat.getConnection()
+        let (type, carrier) = netstat.status()
         span.setAttribute(key: "net.connection.type", value:AttributeValue.string(type))
         if let carrierInfo : CTCarrier = carrier {
             

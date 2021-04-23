@@ -18,24 +18,25 @@ import Network
 import Reachability
 
 public class NetworkStatus {
-    public private(set) var networkInfo : CTTelephonyNetworkInfo = CTTelephonyNetworkInfo()
-    public private(set) var reachability :Reachability
-    public init() throws {
-        try reachability = Reachability()
-        try reachability.startNotifier()
+    public private(set) var networkInfo : CTTelephonyNetworkInfo
+    public private(set) var networkMonitor : INetworkMonitor
+    public convenience init() throws {
+        self.init(with:try NetworkMonitor())
     }
     
-    deinit {
-        reachability.stopNotifier()
+    public init(with monitor: INetworkMonitor, info: CTTelephonyNetworkInfo = CTTelephonyNetworkInfo()) {
+        self.networkMonitor = monitor
+        networkInfo = info
+    
     }
 
-    public func getConnection() -> (String, CTCarrier?) {
-        switch reachability.connection {
+    public func status() -> (String, CTCarrier?) {
+        switch networkMonitor.getConnection() {
         case .wifi:
             return ("wifi",nil)
         case .cellular:
             if #available(iOS 13.0, *) {
-                if let value = networkInfo.serviceCurrentRadioAccessTechnology?[networkInfo.dataServiceIdentifier!] {
+                if let serviceId = networkInfo.dataServiceIdentifier, let value = networkInfo.serviceCurrentRadioAccessTechnology?[serviceId] {
                     return (simpleConnectionName(connectionType: value), networkInfo.serviceSubscriberCellularProviders?[networkInfo.dataServiceIdentifier!])
                 }
             } else {
