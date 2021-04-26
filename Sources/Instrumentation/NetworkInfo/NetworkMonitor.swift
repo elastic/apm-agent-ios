@@ -13,18 +13,30 @@
 //   limitations under the License.
 
 import Foundation
-@testable import iOSAgent
+import Reachability
 
-class mockApplicationData: IApplicationDataSource {
-    var name: String?
-    var identifier: String?
-    var version: String?
-    var build: String?
-
-    init(name: String? = nil, identifier: String? = nil, version: String? = nil, build: String? = nil) {
-        self.name = name
-        self.identifier = identifier
-        self.version = version
-        self.build = build
+public class NetworkMonitor : INetworkMonitor {
+    public private(set) var reachability :Reachability
+    
+    public init() throws {
+        reachability = try Reachability()
+        try reachability.startNotifier()
     }
+
+    deinit {
+        reachability.stopNotifier()
+    }
+    
+    public func getConnection() -> Connection {
+        switch reachability.connection {
+        case .wifi:
+            return .wifi
+        case .cellular:
+            return .cellular
+        case .unavailable:
+            return .unavailable
+        }
+    }
+    
+    
 }

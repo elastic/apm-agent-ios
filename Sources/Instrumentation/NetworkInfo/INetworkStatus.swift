@@ -13,18 +13,9 @@
 //   limitations under the License.
 
 import Foundation
+import CoreTelephony
 
-class TelemetryDataSource: ITelemetryDataSource {
-    var language: String {
-        "swift"
-    }
-
-    var name: String {
-        "iOS"
-    }
-
-    var version: String? {
-        // This may not work if this agent is statically built
-        Bundle(for: type(of: self)).infoDictionary?["CFBundleShortVersionString"] as? String
-    }
+public protocol INetworkStatus {
+    var networkMonitor : INetworkMonitor { get }
+    func getStatus() -> (String, CTCarrier?)
 }

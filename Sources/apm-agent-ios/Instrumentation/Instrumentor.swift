@@ -13,14 +13,12 @@
 //   limitations under the License.
 
 import Foundation
-@testable import iOSAgent
 
-class MockOperatingSystemDataSource: IOperatingSystemDataSource {
-    private(set) var type: String
-    private(set) var description: String
 
-    init(type: String, description: String) {
-        self.type = type
-        self.description = description
-    }
+protocol Instrumentor  {
+    var selector : Selector { get }
+    var klass : AnyClass { get }
+    
+    init(selector: Selector, klass : AnyClass) throws;
+        
 }
