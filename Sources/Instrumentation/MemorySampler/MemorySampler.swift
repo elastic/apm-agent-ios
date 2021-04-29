@@ -23,7 +23,7 @@ class MemorySampler {
     let timer : DispatchSourceTimer
     
     init() {
-       meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "memory sampler", instrumentationVersion: "0.0.1")
+       meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "memorysampler", instrumentationVersion: "0.0.1")
         queue = DispatchQueue(label: "com.elastic.memorySample", qos: .background, attributes: .concurrent, autoreleaseFrequency: .workItem, target: nil)
         timer = DispatchSource.makeTimerSource(queue: queue)
     }
@@ -35,7 +35,7 @@ class MemorySampler {
     func start() -> Void {
         timer.setEventHandler { [weak self] in
             if let memoryUsage = MemorySampler.memoryFootprint() {
-                let measure = self?.meter.createIntMeasure(name: "system.memory.usage")
+                let measure = self?.meter.createIntMeasure(name: )
                 measure?.record(value: Int(memoryUsage), labels: ["state" : "used"])
             }
         }
