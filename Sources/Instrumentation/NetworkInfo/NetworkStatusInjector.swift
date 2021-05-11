@@ -25,23 +25,23 @@ public class NetworkStatusInjector {
     
     public func inject(span: Span) {
         let (type, carrier) = netstat.status()
-        span.setAttribute(key: "net.connection.type", value:AttributeValue.string(type))
+        span.setAttribute(key: "net.host.connection_type", value:AttributeValue.string(type))
         if let carrierInfo : CTCarrier = carrier {
             
             if let carrierName = carrierInfo.carrierName {
-                span.setAttribute(key: "net.connection.carrier.name", value: AttributeValue.string(carrierName))
+                span.setAttribute(key: "net.host.carrier.name", value: AttributeValue.string(carrierName))
             }
             
             if let isoCountryCode = carrierInfo.isoCountryCode {
-                span.setAttribute(key: "net.connection.carrier.isoCountryCode", value: AttributeValue.string(isoCountryCode))
+                span.setAttribute(key: "net.host.carrier.icc", value: AttributeValue.string(isoCountryCode))
             }
             
             if let mobileCountryCode = carrierInfo.mobileCountryCode {
-                span.setAttribute(key: "net.connection.carrier.mobileCountryCode", value: AttributeValue.string(mobileCountryCode))
+                span.setAttribute(key: "net.host.carrier.mcc", value: AttributeValue.string(mobileCountryCode))
             }
             
             if let mobileNetworkCode = carrierInfo.mobileNetworkCode {
-                span.setAttribute(key: "net.connection.carrier.networkCode", value: AttributeValue.string(mobileNetworkCode))
+                span.setAttribute(key: "net.host.carrier.mnc", value: AttributeValue.string(mobileNetworkCode))
             }
         }
     }
