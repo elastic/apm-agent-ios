@@ -31,8 +31,7 @@ public class Agent {
 
     var group: MultiThreadedEventLoopGroup
 
-    var m_channel : ClientConnection
-    var t_channel : ClientConnection
+    var channel : ClientConnection
 
     var memorySampler : MemorySampler
     
@@ -43,17 +42,16 @@ public class Agent {
     var urlSessionInstrumentation : URLSessionInstrumentation?
     
     var netstatInjector : NetworkStatusInjector?
-    
+        
     private init(collectorHost host: String, collectorPort port: Int) {
         _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     
-        m_channel = ClientConnection.insecure(group: group).connect(host: host, port: port)
-        t_channel = ClientConnection.insecure(group: group).connect(host: host, port: port)
+        channel = ClientConnection.insecure(group: group).connect(host: host, port: port)
 
-        Agent.initializeMetrics(grpcClient: m_channel)
-        Agent.initializeTracing(grpcClient: t_channel)
-               
+        Agent.initializeMetrics(grpcClient: channel)
+        Agent.initializeTracing(grpcClient: channel)
+              
         memorySampler = MemorySampler()
         
         print("Initializing Elastic iOS Agent.")
@@ -124,7 +122,8 @@ public class Agent {
         
         OpenTelemetry.registerMeterProvider(meterProvider:MeterProviderSdk(metricProcessor: MetricProcessorSdk(),
                                                                            metricExporter: OtelpMetricExporter(channel: grpcClient), metricPushInterval: MeterProviderSdk.defaultPushInterval, resource: AgentResource.get()))
-    }   
+    }
+    
     static private func initializeTracing(grpcClient: ClientConnection) {
         let e = OtlpTraceExporter(channel: grpcClient)
 

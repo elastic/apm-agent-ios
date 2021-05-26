@@ -19,28 +19,19 @@ import OpenTelemetrySdk
 
 class MemorySampler {
     let meter : Meter
+    var gauge : IntObserverMetric
     let queue : DispatchQueue
     let timer : DispatchSourceTimer
     
     init() {
-       meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "memorysampler", instrumentationVersion: "0.0.1")
+        meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "memory sampler", instrumentationVersion: "0.0.1")
         queue = DispatchQueue(label: "com.elastic.memorySample", qos: .background, attributes: .concurrent, autoreleaseFrequency: .workItem, target: nil)
         timer = DispatchSource.makeTimerSource(queue: queue)
-    }
-    
-    deinit {
-        timer.cancel()
-    }
-    
-    func start() -> Void {
-        timer.setEventHandler { [weak self] in
+        gauge = meter.createIntObservableGauge(name: "system.memory.usage") { gauge in
             if let memoryUsage = MemorySampler.memoryFootprint() {
-                let measure = self?.meter.createIntMeasure(name: )
-                measure?.record(value: Int(memoryUsage), labels: ["state" : "used"])
+                gauge.observe(value: Int(memoryUsage), labels: ["state": "used"])
             }
         }
-        timer.schedule(deadline: .now(), repeating: .seconds(5), leeway: .seconds(1))
-        timer.resume()
     }
     
      
@@ -62,7 +53,5 @@ class MemorySampler {
         else { return nil }
         return info.phys_footprint
     }
-
-    
 }
 
