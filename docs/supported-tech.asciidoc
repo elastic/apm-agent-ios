@@ -1,0 +1,17 @@
+[[supported-technologies]]
+== Supported technologies
+
+The Elastic APM iOS Agent automatically instruments various APIs, frameworks, and application servers. This section lists all supported technologies.
+
+// Tables work like this:
+
+// [options="header"]
+// |=======================================================================
+// |Framework |Version
+// |<<express,Express>> |^4.0.0
+// |<<hapi,hapi>> |>=9.0.0 <19.0.0
+// |<<hapi,@hapi/hapi>> |>=17.9.0 <20.0.0
+// |=======================================================================
+
+// Click the edit button on https://www.elastic.co/guide/en/apm/agent/php/current/supported-technologies.html
+// for more ideas

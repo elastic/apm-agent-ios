@@ -1,0 +1,18 @@
+[[setup]]
+== Set up the Agent
+
+Set up the Agent by...
+
+[source,bash]
+----
+commands go in here
+----
+
+Then do this:
+
+[source,swift]
+----
+code goes in here
+----
+
+yay
