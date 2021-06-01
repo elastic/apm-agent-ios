@@ -28,6 +28,6 @@ public class AgentResource  {
             overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] =  AttributeValue.string(agentVersion)
         }
         
-        return Resource.init(attributes:overridingAttributes).merging(other: defaultResource)
+        return defaultResource.merging(other: Resource.init(attributes:overridingAttributes))
     }
 }

@@ -6,7 +6,7 @@ import Foundation
 import URLSessionInstrumentation
 import Reachability
 import NetworkStatus
-import MemorySampling
+import MemorySampler
 import GRPC
 import NIO
 #if os(iOS)
@@ -47,7 +47,7 @@ public class Agent {
         _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     
-        channel = ClientConnection.insecure(group: group).connect(host: host, port: port)
+        channel = ClientConnection.insecure(group: group).connect(host: host, port: port) //should this be secure?
 
         Agent.initializeMetrics(grpcClient: channel)
         Agent.initializeTracing(grpcClient: channel)
@@ -73,7 +73,6 @@ public class Agent {
         
         initializeNetworkInstrumentation()
         
-        memorySampler.start()
     }
     
     private func initializeNetworkInstrumentation() {

@@ -17,13 +17,13 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 
 
-class MemorySampler {
+public class MemorySampler {
     let meter : Meter
     var gauge : IntObserverMetric
     let queue : DispatchQueue
     let timer : DispatchSourceTimer
     
-    init() {
+    public init() {
         meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "memory sampler", instrumentationVersion: "0.0.1")
         queue = DispatchQueue(label: "com.elastic.memorySample", qos: .background, attributes: .concurrent, autoreleaseFrequency: .workItem, target: nil)
         timer = DispatchSource.makeTimerSource(queue: queue)

@@ -15,25 +15,25 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other package.
         .library(name: "iOSAgent", type: .dynamic, targets: ["iOSAgent"]),
         .library(name: "libiOSAgent", type: .static, targets: ["iOSAgent"]),
-        .library(name: "MemorySampling", type: .dynamic, targets: ["MemorySampling"]),
-        .library(name: "libMemorySampling", type: .static, targets: ["MemorySampling"]),
+        .library(name: "MemorySampler", type: .dynamic, targets: ["MemorySampler"]),
+        .library(name: "libMemorySampler", type: .static, targets: ["MemorySampler"]),
         .library(name: "NetworkStatus", type: .dynamic, targets: ["NetworkStatus"]),
         .library(name: "libNetworkStatus", type: .static, targets: ["NetworkStatus"]),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("metric-proto-fix")),
+        .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("gauge-measurement")),
         .package(name: "Reachability", url: "git@github.com:ashleymills/Reachability.swift.git", .branch("master")),
     ],
     targets: [
         .target(name: "NetworkStatus",
                 dependencies: ["Reachability"],
                 path: "Sources/Instrumentation/NetworkInfo"),
-        .target(name: "MemorySampling",
+        .target(name: "MemorySampler",
                 dependencies: [
                     .product(name: "libOpenTelemetryApi", package: "opentelemetry-swift"),
                     .product(name: "libOpenTelemetrySdk", package: "opentelemetry-swift"),
                 ],
-                path: "Sources/Instrumentation/MemorySampling"),
+                path: "Sources/Instrumentation/MemorySampler"),
         .target(
             name: "iOSAgent",
             dependencies: [
@@ -42,7 +42,7 @@ let package = Package(
                 .product(name: "libResourceExtension", package: "opentelemetry-swift"),
                 .product(name: "Reachability", package: "Reachability"),
                 "NetworkStatus",
-                "MemorySampling",
+                "MemorySampler",
             ],
             path: "Sources/apm-agent-ios"
         ),
@@ -54,7 +54,7 @@ let package = Package(
                     dependencies: ["NetworkStatus"],
                     path: "Sources/Tests/network-status-tests"),
         .testTarget(name: "memory-sampler-tests",
-                    dependencies: ["MemorySampling"],
+                    dependencies: ["MemorySampler"],
                     path: "Sources/Tests/memory-sampler-tests")
     ]
 )
