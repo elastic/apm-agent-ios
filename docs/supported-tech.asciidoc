@@ -4,7 +4,11 @@
 The Elastic APM iOS Agent automatically instruments various APIs, frameworks, and application servers. This section lists all supported technologies.
 
 // Tables work like this:
-
+[options="header"]
+|===
+| Framework  | Version
+| OpenTelemetry-Swift | 1.0.1 (beta)
+|===
 // [options="header"]
 // |=======================================================================
 // |Framework |Version

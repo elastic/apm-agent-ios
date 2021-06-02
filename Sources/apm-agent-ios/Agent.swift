@@ -15,7 +15,7 @@ import UIKit
 public class Agent {
 
     public static func start(with configuaration: AgentConfiguration) {
-        instance = Agent(collectorHost: configuaration.otelCollectorAddress, collectorPort: configuaration.otelCollectorPort)
+        instance = Agent(configuration: configuaration)
         instance?.initialize()
     }
 
@@ -24,13 +24,14 @@ public class Agent {
     }
 
     private static var instance: Agent?
+    
 
     public class func shared() -> Agent? {
         return instance
     }
 
+    var configuration : AgentConfiguration
     var group: MultiThreadedEventLoopGroup
-
     var channel : ClientConnection
 
     var memorySampler : MemorySampler
@@ -42,12 +43,19 @@ public class Agent {
     var urlSessionInstrumentation : URLSessionInstrumentation?
     
     var netstatInjector : NetworkStatusInjector?
-        
-    private init(collectorHost host: String, collectorPort port: Int) {
-        _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
+    
+    private init(configuration: AgentConfiguration) {
+        self.configuration = configuration
+        _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our meter provider
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     
-        channel = ClientConnection.insecure(group: group).connect(host: host, port: port) //should this be secure?
+        if configuration.collectorTLS {
+            channel = ClientConnection.secure(group: group).connect(host: configuration.collectorHost, port: configuration.collectorPort)
+
+        } else {
+            channel = ClientConnection.insecure(group: group).connect(host: configuration.collectorHost, port: configuration.collectorPort)
+
+        }
 
         Agent.initializeMetrics(grpcClient: channel)
         Agent.initializeTracing(grpcClient: channel)

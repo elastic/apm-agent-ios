@@ -3,13 +3,13 @@
 
 The Elastic APM iOS Agent measures the performance of your mobile applications in real-time.
 
-// [float]
-// [[how-it-works]]
-// === How does the Agent work?
-
-// We should add something here about how the agent works. It probably makes sense to mention OTel here.
-
-// does it work in the foreground only? background too?
+[float]
+[[how-it-works]]
+=== How does the Agent work?
+The Elastic APM iOS Agent uses the https://github.com/open-telemetry/opentelemetry-swift[OpenTelemetry-Swift SDK].
+The Agent will automatically trace URLSessions and provide distributed traces annotated with device information along
+with your back-end services instrumented with Open-Telemetry.
+This Agent will also capture any custom open-telemetry traces or measurements captured using the OpenTelemetry-Swift API.
 
 [discrete]
 [[additional-components]]

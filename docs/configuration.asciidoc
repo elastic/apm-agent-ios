@@ -1,17 +1,13 @@
 [[configuration]]
 == Configuration
 
-Configure the agent in the agent's `start()` function.
+Configure the agent with `AgentConfiguration` in the agent's `start()` function.
 
 // some config example that preferably is correct unlike mine
 [source,swift]
 ----
-#import ""
-
-somethinggoesheremaybe({
-  otelCollectorAddress: '',
-  otelCollectorPort: '',
-})
+let config =  AgentConfiguration()
+Agent.start(with:config)
 ----
 
 [discrete]
@@ -21,8 +17,8 @@ somethinggoesheremaybe({
 Available configuration options...
 
 [discrete]
-[[otelCollectorAddress]]
-==== `otelCollectorAddress`
+[[collectorHost]]
+==== `collectorHost`
 
 * *Type:* String
 * *Default:* `127.0.0.1`
@@ -31,11 +27,19 @@ Available configuration options...
 The APM Server host.
 
 [discrete]
-[[otelCollectorPort]]
-==== `otelCollectorPort`
+[[collectorPort]]
+==== `collectorPort`
 
 * *Type:* Int
 * *Default:* `8200`
 // * *Env:* ``
 
 The APM Server port.
+
+[discrete]
+[[collectorTLS]]
+==== `collectorTLS`
+* *Type:* Bool
+* *Default:* false
+
+flags whether the APM Server is secured with TLS.
