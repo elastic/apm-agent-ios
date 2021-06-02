@@ -1,13 +1,17 @@
 [[setup]]
-
-== Requirement
-This project requires Swift `5.3`, and is intended for use in Swift-base mobile apps.
+== Set up the Agent
 
 :source-highlighter: coderay
 
-== Set up the Agent
+[discrete]
+[[requirements]]
+=== Requirements
 
-=== adding the Agent dependency
+This project requires Swift `5.3`, and is intended for use in Swift-base mobile apps.
+
+[discrete]
+[[add-agent-dependency]]
+=== Add the Agent dependency
 Add the Elastic APM iOS Agent to your Xcode project or your `Package.swift`.
 
 Here are instructions for adding a https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app[package dependency] to a standard Xcode poject.
@@ -32,7 +36,9 @@ Package(
 ])
 ----
 
-=== initializing the agent
+[discrete]
+[[initialize]]
+=== Initialize the agent
 Once the Agent has been added as a dependency, it must be intialized.
 
 If you're using `SwiftUI` to build your app add the following to your `App.swift`:
