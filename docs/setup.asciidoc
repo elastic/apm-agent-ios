@@ -52,8 +52,8 @@ import iOSAgent
 struct MyApp: App {
     init() {
         var config = AgentConfiguration()
-        config.collectorAddress = "127.0.0.1" // APM Server url or ip address
-        config.collectorPort = 8200 // APM Server port number
+        config.collectorAddress = "127.0.0.1" <1>
+        config.collectorPort = 8200 <2>
         Agent.start(with: config)
     }
     var body: some Scene {
@@ -63,6 +63,8 @@ struct MyApp: App {
     }
 }
 ----
+<1> APM Server URL or IP address
+<2> APM Server port number
 
 If you're not using `SwiftUI` you can alternatively add the same thing to your AppDelegate file:
 
