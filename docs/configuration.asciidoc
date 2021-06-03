@@ -42,4 +42,4 @@ The APM Server port.
 * *Type:* Bool
 * *Default:* false
 
-flags whether the APM Server is secured with TLS.
+Flags whether the APM Server is secured with TLS.
