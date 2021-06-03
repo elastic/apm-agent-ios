@@ -60,19 +60,7 @@ public class Agent {
     
     
     private func initialize() {
-//        #if os(iOS)
-//        do {
-//            try vcInstrumentation = ViewControllerInstrumentation.init()
-//            vcInstrumentation?.swizzle()
-//        } catch  SwizzleError.TargetNotFound(let klass, let method) {
-//            print ("unable to instrument \(klass).\(method). Target not found.")
-//        } catch {
-//            print("Unexpected error: \(error)")
-//        }
-//        #endif
-        
         initializeNetworkInstrumentation()
-        
     }
     
     private func initializeNetworkInstrumentation() {
