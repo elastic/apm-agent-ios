@@ -6,7 +6,7 @@ import Foundation
 import URLSessionInstrumentation
 import Reachability
 import NetworkStatus
-
+import MemorySampler
 import GRPC
 import NIO
 #if os(iOS)
@@ -32,7 +32,8 @@ public class Agent {
     var group: MultiThreadedEventLoopGroup
 
     var channel : ClientConnection
-    
+
+    var memorySampler : MemorySampler
     
     #if os(iOS)
     var vcInstrumentation : ViewControllerInstrumentation?
@@ -41,16 +42,17 @@ public class Agent {
     var urlSessionInstrumentation : URLSessionInstrumentation?
     
     var netstatInjector : NetworkStatusInjector?
-    
+        
     private init(collectorHost host: String, collectorPort port: Int) {
         _ = OpenTelemetrySDK.instance // intialize sdk, or else it will over write our meter provider
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     
-        channel = ClientConnection.insecure(group: group).connect(host: host, port: port)
+        channel = ClientConnection.insecure(group: group).connect(host: host, port: port) //should this be secure?
 
         Agent.initializeMetrics(grpcClient: channel)
         Agent.initializeTracing(grpcClient: channel)
-               
+              
+        memorySampler = MemorySampler()
         
         print("Initializing Elastic iOS Agent.")
     }
@@ -58,17 +60,6 @@ public class Agent {
     
     
     private func initialize() {
-        #if os(iOS)
-        do {
-            try vcInstrumentation = ViewControllerInstrumentation.init()
-            vcInstrumentation?.swizzle()
-        } catch  SwizzleError.TargetNotFound(let klass, let method) {
-            print ("unable to instrument \(klass).\(method). Target not found.")
-        } catch {
-            print("Unexpected error: \(error)")
-        }
-        #endif
-        
         initializeNetworkInstrumentation()
     }
     
@@ -115,8 +106,11 @@ public class Agent {
 
     private static func initializeMetrics(grpcClient: ClientConnection) {
         _ = OpenTelemetry.instance
-        OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderSdk(metricProcessor: MetricProcessorSdk(), metricExporter: OtelpMetricExporter(channel:grpcClient)))
-    }   
+        
+        OpenTelemetry.registerMeterProvider(meterProvider:MeterProviderSdk(metricProcessor: MetricProcessorSdk(),
+                                                                           metricExporter: OtelpMetricExporter(channel: grpcClient), metricPushInterval: MeterProviderSdk.defaultPushInterval, resource: AgentResource.get()))
+    }
+    
     static private func initializeTracing(grpcClient: ClientConnection) {
         let e = OtlpTraceExporter(channel: grpcClient)
 
@@ -124,7 +118,8 @@ public class Agent {
         let mse = MultiSpanExporter(spanExporters: [e, stdout])
 
         let b = BatchSpanProcessor(spanExporter: mse)
-        let tracerProvider = TracerProviderSdk(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: DefaultResources().get())
+        
+        let tracerProvider = TracerProviderSdk(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: AgentResource.get())
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(b)
     }
