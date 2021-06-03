@@ -69,7 +69,7 @@ struct MyApp: App {
 If you're not using `SwiftUI` you can alternatively add the same thing to your AppDelegate file:
 
 `AppDelegate.swift`
-[source,swift,linenums,swift,highlight=2;7..10]
+[source,swift,linenums,highlight=2;9..12]
 ----
 import UIKit
 import iOSAgent
@@ -77,10 +77,12 @@ import iOSAgent
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         var config = AgentConfiguration()
-        config.collectorAddress = "127.0.0.1" // APM Server url or ip address
-        config.collectorPort = 8200 // APM Server port number
+        config.collectorAddress = "127.0.0.1" <1>
+        config.collectorPort = 8200 <2>
         Agent.start(with: config)
         return true
     }
 }
 ----
+<1> APM Server url or ip address
+<2> APM Server port number
