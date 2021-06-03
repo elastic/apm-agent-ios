@@ -14,7 +14,7 @@
 
 import Foundation
 import XCTest
-@testable import MemorySampling
+@testable import MemorySampler
 
 
 final class InstrumentorTests: XCTestCase {

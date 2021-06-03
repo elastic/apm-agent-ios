@@ -23,11 +23,13 @@ let package = Package(
     dependencies: [
         .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("gauge-measurement")),
         .package(name: "Reachability", url: "git@github.com:ashleymills/Reachability.swift.git", .branch("master")),
+    
     ],
     targets: [
         .target(name: "NetworkStatus",
                 dependencies: ["Reachability"],
-                path: "Sources/Instrumentation/NetworkInfo"),
+                path: "Sources/Instrumentation/NetworkInfo",
+                linkerSettings: [.linkedFramework("CoreTelephony")]),
         .target(name: "MemorySampler",
                 dependencies: [
                     .product(name: "libOpenTelemetryApi", package: "opentelemetry-swift"),
