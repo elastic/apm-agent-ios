@@ -20,16 +20,12 @@ import OpenTelemetrySdk
 public class MemorySampler {
     let meter : Meter
     var gauge : IntObserverMetric
-    let queue : DispatchQueue
-    let timer : DispatchSourceTimer
     
     public init() {
-        meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "memory sampler", instrumentationVersion: "0.0.1")
-        queue = DispatchQueue(label: "com.elastic.memorySample", qos: .background, attributes: .concurrent, autoreleaseFrequency: .workItem, target: nil)
-        timer = DispatchSource.makeTimerSource(queue: queue)
+        meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "Memory Sampler", instrumentationVersion: "0.0.1")
         gauge = meter.createIntObservableGauge(name: "system.memory.usage") { gauge in
             if let memoryUsage = MemorySampler.memoryFootprint() {
-                gauge.observe(value: Int(memoryUsage), labels: ["state": "used"])
+                gauge.observe(value: Int(memoryUsage), labels: ["state": "app"])
             }
         }
     }

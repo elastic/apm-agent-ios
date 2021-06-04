@@ -6,6 +6,7 @@ import Foundation
 import URLSessionInstrumentation
 import Reachability
 import NetworkStatus
+import CPUSampler
 import MemorySampler
 import GRPC
 import NIO
@@ -35,7 +36,7 @@ public class Agent {
     var channel : ClientConnection
 
     var memorySampler : MemorySampler
-    
+    var cpuSampler : CPUSampler
     #if os(iOS)
     var vcInstrumentation : ViewControllerInstrumentation?
     #endif
@@ -61,7 +62,7 @@ public class Agent {
         Agent.initializeTracing(grpcClient: channel)
               
         memorySampler = MemorySampler()
-        
+        cpuSampler = CPUSampler()
         print("Initializing Elastic iOS Agent.")
     }
     
