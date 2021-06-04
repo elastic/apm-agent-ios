@@ -1,0 +1,47 @@
+[[configuration]]
+== Configuration
+
+Configure the agent with `AgentConfiguration` in the agent's `start()` function.
+
+// some config example that preferably is correct unlike mine
+[source,swift]
+----
+let config =  AgentConfiguration()
+config.collectorHost = "192.168.0.1"
+config.collectorPort = 8200
+config.collectorTLS = true
+Agent.start(with:config)
+----
+
+[discrete]
+[[configuration-options]]
+=== Configuration options
+
+
+[discrete]
+[[collectorHost]]
+==== `collectorHost`
+
+* *Type:* String
+* *Default:* `127.0.0.1`
+// * *Env:* ``
+
+The APM Server host.
+
+[discrete]
+[[collectorPort]]
+==== `collectorPort`
+
+* *Type:* Int
+* *Default:* `8200`
+// * *Env:* ``
+
+The APM Server port.
+
+[discrete]
+[[collectorTLS]]
+==== `collectorTLS`
+* *Type:* Bool
+* *Default:* false
+
+Flags whether the APM Server is secured with TLS.

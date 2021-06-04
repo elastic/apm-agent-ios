@@ -1,0 +1,32 @@
+////
+[[release-notes-x.x.x]]
+==== x.x.x - YYYY/MM/DD
+
+[float]
+===== Breaking changes
+
+[float]
+===== Features
+* Cool new feature: {pull}2526[#2526]
+
+[float]
+===== Bug fixes
+////
+
+[[release-notes-preview]]
+=== iOS Agent technical preview
+
+[discrete]
+[[release-notes-preview-1]]
+==== Technical preview
+
+[[release-notes-x.x.x]]
+==== x.x.x - tbd
+[float]
+===== Features
+* Network status attributes {pull}20[#20]
+* Device Resources {pull}16[#16]
+
+
+// Using the template above, release notes go here.
+// append the version number of the release to the heading above
