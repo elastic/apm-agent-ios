@@ -122,7 +122,7 @@ public class Agent {
     }
     
     static private func initializeTracing(grpcClient: ClientConnection) {
-        let e = OtlpTraceExporter(channel: grpcClient)
+        let e = ElasticExporter(channel: grpcClient)
 
         let stdout = StdoutExporter()
         let mse = MultiSpanExporter(spanExporters: [e, stdout])
