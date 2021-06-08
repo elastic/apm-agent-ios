@@ -17,6 +17,8 @@ let package = Package(
         .library(name: "libiOSAgent", type: .static, targets: ["iOSAgent"]),
         .library(name: "MemorySampler", type: .dynamic, targets: ["MemorySampler"]),
         .library(name: "libMemorySampler", type: .static, targets: ["MemorySampler"]),
+        .library(name: "CPUSampler", type: .dynamic, targets: ["CPUSampler"]),
+        .library(name: "libCPUSampler", type: .static, targets: ["CPUSampler"]),
         .library(name: "NetworkStatus", type: .dynamic, targets: ["NetworkStatus"]),
         .library(name: "libNetworkStatus", type: .static, targets: ["NetworkStatus"]),
     ],
@@ -36,6 +38,12 @@ let package = Package(
                     .product(name: "libOpenTelemetrySdk", package: "opentelemetry-swift"),
                 ],
                 path: "Sources/Instrumentation/MemorySampler"),
+        .target(name: "CPUSampler",
+                dependencies: [
+                    .product(name: "libOpenTelemetryApi", package: "opentelemetry-swift"),
+                    .product(name: "libOpenTelemetrySdk", package: "opentelemetry-swift"),
+                ],
+                path: "Sources/Instrumentation/CPUSampler"),
         .target(
             name: "iOSAgent",
             dependencies: [
@@ -45,6 +53,7 @@ let package = Package(
                 .product(name: "Reachability", package: "Reachability"),
                 "NetworkStatus",
                 "MemorySampler",
+                "CPUSampler"
             ],
             path: "Sources/apm-agent-ios"
         ),
