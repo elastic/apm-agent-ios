@@ -7,7 +7,9 @@ This package is considered experimental and should not be used in production.
 
 ## Documentation
 
-To build the documentation for this project, you must first clone the [`elastic/docs` repository](https://github.com/elastic/docs/). Then run the following commands:
+Visit [elastic.co](https://www.elastic.co/guide/en/apm/agent/swift/current/index.html) for the iOS agent documentation.
+
+To build this project's documentation locally, you must first clone the [`elastic/docs` repository](https://github.com/elastic/docs/). Then run the following commands:
 
 ```bash
 # Set the location of your repositories
