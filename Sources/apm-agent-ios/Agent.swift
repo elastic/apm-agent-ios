@@ -51,13 +51,14 @@ public class Agent {
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     
         if configuration.collectorTLS {
-            channel = ClientConnection.secure(group: group).connect(host: configuration.collectorHost, port: configuration.collectorPort)
-
+            channel = ClientConnection.secure(group: group)
+                .connect(host: configuration.collectorHost, port: configuration.collectorPort)
         } else {
-            channel = ClientConnection.insecure(group: group).connect(host: configuration.collectorHost, port: configuration.collectorPort)
-
+            channel = ClientConnection.insecure(group: group)
+                .connect(host: configuration.collectorHost, port: configuration.collectorPort)
         }
-
+        
+        
         Agent.initializeMetrics(grpcClient: channel)
         Agent.initializeTracing(grpcClient: channel)
               

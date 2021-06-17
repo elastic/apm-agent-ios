@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 import Foundation
+import UIKit
 import ResourceExtension
 import OpenTelemetryApi
 import OpenTelemetrySdk
@@ -24,8 +25,13 @@ public class AgentResource  {
             ResourceAttributes.telemetrySdkName.rawValue :  AttributeValue.string("iOS"),
         ]
         
+        
         if let agentVersion =  Bundle(for: self).infoDictionary?["CFBundleShortVersionString"] as? String {
             overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] =  AttributeValue.string(agentVersion)
+        }
+        
+        if let deviceId = UIDevice.current.identifierForVendor?.uuidString {
+            overridingAttributes["device.id"] = AttributeValue.string(deviceId)
         }
         
         return defaultResource.merging(other: Resource.init(attributes:overridingAttributes))
