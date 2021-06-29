@@ -43,7 +43,7 @@ Once the Agent has been added as a dependency, it must be intialized.
 
 If you're using `SwiftUI` to build your app add the following to your `App.swift`:
 
-[source,swift,linenums,swift,highlight=2;7..10]
+[source,swift,linenums,swift,highlight=2;7..12]
 ----
 import SwiftUI
 import iOSAgent
@@ -54,6 +54,8 @@ struct MyApp: App {
         var config = AgentConfiguration()
         config.collectorAddress = "127.0.0.1" <1>
         config.collectorPort = 8200 <2>
+        config.collectorTLS = false <3>
+        config.secretToken = "<secret token>" <4>
         Agent.start(with: config)
     }
     var body: some Scene {
@@ -65,11 +67,13 @@ struct MyApp: App {
 ----
 <1> APM Server URL or IP address
 <2> APM Server port number
+<3> Enable TLS for Open telemetry exporters
+<4> Set secret token for APM server connection
 
 If you're not using `SwiftUI` you can alternatively add the same thing to your AppDelegate file:
 
 `AppDelegate.swift`
-[source,swift,linenums,highlight=2;9..12]
+[source,swift,linenums,highlight=2;9..14]
 ----
 import UIKit
 import iOSAgent
@@ -79,6 +83,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         var config = AgentConfiguration()
         config.collectorAddress = "127.0.0.1" <1>
         config.collectorPort = 8200 <2>
+        config.collectorTLS = false <3>
+        config.secretToken = "<secret token>" <4>
         Agent.start(with: config)
         return true
     }
@@ -86,3 +92,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 ----
 <1> APM Server url or ip address
 <2> APM Server port number
+<3> Enable TLS for Open telemetry exporters
+<4> Set secret token for APM server connection
+
