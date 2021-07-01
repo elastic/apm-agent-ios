@@ -23,7 +23,7 @@ let package = Package(
         .library(name: "libNetworkStatus", type: .static, targets: ["NetworkStatus"]),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "git@github.com:bryce-b/opentelemetry-swift.git", .branch("otlp-exporter-config")),
+        .package(name: "opentelemetry-swift", url: "git@github.com:open-telemetry/opentelemetry-swift.git", .branch("main")),
         .package(name: "Reachability", url: "git@github.com:ashleymills/Reachability.swift.git", .branch("master")),
     
     ],
