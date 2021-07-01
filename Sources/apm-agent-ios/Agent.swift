@@ -10,6 +10,7 @@ import CPUSampler
 import MemorySampler
 import GRPC
 import NIO
+import Logging
 #if os(iOS)
 import UIKit
 #endif
@@ -32,11 +33,13 @@ public class Agent {
     }
 
     var configuration : AgentConfiguration
+    var otlpConfiguration : OtlpConfiguration
     var group: MultiThreadedEventLoopGroup
     var channel : ClientConnection
 
     var memorySampler : MemorySampler
     var cpuSampler : CPUSampler
+    
     #if os(iOS)
     var vcInstrumentation : ViewControllerInstrumentation?
     #endif
@@ -47,8 +50,12 @@ public class Agent {
     
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
-        _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our meter provider
+        _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
+        _ = OpenTelemetry.instance    // initialize api, or else it will over write our providers
+
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        
+        otlpConfiguration = OtlpConfiguration(timeout:OtlpConfiguration.DefaultTimeoutInterval,headers: Self.generateMetadata(configuration.secretToken))
     
         if configuration.collectorTLS {
             channel = ClientConnection.secure(group: group)
@@ -57,11 +64,33 @@ public class Agent {
             channel = ClientConnection.insecure(group: group)
                 .connect(host: configuration.collectorHost, port: configuration.collectorPort)
         }
+
+        
+        // create meter provider
+        OpenTelemetry.registerMeterProvider(meterProvider:MeterProviderBuilder()
+                                                .with(resource: AgentResource.get())
+                                                .with(exporter: OtlpMetricExporter(channel: channel, config:otlpConfiguration))
+                                                .build())
         
         
-        Agent.initializeMetrics(grpcClient: channel)
-        Agent.initializeTracing(grpcClient: channel)
-              
+        // create tracer provider
+        let e = OtlpTraceExporter(channel: channel, config: otlpConfiguration)
+
+        let b = BatchSpanProcessor(spanExporter: e) { spanData in
+            // This is for clock skew compensation
+            let exportTimestamp = Date().timeIntervalSince1970.toNanoseconds
+            for i in spanData.indices {
+                // This is for clock skew compensation
+                let newResource = spanData[i].resource.merging(other: Resource(attributes: ["telemetry.sdk.elastic_export_timestamp": AttributeValue.int(Int(exportTimestamp))]))
+                _ = spanData[i].settingResource(newResource)
+            }
+        }
+        
+        OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
+                                                .add(spanProcessor: b)
+                                                .with(resource: AgentResource.get())
+                                                .build())
+                      
         memorySampler = MemorySampler()
         cpuSampler = CPUSampler()
         print("Initializing Elastic iOS Agent.")
@@ -114,26 +143,13 @@ public class Agent {
           try! group.syncShutdownGracefully()
     }
 
-    private static func initializeMetrics(grpcClient: ClientConnection) {
-        _ = OpenTelemetry.instance
         
-        OpenTelemetry.registerMeterProvider(meterProvider:MeterProviderSdk(metricProcessor: MetricProcessorSdk(),
-                                                                           metricExporter: OtelpMetricExporter(channel: grpcClient), metricPushInterval: MeterProviderSdk.defaultPushInterval, resource: AgentResource.get()))
+    static private func generateMetadata(_ token: String?) -> [(String,String)]? {
+        if let t = token {
+            return [("Authorization", "Bearer \(t)")]
+        }
+        return nil
     }
-    
-    static private func initializeTracing(grpcClient: ClientConnection) {
-        let e = OtlpTraceExporter(channel: grpcClient)
-
-        let stdout = StdoutExporter()
-        let mse = MultiSpanExporter(spanExporters: [e, stdout])
-
-        let b = BatchSpanProcessor(spanExporter: mse)
-        
-        let tracerProvider = TracerProviderSdk(clock: MillisClock(), idGenerator: RandomIdGenerator(), resource: AgentResource.get())
-        OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(b)
-    }
-    
     
     @objc func appEnteredBackground() {
     }

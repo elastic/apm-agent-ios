@@ -10,6 +10,7 @@ let config =  AgentConfiguration()
 config.collectorHost = "192.168.0.1"
 config.collectorPort = 8200
 config.collectorTLS = true
+config.secretToken = "<secret token>"
 Agent.start(with:config)
 ----
 
@@ -45,3 +46,12 @@ The APM Server port.
 * *Default:* false
 
 Flags whether the APM Server is secured with TLS.
+
+[discrete]
+[[secretToken]]
+==== `secretToken`
+* *Type:* String
+* *Default:* nil
+* *Env:* `OTEL_EXPORTER_OTLP_HEADERS`
+
+Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be define per https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md[OpenTelemetry Protocol Exporter Config] (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
