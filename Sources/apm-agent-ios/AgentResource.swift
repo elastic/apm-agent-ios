@@ -26,10 +26,8 @@ public class AgentResource  {
         ]
         
         
-        if let agentVersion =  Bundle(for: self).infoDictionary?["CFBundleShortVersionString"] as? String {
-            overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] =  AttributeValue.string(agentVersion)
-        }
-        
+        overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] = AttributeValue.string(Agent.ELASTIC_SWIFT_AGENT_VERSION)
+                
         if let deviceId = UIDevice.current.identifierForVendor?.uuidString {
             overridingAttributes["device.id"] = AttributeValue.string(deviceId)
         }

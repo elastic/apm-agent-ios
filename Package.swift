@@ -13,13 +13,13 @@ let package = Package(
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other package.
-        .library(name: "iOSAgent", type: .dynamic, targets: ["iOSAgent"]),
+        .library(name: "iOSAgent", type: .static, targets: ["iOSAgent"]),
         .library(name: "libiOSAgent", type: .static, targets: ["iOSAgent"]),
-        .library(name: "MemorySampler", type: .dynamic, targets: ["MemorySampler"]),
+        .library(name: "MemorySampler", type: .static, targets: ["MemorySampler"]),
         .library(name: "libMemorySampler", type: .static, targets: ["MemorySampler"]),
-        .library(name: "CPUSampler", type: .dynamic, targets: ["CPUSampler"]),
+        .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
         .library(name: "libCPUSampler", type: .static, targets: ["CPUSampler"]),
-        .library(name: "NetworkStatus", type: .dynamic, targets: ["NetworkStatus"]),
+        .library(name: "NetworkStatus", type: .static, targets: ["NetworkStatus"]),
         .library(name: "libNetworkStatus", type: .static, targets: ["NetworkStatus"]),
     ],
     dependencies: [
