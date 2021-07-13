@@ -32,6 +32,8 @@ public class AgentResource  {
             overridingAttributes["device.id"] = AttributeValue.string(deviceId)
         }
         
+        overridingAttributes[ResourceAttributes.deploymentEnvironment.rawValue] = AttributeValue.string("default")
+        
         return defaultResource.merging(other: Resource.init(attributes:overridingAttributes))
     }
 }
