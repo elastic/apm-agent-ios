@@ -30,39 +30,56 @@ public class NetworkStatus {
     
     }
 
-    public func status() -> (String, CTCarrier?) {
+    public func status() -> (String, String? ,CTCarrier?) {
         switch networkMonitor.getConnection() {
         case .wifi:
-            return ("wifi",nil)
+            return ("wifi",nil,nil)
         case .cellular:
             if #available(iOS 13.0, *) {
                 if let serviceId = networkInfo.dataServiceIdentifier, let value = networkInfo.serviceCurrentRadioAccessTechnology?[serviceId] {
-                    return (simpleConnectionName(connectionType: value), networkInfo.serviceSubscriberCellularProviders?[networkInfo.dataServiceIdentifier!])
+                    return ("cell", simpleConnectionName(connectionType: value), networkInfo.serviceSubscriberCellularProviders?[networkInfo.dataServiceIdentifier!])
                 }
             } else {
                 if let radioType = networkInfo.currentRadioAccessTechnology {
-                return (simpleConnectionName(connectionType: radioType), networkInfo.subscriberCellularProvider)
+                return ("cell", simpleConnectionName(connectionType: radioType), networkInfo.subscriberCellularProvider)
                 }
             }
-            return ("cell", nil)
+            return ("cell","unknown", nil)
         case .unavailable:
-            return ("unavailable", nil)
+            return ("unavailable",nil , nil)
         }
     }
     
     func simpleConnectionName(connectionType: String) -> String {
         switch connectionType {
-        case "CTRadioAccessTechnologyEdge", "CTRadioAccessTechnologyCDMA1x","CTRadioAccessTechnologyGPRS":
-            return "2G"
-        case "CTRadioAccessTechnologyWCDMA", "CTRadioAccessTechnologyHSDPA", "CTRadioAccessTechnologyHSUPA", "CTRadioAccessTechnologyCDMAEVDORev0", "CTRadioAccessTechnologyCDMAEVDORevA", "CTRadioAccessTechnologyCDMAEVDORevB","CTRadioAccessTechnologyeHRPD":
-            return "3G"
+        case "CTRadioAccessTechnologyEdge":
+            return "GPRS"
+        case "CTRadioAccessTechnologyCDMA1x":
+            return "CDMA"
+        case "CTRadioAccessTechnologyGPRS":
+            return "GPRS"
+        case "CTRadioAccessTechnologyWCDMA":
+            return "WCDMA"
+        case "CTRadioAccessTechnologyHSDPA":
+            return "HSDPA"
+        case "CTRadioAccessTechnologyHSUPA":
+            return "HSUPA"
+        case "CTRadioAccessTechnologyCDMAEVDORev0":
+            return "EVDO_0"
+        case "CTRadioAccessTechnologyCDMAEVDORevA":
+            return "EVDO_A"
+        case "CTRadioAccessTechnologyCDMAEVDORevB":
+            return "EVDO_B"
+            case "CTRadioAccessTechnologyeHRPD":
+                return "HRPD"
         case "CTRadioAccessTechnologyLTE":
-            return "4G"
-        case "CTRadioAccessTechnologyNRNSA", "CTRadioAccessTechnologyNR":
-            return "5G"
-            
+            return "LTE"
+        case "CTRadioAccessTechnologyNRNSA":
+            return "NRNSA"
+            case "CTRadioAccessTechnologyNR":
+                return "NR"
         default:
-            return "cell"
+            return "unknown"
         }
     }
 }
