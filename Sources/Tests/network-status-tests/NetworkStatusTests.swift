@@ -100,7 +100,7 @@ final class InstrumentorTests: XCTestCase {
         let wifi_status = NetworkStatus(with: MockNetworkMonitor(connection: .wifi))
         
         
-        var (type, info) = wifi_status.status()
+        var (type,subtype, info) = wifi_status.status()
         
         XCTAssertNil(info)
         XCTAssertEqual("wifi", type)
@@ -110,18 +110,19 @@ final class InstrumentorTests: XCTestCase {
                                                                          currentRadioAccessTechnology: "CTRadioAccessTechnologyEdge",
                                                                          carrier:MockCTCarrier(carrierName: "mobile-carrier", isoCountryCode: "1", mobileCountryCode: "120", mobileNetworkCode: "202")))
         
-        (type, info) = cell_status.status()
+        (type,subtype, info) = cell_status.status()
         
         XCTAssertNotNil(info)
         XCTAssertEqual("mobile-carrier", info?.carrierName)
         XCTAssertEqual("1", info?.isoCountryCode)
         XCTAssertEqual("120", info?.mobileCountryCode)
         XCTAssertEqual("202", info?.mobileNetworkCode)
-        XCTAssertEqual("2G", type)
+        XCTAssertEqual("cell", type)
+        XCTAssertEqual("EDGE", subtype)
     
         let unavailable = NetworkStatus(with: MockNetworkMonitor(connection: .unavailable))
         
-        (type, info) = unavailable.status()
+        (type,subtype, info) = unavailable.status()
         
         XCTAssertNil(info)
         
@@ -131,14 +132,14 @@ final class InstrumentorTests: XCTestCase {
     func testEdgeCases() {
         let wifi_status = NetworkStatus(with: MockNetworkMonitor(connection: .wifi), info: MockCTTelephonyNetworkInfo(dataServiceIndentifier: nil, currentRadioAccessTechnology: nil, carrier: nil))
         
-        var (type, info) = wifi_status.status()
+        var (type,subtype, info) = wifi_status.status()
         XCTAssertNil(info)
         XCTAssertEqual("wifi", type)
         
         
         let cell_status = NetworkStatus(with: MockNetworkMonitor(connection: .cellular), info: MockCTTelephonyNetworkInfo(dataServiceIndentifier: nil, currentRadioAccessTechnology: nil, carrier: nil))
         
-        (type, info) = cell_status.status()
+        (type,subtype, info) = cell_status.status()
         
         XCTAssertNil(info)
         XCTAssertEqual("cell", type)
@@ -146,7 +147,7 @@ final class InstrumentorTests: XCTestCase {
         
         let unavailable_status = NetworkStatus(with: MockNetworkMonitor(connection: .unavailable), info: MockCTTelephonyNetworkInfo(dataServiceIndentifier: nil, currentRadioAccessTechnology: nil, carrier: nil))
         
-        (type, info) = unavailable_status.status()
+        (type,subtype, info) = unavailable_status.status()
         
         XCTAssertNil(info)
         XCTAssertEqual("unavailable", type)

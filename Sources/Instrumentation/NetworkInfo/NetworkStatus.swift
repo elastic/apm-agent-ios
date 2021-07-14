@@ -53,7 +53,7 @@ public class NetworkStatus {
     func simpleConnectionName(connectionType: String) -> String {
         switch connectionType {
         case "CTRadioAccessTechnologyEdge":
-            return "GPRS"
+            return "EDGE"
         case "CTRadioAccessTechnologyCDMA1x":
             return "CDMA"
         case "CTRadioAccessTechnologyGPRS":
