@@ -13,7 +13,13 @@
 //   limitations under the License.
 
 import Foundation
-import UIKit
+#if os(watchOS)
+    import WatchKit
+#elseif os(macOS)
+    import AppKit
+#else
+    import UIKit
+#endif
 import ResourceExtension
 import OpenTelemetryApi
 import OpenTelemetrySdk
@@ -28,7 +34,7 @@ public class AgentResource  {
         
         overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] = AttributeValue.string(Agent.ELASTIC_SWIFT_AGENT_VERSION)
                 
-        if let deviceId = UIDevice.current.identifierForVendor?.uuidString {
+        if let deviceId = AgentResource.identifier()  {
             overridingAttributes["device.id"] = AttributeValue.string(deviceId)
         }
         
@@ -36,4 +42,21 @@ public class AgentResource  {
         
         return defaultResource.merging(other: Resource.init(attributes:overridingAttributes))
     }
+    
+    static private func identifier() -> String? {
+        #if os(watchOS)
+            if #available(watchOS 6.3, *) {
+                return WKInterfaceDevice.current().identifierForVendor?.uuidString
+            } else {
+                return nil
+            }
+        #elseif os(macOS)
+            return nil
+        #else
+            return UIDevice.current.identifierForVendor?.uuidString
+
+        #endif
+    }
+    
+    
 }

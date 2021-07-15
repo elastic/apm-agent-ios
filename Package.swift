@@ -29,7 +29,9 @@ let package = Package(
     ],
     targets: [
         .target(name: "NetworkStatus",
-                dependencies: ["Reachability"],
+                dependencies: ["Reachability",
+                               .product(name:"libOpenTelemetrySdk", package: "opentelemetry-swift"),
+                               .product(name: "libOpenTelemetryApi", package: "opentelemetry-swift")],
                 path: "Sources/Instrumentation/NetworkInfo",
                 linkerSettings: [.linkedFramework("CoreTelephony")]),
         .target(name: "MemorySampler",

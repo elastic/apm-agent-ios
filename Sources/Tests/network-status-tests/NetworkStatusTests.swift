@@ -12,6 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+
+#if os(iOS)
 import Foundation
 import Reachability
 import CoreTelephony
@@ -155,3 +157,4 @@ final class InstrumentorTests: XCTestCase {
     }
 }
 
+#endif //os(iOS)
