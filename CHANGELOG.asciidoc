@@ -20,13 +20,25 @@
 [[release-notes-preview-1]]
 ==== Technical preview
 
-[[release-notes-x.x.x]]
-==== x.x.x - tbd
+[[release-notes-0.1.0]]
+==== 0.1.0 - Technical Preview
 [float]
 ===== Features
 * Network status attributes {pull}20[#20]
-* Device Resources {pull}16[#16]
+** Network instrumentation contains connection information providing insight into cell carriers and connection quality.
 
+* Device Resources {pull}16[#16]
+** Captures details about the device the application runs on. Include model, version, and os information.
+
+* Open Telemetry Support
+** Captures custom OTel Instrumentation
+
+* Memory usage metrics {pull}34[#34]
+
+* CPU usage metrics {pull}35[#35]
+
+* Network Instrumentation
+    ** Automatically generate spans for all network reqeust using `URLSession`
 
 // Using the template above, release notes go here.
 // append the version number of the release to the heading above
