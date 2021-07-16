@@ -14,6 +14,8 @@ import Logging
 #if os(iOS)
 import UIKit
 #endif
+
+import os.log
 public class Agent {
 
     public static func start(with configuaration: AgentConfiguration) {
@@ -65,10 +67,11 @@ public class Agent {
                 .connect(host: configuration.collectorHost, port: configuration.collectorPort)
         }
 
-        
+        let vars = AgentResource.get().merging(other: AgentEnvResource.resource)
         // create meter provider
         OpenTelemetry.registerMeterProvider(meterProvider:MeterProviderBuilder()
-                                                .with(resource: AgentResource.get())
+                                                .with(processor: MetricProcessorSdk())
+                                                .with(resource: vars)
                                                 .with(exporter: OtlpMetricExporter(channel: channel, config:otlpConfiguration))
                                                 .build())
         
@@ -88,12 +91,12 @@ public class Agent {
         
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
                                                 .add(spanProcessor: b)
-                                                .with(resource: AgentResource.get())
+                                                .with(resource: AgentResource.get().merging(other: AgentEnvResource.resource))
                                                 .build())
                       
         memorySampler = MemorySampler()
         cpuSampler = CPUSampler()
-        print("Initializing Elastic iOS Agent.")
+        os_log("Initializing Elastic iOS Agent.")
     }
     
     
