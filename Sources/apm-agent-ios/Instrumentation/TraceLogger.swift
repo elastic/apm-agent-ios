@@ -17,30 +17,30 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
     
 class TraceLogger {
-    private static var associatedObjectKey : UInt8 = 0
+    private static var objectKey : UInt8 = 0
     
-    static func startTrace(tracer: TracerSdk, associatedObject: AnyObject, name: String) {
-        guard let _ = objc_getAssociatedObject(associatedObject, &Self.associatedObjectKey) as? OpenTelemetryApi.Span else {
+    @objc static func didEnterBackground() {
+        OpenTelemetrySDK.instance.contextProvider.activeSpan?.addEvent(name: "application entered background")
+    }
+    
+    static func startTrace(tracer: TracerSdk, associatedObject: AnyObject, name: String, isRoot: Bool = false) {
+        guard let _ = objc_getAssociatedObject(associatedObject, UnsafeRawPointer(&Self.objectKey)) as? OpenTelemetryApi.Span else {
            let builder = tracer.spanBuilder(spanName: "\(name)")
-            .setSpanKind(spanKind: .server)
-    
-            
+            .setSpanKind(spanKind: .client)
             
             let span = builder.startSpan()
+            OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
             
-            
-            print("Started Span \"\(name)\" (\(span.context.traceId.hexString)-\(span.context.spanId.hexString))")
-            objc_setAssociatedObject(associatedObject, &Self.associatedObjectKey, span, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
+            objc_setAssociatedObject(associatedObject, UnsafeRawPointer(&Self.objectKey), span, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
             return
         }
     }
     
-    static func stopTrace(associatedObject: AnyObject) {
-        if let span = objc_getAssociatedObject(associatedObject, &Self.associatedObjectKey) as? Span {
+    static func stopTrace(associatedObject: AnyObject, isRoot: Bool = false) {
+        if let span = objc_getAssociatedObject(associatedObject,  UnsafeRawPointer(&Self.objectKey)) as? Span {
             span.status = .ok;
             span.end()
-            print("ended span \"\(span.name)\" (\(span.context.traceId.hexString)-\(span.context.spanId.hexString))")
-            objc_setAssociatedObject(associatedObject, &Self.associatedObjectKey, nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
+            objc_setAssociatedObject(associatedObject,  UnsafeRawPointer(&Self.objectKey), nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
         }
     }
 }

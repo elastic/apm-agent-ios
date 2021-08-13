@@ -11,6 +11,7 @@ import MemorySampler
 import GRPC
 import NIO
 import Logging
+import os
 #if os(iOS)
 import UIKit
 #endif
@@ -44,6 +45,7 @@ public class Agent {
     
     #if os(iOS)
     var vcInstrumentation : ViewControllerInstrumentation?
+    var applicationInstrumentation : UIApplicationInstrumentation?
     #endif
     
     var urlSessionInstrumentation : URLSessionInstrumentation?
@@ -57,6 +59,13 @@ public class Agent {
         _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
         _ = OpenTelemetry.instance    // initialize api, or else it will over write our providers
 
+        do {
+        self.vcInstrumentation = try ViewControllerInstrumentation()
+            self.applicationInstrumentation = try UIApplicationInstrumentation()
+        } catch {
+            
+            print("failed to initalize view controller instrumentation: \(error)")
+        }
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         
         otlpConfiguration = OtlpConfiguration(timeout:OtlpConfiguration.DefaultTimeoutInterval,headers: Self.generateMetadata(configuration.secretToken))
@@ -105,6 +114,8 @@ public class Agent {
     
     private func initialize() {
         initializeNetworkInstrumentation()
+        vcInstrumentation?.swizzle()
+        applicationInstrumentation?.swizzle()
     }
     
     private func initializeNetworkInstrumentation() {
