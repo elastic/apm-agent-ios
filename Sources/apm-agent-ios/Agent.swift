@@ -1,24 +1,23 @@
-import OpenTelemetryApi
-import OpenTelemetrySdk
-import ResourceExtension
-import OpenTelemetryProtocolExporter
-import Foundation
-import URLSessionInstrumentation
-import Reachability
-import NetworkStatus
 import CPUSampler
-import MemorySampler
+import Foundation
 import GRPC
-import NIO
 import Logging
+import MemorySampler
+import NetworkStatus
+import NIO
+import OpenTelemetryApi
+import OpenTelemetryProtocolExporter
+import OpenTelemetrySdk
 import os
+import Reachability
+import ResourceExtension
+import URLSessionInstrumentation
 #if os(iOS)
-import UIKit
+    import UIKit
 #endif
 
 import os.log
 public class Agent {
-
     public static func start(with configuaration: AgentConfiguration) {
         instance = Agent(configuration: configuaration)
         instance?.initialize()
@@ -29,23 +28,22 @@ public class Agent {
     }
 
     private static var instance: Agent?
-    
 
     public class func shared() -> Agent? {
-        return instance
+        instance
     }
 
-    var configuration : AgentConfiguration
-    var otlpConfiguration : OtlpConfiguration
+    var configuration: AgentConfiguration
+    var otlpConfiguration: OtlpConfiguration
     var group: MultiThreadedEventLoopGroup
-    var channel : ClientConnection
+    var channel: ClientConnection
 
-    var memorySampler : MemorySampler
-    var cpuSampler : CPUSampler
-    
+    var memorySampler: MemorySampler
+    var cpuSampler: CPUSampler
+
     #if os(iOS)
-    var vcInstrumentation : ViewControllerInstrumentation?
-    var applicationInstrumentation : UIApplicationInstrumentation?
+        var vcInstrumentation: ViewControllerInstrumentation?
+        var applicationInstrumentation: UIApplicationInstrumentation?
     #endif
     
     var urlSessionInstrumentation : URLSessionInstrumentation?
@@ -54,22 +52,22 @@ public class Agent {
     var netstatInjector : NetworkStatusInjector?
     #endif
     
+
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
         _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
-        _ = OpenTelemetry.instance    // initialize api, or else it will over write our providers
+        _ = OpenTelemetry.instance // initialize api, or else it will over write our providers
 
         do {
-        self.vcInstrumentation = try ViewControllerInstrumentation()
-            self.applicationInstrumentation = try UIApplicationInstrumentation()
+            vcInstrumentation = try ViewControllerInstrumentation()
+            applicationInstrumentation = try UIApplicationInstrumentation()
         } catch {
-            
             print("failed to initalize view controller instrumentation: \(error)")
         }
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        
-        otlpConfiguration = OtlpConfiguration(timeout:OtlpConfiguration.DefaultTimeoutInterval,headers: Self.generateMetadata(configuration.secretToken))
-    
+
+        otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: Self.generateMetadata(configuration.secretToken))
+
         if configuration.collectorTLS {
             channel = ClientConnection.secure(group: group)
                 .connect(host: configuration.collectorHost, port: configuration.collectorPort)
@@ -87,6 +85,7 @@ public class Agent {
                                                 .build())
         
         
+
         // create tracer provider
         let e = OtlpTraceExporter(channel: channel, config: otlpConfiguration)
 
@@ -99,32 +98,30 @@ public class Agent {
                 _ = spanData[i].settingResource(newResource)
             }
         }
-        
+
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
                                                 .add(spanProcessor: b)
                                                 .with(resource: AgentResource.get().merging(other: AgentEnvResource.resource))
                                                 .build())
-                      
+
         memorySampler = MemorySampler()
         cpuSampler = CPUSampler()
         os_log("Initializing Elastic iOS Agent.")
     }
-    
-    
-    
+
     private func initialize() {
         initializeNetworkInstrumentation()
         vcInstrumentation?.swizzle()
         applicationInstrumentation?.swizzle()
     }
-    
+
     private func initializeNetworkInstrumentation() {
         #if os(iOS)
         do {
             let netstats = try NetworkStatus()
-            self.netstatInjector = NetworkStatusInjector(netstat: netstats)
+            netstatInjector = NetworkStatusInjector(netstat: netstats)
         } catch {
-            print ("failed to initialize network connection status \(error)")
+            print("failed to initialize network connection status \(error)")
         }
         #endif
         
@@ -154,22 +151,20 @@ public class Agent {
         
 
         
+
         urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
     }
 
-    
     deinit {
-          try! group.syncShutdownGracefully()
+        try! group.syncShutdownGracefully()
     }
 
-        
-    static private func generateMetadata(_ token: String?) -> [(String,String)]? {
+    private static func generateMetadata(_ token: String?) -> [(String, String)]? {
         if let t = token {
             return [("Authorization", "Bearer \(t)")]
         }
         return nil
     }
-    
-    @objc func appEnteredBackground() {
-    }
+
+    @objc func appEnteredBackground() {}
 }

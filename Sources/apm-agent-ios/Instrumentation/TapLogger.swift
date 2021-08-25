@@ -12,38 +12,79 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+import Accessibility
 import Foundation
-import UIKit
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import os
+import SwiftUI
+import UIKit
 
 class TouchLogger {
-    private static var objectKey : UInt8 = 0
-    static func startTrace(tracer: TracerSdk, touch : UITouch) {
-        if let parentVc = TouchLogger.findViewController(ofView: touch.view), let view = touch.view {
-            if view is UITableView { //todo: make configurable
-                return
+    private static var objectKey: UInt8 = 0
+    static func printAccessibility(view: UIView) {
+        print("Traits: \(view.accessibilityTraits)")
+        print("Elements : \(String(describing: view.accessibilityElements))")
+        print("Value : \(String(describing: view.accessibilityValue))")
+        print("Hint : \(String(describing: view.accessibilityHint))")
+        print("AttributedLabel : \(String(describing: view.accessibilityAttributedLabel))")
+        print("Path : \(String(describing: view.accessibilityPath))")
+        print("ContainerType : \(view.accessibilityContainerType)")
+        if #available(iOS 13, *) {
+            print("UserInputLabels : \(String(describing: view.accessibilityAttributedUserInputLabels))")
+        }
+    }
+
+    static func startTrace(tracer: TracerSdk, event: UIEvent, config: UIApplicationInstrumentationConfiguration) -> Span? {
+        if config.shouldInstrumentEvent(type: event.type) {
+            for touch in event.allTouches ?? [] {
+                if touch.phase == .ended {
+                    if let parentVc = TouchLogger.findViewController(ofView: touch.view), let view = touch.view {
+                        if config.shouldFilter(cls: type(of: view)) {
+                            return nil
+                        }
+
+                        var spanName = "tapped \(type(of: view))"
+
+                        if config.useAccessibility, let accessibilityView = Self.findAccessibility(ofView: view) {
+                            if let label = accessibilityView.accessibilityLabel {
+                                spanName += " \"\(label)\" "
+                            }
+                        }
+
+                        spanName += " in \(type(of: parentVc))"
+                        os_log("%@", spanName)
+
+                        if let customName = config.customName?(touch, spanName) {
+                            spanName = customName
+                        }
+
+                        let span = tracer.spanBuilder(spanName: spanName).setSpanKind(spanKind: .client).startSpan()
+                        span.setAttribute(key: "touch.targetView", value: AttributeValue.string("\(type(of: view))"))
+                        span.setAttribute(key: "touch.viewController", value: AttributeValue.string("\(type(of:parentVc))"))
+                        span.setAttribute(key: "touch.type", value: AttributeValue.string(String(describing: touch.type)))
+                        span.setAttribute(key: "event.type",value:  AttributeValue.string(String(describing: event.type)))
+                        OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
+                        return span
+                    }
+                }
             }
-            let spanName = "tapped \(type(of:view)) in \(type(of:parentVc))"
-           
-            os_log("%@",spanName)
-            
-            // todo: shouldTrace?
-            let span = tracer.spanBuilder(spanName: spanName).setSpanKind(spanKind: .client).startSpan()
-            OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
-            objc_setAssociatedObject(touch, UnsafeRawPointer(&Self.objectKey), span, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
         }
+
+        return nil
     }
-    
-    static func stopTrace(tracer: TracerSdk, touch: UITouch) {
-        if let span = objc_getAssociatedObject(touch,  UnsafeRawPointer(&Self.objectKey)) as? Span {
-            span.status = .ok;
-            span.end()
-            objc_setAssociatedObject(touch,  UnsafeRawPointer(&Self.objectKey), nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
+
+    static func findAccessibility(ofView view: UIView?) -> UIView? {
+        if let isView = view {
+            if isView.isAccessibilityElement {
+                return isView
+            } else {
+                return Self.findAccessibility(ofView: isView.superview)
+            }
         }
+        return nil
     }
-    
+
     static func findViewController(ofView: UIView?) -> UIViewController? {
         guard let view = ofView else {
             return nil

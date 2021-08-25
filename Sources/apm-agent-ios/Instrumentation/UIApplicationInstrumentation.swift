@@ -15,57 +15,68 @@
 import Foundation
 
 #if os(iOS)
-import Foundation
-import UIKit
-import OpenTelemetryApi
-import OpenTelemetrySdk
-import SwiftUI
+    import Foundation
+    import OpenTelemetryApi
+    import OpenTelemetrySdk
+    import SwiftUI
+    import UIKit
 
-internal class UIApplicationInstrumentation {
-   
-    let sendEvent: SendEvent
+    internal class UIApplicationInstrumentation {
+        let configuration: UIApplicationInstrumentationConfiguration
+        let sendEvent: SendEvent
 
-    static func tracer() -> TracerSdk {
-        OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "UIApplication", instrumentationVersion: "0.0.1") as! TracerSdk
-    }
-    init() throws {
-        sendEvent = try SendEvent.build()
-    }
-    
-    func swizzle() {
-        sendEvent.swizzle()
-    }
-    
-    class SendEvent: MethodSwizzler<
-        @convention(c) (UIApplication, Selector, UIEvent) -> Void,
-        @convention(block) (UIApplication, UIEvent) -> Void
-    > {
-        static func build() throws -> SendEvent {
-            try SendEvent(selector: #selector(UIApplication.sendEvent), klass: UIApplication.self)
+        static func tracer() -> TracerSdk {
+            OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "UIApplication", instrumentationVersion: "0.0.1") as! TracerSdk
         }
+
+        init(configuration: UIApplicationInstrumentationConfiguration = UIApplicationInstrumentationConfiguration.defaultConfiguration) throws {
+            self.configuration = configuration
+            sendEvent = try SendEvent.build(config: self.configuration)
+        }
+
         func swizzle() {
-            swap { previousImplementation -> BlockSignature in
-                { application,  event -> Void in
-                    if event.type == .touches {
-                        for touch in event.allTouches ?? [] {
-                            if touch.phase == .ended {
-                                TouchLogger.startTrace(tracer:UIApplicationInstrumentation.tracer(),touch: touch)
+            sendEvent.swizzle()
+        }
+
+        class SendEvent: MethodSwizzler<
+        @convention(c) (UIApplication, Selector, UIEvent) -> Void,
+            @convention(block) (UIApplication, UIEvent) -> Void
+            >
+            {
+                public var config: UIApplicationInstrumentationConfiguration
+
+                init(config: UIApplicationInstrumentationConfiguration) throws {
+                    self.config = config
+                    try super.init(selector: #selector(UIApplication.sendEvent), klass: UIApplication.self)
+                }
+
+                internal required init(selector _: Selector, klass _: AnyClass) throws {
+                    config = UIApplicationInstrumentationConfiguration.defaultConfiguration
+                    try super.init(selector: #selector(UIApplication.sendEvent), klass: UIApplication.self)
+                }
+
+                static func build(config: UIApplicationInstrumentationConfiguration) throws -> SendEvent {
+                    try SendEvent(config: config)
+                }
+
+                func swizzle() {
+                    swap { previousImplementation -> BlockSignature in
+                        { application, event -> Void in
+                            var span: Span?
+                            if self.config.shouldInstrumentEvent(type: event.type) {
+                                span = TouchLogger.startTrace(tracer: UIApplicationInstrumentation.tracer(),
+                                                              event: event,
+                                                              config: self.config)
                             }
-                        }
-                    }
-                    previousImplementation(application,self.selector, event)
-                   
-                    if event.type == .touches {
-                        for touch in event.allTouches ?? [] {
-                            if touch.phase == .ended {
-                                TouchLogger.stopTrace(tracer:UIApplicationInstrumentation.tracer(),touch: touch)
-                            }
+
+                            previousImplementation(application, self.selector, event)
+
+                            span?.status = .ok
+                            span?.end()
                         }
                     }
                 }
             }
-        }
     }
-}
-    
+
 #endif
