@@ -12,6 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+
+#if os(iOS)
 import Foundation
 import CoreTelephony
 
@@ -19,3 +21,4 @@ public protocol INetworkStatus {
     var networkMonitor : INetworkMonitor { get }
     func getStatus() -> (String, CTCarrier?)
 }
+#endif

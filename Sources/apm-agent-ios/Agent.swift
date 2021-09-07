@@ -48,7 +48,9 @@ public class Agent {
     
     var urlSessionInstrumentation : URLSessionInstrumentation?
     
+    #if os(iOS)
     var netstatInjector : NetworkStatusInjector?
+    #endif
     
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
@@ -106,13 +108,14 @@ public class Agent {
     }
     
     private func initializeNetworkInstrumentation() {
+        #if os(iOS)
         do {
             let netstats = try NetworkStatus()
             self.netstatInjector = NetworkStatusInjector(netstat: netstats)
         } catch {
             print ("failed to initialize network connection status \(error)")
         }
-        
+        #endif
         
         let config = URLSessionInstrumentationConfiguration.init(shouldRecordPayload: nil,
                                                                  shouldInstrument: nil,
@@ -124,9 +127,11 @@ public class Agent {
                                                                  } ,
                                                                  shouldInjectTracingHeaders: nil,
                                                                  createdRequest: { (request, span) in
+                                                                    #if os(iOS)
                                                                     if let injector = self.netstatInjector {
                                                                         injector.inject(span: span)
                                                                     }
+                                                                    #endif
                                                                 },
                                                                  receivedResponse: nil,
                                                                  receivedError: { (error, dataOrFile, status, span) in

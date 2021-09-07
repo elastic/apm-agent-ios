@@ -12,6 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#if os(iOS)
 import Foundation
 import OpenTelemetryApi
 import CoreTelephony
@@ -24,10 +25,15 @@ public class NetworkStatusInjector {
     }
     
     public func inject(span: Span) {
-        let (type, carrier) = netstat.status()
-        span.setAttribute(key: "net.host.connection_type", value:AttributeValue.string(type))
+        let (type, subtype, carrier) = netstat.status()
+        span.setAttribute(key: "net.host.connection.type", value:AttributeValue.string(type))
+
+        if let subtype : String  = subtype {
+            span.setAttribute(key: "net.host.connection.subtype", value: AttributeValue.string(subtype))
+        }
+
         if let carrierInfo : CTCarrier = carrier {
-            
+
             if let carrierName = carrierInfo.carrierName {
                 span.setAttribute(key: "net.host.carrier.name", value: AttributeValue.string(carrierName))
             }
@@ -46,3 +52,4 @@ public class NetworkStatusInjector {
         }
     }
 }
+#endif
