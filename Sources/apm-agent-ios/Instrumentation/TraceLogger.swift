@@ -18,7 +18,7 @@ import OpenTelemetrySdk
 
 class TraceLogger {
     private static var objectKey: UInt8 = 0
-    private static var timerKey : UInt8 = 0
+    private static var timerKey: UInt8 = 0
     @objc static func didEnterBackground() {
         OpenTelemetrySDK.instance.contextProvider.activeSpan?.addEvent(name: "application entered background")
     }
@@ -26,19 +26,20 @@ class TraceLogger {
     static func setDate(on object: AnyObject) {
         objc_setAssociatedObject(object, UnsafeRawPointer(&Self.timerKey), Date(), objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
     }
-    
+
     static func fetchDate(from object: AnyObject) -> Date? {
         let date = objc_getAssociatedObject(object, UnsafeRawPointer(&Self.timerKey)) as? Date
         objc_setAssociatedObject(object, UnsafeRawPointer(&Self.timerKey), nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
         return date
     }
-    
+
     static func startTrace(tracer: TracerSdk, associatedObject: AnyObject, name: String) -> Span {
         guard let previousSpan = objc_getAssociatedObject(associatedObject, UnsafeRawPointer(&Self.objectKey)) as? OpenTelemetryApi.Span else {
             let builder = tracer.spanBuilder(spanName: "\(name)")
                 .setSpanKind(spanKind: .client)
 
             let span = builder.startSpan()
+            span.setAttribute(key: "session.id", value: SessionManager.instance.session())
             OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
 
             objc_setAssociatedObject(associatedObject, UnsafeRawPointer(&Self.objectKey), span, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)

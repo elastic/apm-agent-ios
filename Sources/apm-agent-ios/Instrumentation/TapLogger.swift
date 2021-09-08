@@ -64,6 +64,7 @@ class TouchLogger {
                         span.setAttribute(key: "touch.viewController", value: AttributeValue.string("\(type(of:parentVc))"))
                         span.setAttribute(key: "touch.type", value: AttributeValue.string(String(describing: touch.type)))
                         span.setAttribute(key: "event.type",value:  AttributeValue.string(String(describing: event.type)))
+                        span.setAttribute(key: "session.id", value: SessionManager.instance.session())
                         OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
                         return span
                     }
