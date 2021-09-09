@@ -1,23 +1,23 @@
-import OpenTelemetryApi
-import OpenTelemetrySdk
-import ResourceExtension
-import OpenTelemetryProtocolExporter
-import Foundation
-import URLSessionInstrumentation
-import Reachability
-import NetworkStatus
 import CPUSampler
-import MemorySampler
+import Foundation
 import GRPC
-import NIO
 import Logging
+import MemorySampler
+import NetworkStatus
+import NIO
+import OpenTelemetryApi
+import OpenTelemetryProtocolExporter
+import OpenTelemetrySdk
+import os
+import Reachability
+import ResourceExtension
+import URLSessionInstrumentation
 #if os(iOS)
-import UIKit
+    import UIKit
 #endif
 
 import os.log
 public class Agent {
-
     public static func start(with configuaration: AgentConfiguration) {
         instance = Agent(configuration: configuaration)
         instance?.initialize()
@@ -28,39 +28,47 @@ public class Agent {
     }
 
     private static var instance: Agent?
-    
 
     public class func shared() -> Agent? {
-        return instance
+        instance
     }
 
-    var configuration : AgentConfiguration
-    var otlpConfiguration : OtlpConfiguration
+    var configuration: AgentConfiguration
+    var otlpConfiguration: OtlpConfiguration
     var group: MultiThreadedEventLoopGroup
-    var channel : ClientConnection
+    var channel: ClientConnection
 
-    var memorySampler : MemorySampler
-    var cpuSampler : CPUSampler
-    
+    var memorySampler: MemorySampler
+    var cpuSampler: CPUSampler
+
     #if os(iOS)
-    var vcInstrumentation : ViewControllerInstrumentation?
+        var vcInstrumentation: ViewControllerInstrumentation?
+        var applicationInstrumentation: UIApplicationInstrumentation?
     #endif
-    
-    var urlSessionInstrumentation : URLSessionInstrumentation?
-    
+
+    var urlSessionInstrumentation: URLSessionInstrumentation?
+
     #if os(iOS)
-    var netstatInjector : NetworkStatusInjector?
+        var netstatInjector: NetworkStatusInjector?
     #endif
-    
+
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
         _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
-        _ = OpenTelemetry.instance    // initialize api, or else it will over write our providers
+        _ = OpenTelemetry.instance // initialize api, or else it will over write our providers
 
+        #if os(iOS)
+            do {
+                vcInstrumentation = try ViewControllerInstrumentation()
+                applicationInstrumentation = try UIApplicationInstrumentation()
+            } catch {
+                print("failed to initalize view controller instrumentation: \(error)")
+            }
+        #endif // os(iOS)
         group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        
-        otlpConfiguration = OtlpConfiguration(timeout:OtlpConfiguration.DefaultTimeoutInterval,headers: Self.generateMetadata(configuration.secretToken))
-    
+
+        otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: Self.generateMetadata(configuration.secretToken))
+
         if configuration.collectorTLS {
             channel = ClientConnection.secure(group: group)
                 .connect(host: configuration.collectorHost, port: configuration.collectorPort)
@@ -71,13 +79,12 @@ public class Agent {
 
         let vars = AgentResource.get().merging(other: AgentEnvResource.resource)
         // create meter provider
-        OpenTelemetry.registerMeterProvider(meterProvider:MeterProviderBuilder()
-                                                .with(processor: MetricProcessorSdk())
-                                                .with(resource: vars)
-                                                .with(exporter: OtlpMetricExporter(channel: channel, config:otlpConfiguration))
-                                                .build())
-        
-        
+        OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
+            .with(processor: MetricProcessorSdk())
+            .with(resource: vars)
+            .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration))
+            .build())
+
         // create tracer provider
         let e = OtlpTraceExporter(channel: channel, config: otlpConfiguration)
 
@@ -90,75 +97,72 @@ public class Agent {
                 _ = spanData[i].settingResource(newResource)
             }
         }
-        
+
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
-                                                .add(spanProcessor: b)
-                                                .with(resource: AgentResource.get().merging(other: AgentEnvResource.resource))
-                                                .build())
-                      
+            .add(spanProcessor: b)
+            .with(resource: AgentResource.get().merging(other: AgentEnvResource.resource))
+            .build())
+
         memorySampler = MemorySampler()
         cpuSampler = CPUSampler()
         os_log("Initializing Elastic iOS Agent.")
     }
-    
-    
-    
+
     private func initialize() {
         initializeNetworkInstrumentation()
+        #if os(iOS)
+            vcInstrumentation?.swizzle()
+            applicationInstrumentation?.swizzle()
+        #endif // os(iOS)
     }
-    
+
     private func initializeNetworkInstrumentation() {
         #if os(iOS)
-        do {
-            let netstats = try NetworkStatus()
-            self.netstatInjector = NetworkStatusInjector(netstat: netstats)
-        } catch {
-            print ("failed to initialize network connection status \(error)")
-        }
+            do {
+                let netstats = try NetworkStatus()
+                netstatInjector = NetworkStatusInjector(netstat: netstats)
+            } catch {
+                print("failed to initialize network connection status \(error)")
+            }
         #endif
-        
-        let config = URLSessionInstrumentationConfiguration.init(shouldRecordPayload: nil,
-                                                                 shouldInstrument: nil,
-                                                                 nameSpan:{ request in
-                                                                    if let host = request.url?.host, let method = request.httpMethod {
-                                                                        return "\(method) \(host)"
-                                                                    }
-                                                                   return nil
-                                                                 } ,
-                                                                 shouldInjectTracingHeaders: nil,
-                                                                 createdRequest: { (request, span) in
-                                                                    #if os(iOS)
+
+        let config = URLSessionInstrumentationConfiguration(shouldRecordPayload: nil,
+                                                            shouldInstrument: nil,
+                                                            nameSpan: { request in
+                                                                if let host = request.url?.host, let method = request.httpMethod {
+                                                                    return "\(method) \(host)"
+                                                                }
+                                                                return nil
+                                                            },
+                                                            shouldInjectTracingHeaders: nil,
+                                                            createdRequest: { _, span in
+                                                                #if os(iOS)
                                                                     if let injector = self.netstatInjector {
                                                                         injector.inject(span: span)
                                                                     }
-                                                                    #endif
-                                                                },
-                                                                 receivedResponse: nil,
-                                                                 receivedError: { (error, dataOrFile, status, span) in
-                                                                    span.addEvent(name: SemanticAttributes.exception.rawValue,
-                                                                                  attributes: [SemanticAttributes.exceptionType.rawValue : AttributeValue.string(String(describing: type(of:error))),
-                                                                                               SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
-                                                                                               SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(error.localizedDescription)])
-                                                                })
-        
+                                                                #endif
+                                                            },
+                                                            receivedResponse: nil,
+                                                            receivedError: { error, _, _, span in
+                                                                span.addEvent(name: SemanticAttributes.exception.rawValue,
+                                                                              attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string(String(describing: type(of: error))),
+                                                                                           SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
+                                                                                           SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(error.localizedDescription)])
+                                                            })
 
-        
         urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
     }
 
-    
     deinit {
-          try! group.syncShutdownGracefully()
+        try! group.syncShutdownGracefully()
     }
 
-        
-    static private func generateMetadata(_ token: String?) -> [(String,String)]? {
+    private static func generateMetadata(_ token: String?) -> [(String, String)]? {
         if let t = token {
             return [("Authorization", "Bearer \(t)")]
         }
         return nil
     }
-    
-    @objc func appEnteredBackground() {
-    }
+
+    @objc func appEnteredBackground() {}
 }
