@@ -2,89 +2,92 @@
 // Created by Bryce Buchanan on 8/23/21.
 //
 
-import Foundation
-import UIKit
-class UIApplicationInstrumentationConfiguration {
-    public let filter: Set<String>
-    public let useAccessibility: Bool
-    public let events: Set<UIEvent.EventType>
-    public let shouldInstrumentEvent: ((UIEvent) -> Bool?)?
-    public let customName: ((UITouch, String) -> String?)?
+#if os(iOS)
 
-    private init(filter: Set<String>, events: Set<UIEvent.EventType>, useAccessibility: Bool, shouldInstrumentEvent: ((UIEvent) -> Bool?)?, customName: ((UITouch, String) -> String?)?) {
-        self.filter = filter
-        self.events = events
-        self.shouldInstrumentEvent = shouldInstrumentEvent
-        self.customName = customName
-        self.useAccessibility = useAccessibility
-    }
+    import Foundation
+    import UIKit
+    class UIApplicationInstrumentationConfiguration {
+        public let filter: Set<String>
+        public let useAccessibility: Bool
+        public let events: Set<UIEvent.EventType>
+        public let shouldInstrumentEvent: ((UIEvent) -> Bool?)?
+        public let customName: ((UITouch, String) -> String?)?
 
-    public static var defaultConfiguration: UIApplicationInstrumentationConfiguration {
-        UIApplicationInstrumentationConfiguration(filter: Set<String>(), events: defaultEvents, useAccessibility: true, shouldInstrumentEvent: nil, customName: nil)
-    }
-
-    public static var defaultEvents: Set<UIEvent.EventType> {
-        Set<UIEvent.EventType>([.touches])
-    }
-
-    func shouldFilter(cls: AnyClass) -> Bool {
-        filter.contains(String(describing: cls))
-    }
-
-    func shouldInstrumentEvent(type: UIEvent.EventType) -> Bool {
-        events.contains(type)
-    }
-
-    class Builder {
-        private var useAccessibility: Bool = true
-        private var classFilter = Set<String>()
-        private var events = Set<UIEvent.EventType>()
-        public let shouldInstrumentEvent: ((UIEvent) -> Bool?)? = nil
-        public let customName: ((UITouch, String) -> String?)? = nil
-        public func defaultEvents() -> Self {
-            self
+        private init(filter: Set<String>, events: Set<UIEvent.EventType>, useAccessibility: Bool, shouldInstrumentEvent: ((UIEvent) -> Bool?)?, customName: ((UITouch, String) -> String?)?) {
+            self.filter = filter
+            self.events = events
+            self.shouldInstrumentEvent = shouldInstrumentEvent
+            self.customName = customName
+            self.useAccessibility = useAccessibility
         }
 
-        public func useAccessibility(_ use: Bool) -> Self {
-            useAccessibility = use
-            return self
+        public static var defaultConfiguration: UIApplicationInstrumentationConfiguration {
+            UIApplicationInstrumentationConfiguration(filter: Set<String>(), events: defaultEvents, useAccessibility: true, shouldInstrumentEvent: nil, customName: nil)
         }
 
-        public func addEventType(type: UIEvent.EventType) -> Self {
-            events.insert(type)
-            return self
+        public static var defaultEvents: Set<UIEvent.EventType> {
+            Set<UIEvent.EventType>([.touches])
         }
 
-        public func addTargetFilter(for cls: AnyClass) -> Self {
-            classFilter.insert(String(describing: type(of: cls)))
-            return self
+        func shouldFilter(cls: AnyClass) -> Bool {
+            filter.contains(String(describing: cls))
         }
 
-        func addTargetFilter(for cls: String) -> Self {
-            classFilter.insert(cls)
-            return self
+        func shouldInstrumentEvent(type: UIEvent.EventType) -> Bool {
+            events.contains(type)
         }
 
-        public func addTargetFilters(for classes: [AnyClass]) -> Self {
-            for element in classes {
-                _ = addTargetFilter(for: element)
+        class Builder {
+            private var useAccessibility: Bool = true
+            private var classFilter = Set<String>()
+            private var events = Set<UIEvent.EventType>()
+            public let shouldInstrumentEvent: ((UIEvent) -> Bool?)? = nil
+            public let customName: ((UITouch, String) -> String?)? = nil
+            public func defaultEvents() -> Self {
+                self
             }
 
-            return self
-        }
-
-        public func addTargetFilters(for classes: [String]) -> Self {
-            for element in classes {
-                _ = addTargetFilter(for: element)
+            public func useAccessibility(_ use: Bool) -> Self {
+                useAccessibility = use
+                return self
             }
-            return self
-        }
 
-        public func build() -> UIApplicationInstrumentationConfiguration {
-            UIApplicationInstrumentationConfiguration(filter: classFilter, events: events,
-                                                      useAccessibility: useAccessibility,
-                                                      shouldInstrumentEvent: shouldInstrumentEvent,
-                                                      customName: customName)
+            public func addEventType(type: UIEvent.EventType) -> Self {
+                events.insert(type)
+                return self
+            }
+
+            public func addTargetFilter(for cls: AnyClass) -> Self {
+                classFilter.insert(String(describing: type(of: cls)))
+                return self
+            }
+
+            func addTargetFilter(for cls: String) -> Self {
+                classFilter.insert(cls)
+                return self
+            }
+
+            public func addTargetFilters(for classes: [AnyClass]) -> Self {
+                for element in classes {
+                    _ = addTargetFilter(for: element)
+                }
+
+                return self
+            }
+
+            public func addTargetFilters(for classes: [String]) -> Self {
+                for element in classes {
+                    _ = addTargetFilter(for: element)
+                }
+                return self
+            }
+
+            public func build() -> UIApplicationInstrumentationConfiguration {
+                UIApplicationInstrumentationConfiguration(filter: classFilter, events: events,
+                                                          useAccessibility: useAccessibility,
+                                                          shouldInstrumentEvent: shouldInstrumentEvent,
+                                                          customName: customName)
+            }
         }
     }
-}
+#endif // os(iOS)

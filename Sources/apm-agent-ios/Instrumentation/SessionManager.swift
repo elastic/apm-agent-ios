@@ -21,19 +21,19 @@ public class SessionManager {
     public static var instance = SessionManager()
     private var currentId: UUID {
         get {
-            UserDefaults.standard.object(forKey: Self.sessionIdKey) as? UUID ?? UUID()
+            UUID(uuidString: UserDefaults.standard.object(forKey: Self.sessionIdKey) as? String ?? "") ?? UUID()
         }
         set(uuid) {
-            UserDefaults.standard.setValue(uuid, forKey: Self.sessionIdKey)
+            UserDefaults.standard.setValue(uuid.uuidString, forKey: Self.sessionIdKey)
         }
     }
 
     private var lastUpdated: Date {
         get {
-            UserDefaults.standard.object(forKey: Self.sessionTimerKey) as? Date ?? Date.distantPast
+            Date(timeIntervalSince1970: UserDefaults.standard.object(forKey: Self.sessionTimerKey) as? TimeInterval ?? Date.distantPast.timeIntervalSince1970)
         }
         set(date) {
-            UserDefaults.standard.setValue(date, forKey: Self.sessionTimerKey)
+            UserDefaults.standard.setValue(date.timeIntervalSince1970, forKey: Self.sessionTimerKey)
         }
     }
 
@@ -62,6 +62,6 @@ public class SessionManager {
     }
 
     func isValid() -> Bool {
-        lastUpdated.timeIntervalSinceNow < Self.sessionTimeout
+        lastUpdated.timeIntervalSinceNow.magnitude < Self.sessionTimeout
     }
 }
