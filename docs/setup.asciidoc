@@ -9,6 +9,18 @@
 
 This project requires Swift `5.3`, and is intended for use in Swift-base mobile apps.
 
+Other platform requires:
+
+[options="header"]
+|===
+| platform | version
+| `iOS` | `11`
+|`macOS` | `10.13`
+| `tvOS` | `v11`
+| `watchOS` | `3`
+|===
+
+
 [discrete]
 [[add-agent-dependency]]
 === Add the Agent dependency
@@ -24,13 +36,13 @@ Below is a helpful code-snippet:
 ----
 Package(
     dependencies:[
-        .package(name: "iOSAgent", url: "git@github.com:elastic/apm-agent-ios.git", .branch("main")),
+        .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", .branch("main")),
     ],
   targets:[
     .target(
         name: "MyApp",
         dependencies: [
-            .product(name: "iOSAgent", package: "iOSAgent")
+            .product(name: "iOSAgent", package: "apm-agent-ios")
         ]
     ),
 ])
@@ -52,7 +64,7 @@ import iOSAgent
 struct MyApp: App {
     init() {
         var config = AgentConfiguration()
-        config.collectorAddress = "127.0.0.1" <1>
+        config.collectorHost = "127.0.0.1" <1>
         config.collectorPort = 8200 <2>
         config.collectorTLS = false <3>
         config.secretToken = "<secret token>" <4>
@@ -65,7 +77,7 @@ struct MyApp: App {
     }
 }
 ----
-<1> APM Server URL or IP address
+<1> APM Server host or IP address
 <2> APM Server port number
 <3> Enable TLS for Open telemetry exporters
 <4> Set secret token for APM server connection
@@ -81,7 +93,7 @@ import iOSAgent
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         var config = AgentConfiguration()
-        config.collectorAddress = "127.0.0.1" <1>
+        config.collectorHost = "127.0.0.1" <1>
         config.collectorPort = 8200 <2>
         config.collectorTLS = false <3>
         config.secretToken = "<secret token>" <4>
@@ -90,7 +102,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 ----
-<1> APM Server url or ip address
+<1> APM Server host or ip address
 <2> APM Server port number
 <3> Enable TLS for Open telemetry exporters
 <4> Set secret token for APM server connection
