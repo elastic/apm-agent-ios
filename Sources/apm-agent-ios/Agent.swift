@@ -70,7 +70,7 @@ public class Agent {
         otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: Self.generateMetadata(configuration.secretToken))
 
         if configuration.collectorTLS {
-            channel = ClientConnection.secure(group: group)
+            channel = ClientConnection.usingPlatformAppropriateTLS(for: group)
                 .connect(host: configuration.collectorHost, port: configuration.collectorPort)
         } else {
             channel = ClientConnection.insecure(group: group)
