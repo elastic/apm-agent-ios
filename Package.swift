@@ -19,8 +19,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
-        .package(url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.2.0"),
-        .package(url:"https://github.com/elastic/TrueTime.swift.git", branch: "master")
+        .package(url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.3.0"),
+        .package(url:"https://github.com/elastic/TrueTime.swift.git", branch: "master"),
+        .package(url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         .target(name: "MemorySampler",
@@ -43,8 +44,9 @@ let package = Package(
                 .product(name: "ResourceExtension", package: "opentelemetry-swift"),
                 .product(name: "Reachability", package: "Reachability.swift"),
                 .product(name: "TrueTime", package: "TrueTime.swift"),
+                .product(name: "CrashReporter", package: "plcrashreporter"),
                 "MemorySampler",
-                "CPUSampler"
+                "CPUSampler",
             ],
             path: "Sources/apm-agent-ios"
         ),
