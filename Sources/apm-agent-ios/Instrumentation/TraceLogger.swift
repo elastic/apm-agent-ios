@@ -23,15 +23,9 @@ import os
 class TraceLogger {
     private static var objectKey: UInt8 = 0
     private static var timerKey: UInt8 = 0
-    private var activeSpan : Span? = nil
-    private let spanLock = NSRecursiveLock()
     private let logger = OSLog(subsystem: "co.elastic.viewControllerInstrumentation", category: "Instrumentation")
     
     func startTrace(tracer: TracerSdk, associatedObject: AnyObject, name: String, preferredName: String?) -> Span? {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
-        }
         guard let activeSpan = getActiveSpan() else {
             let builder = tracer.spanBuilder(spanName: "\(name)")
                 .setActive(true)
@@ -55,10 +49,6 @@ class TraceLogger {
     }
     
     func stopTrace(associatedObject: AnyObject) {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
-        }
         if let associatedSpan = getAssociatedSpan(associatedObject), associatedSpan === getActiveSpan() {
             os_log("Stopping trace: %@ - %@ - %@", log:logger, type:.debug,associatedSpan.name,associatedSpan.context.traceId.description, associatedSpan.context.spanId.description)
             associatedSpan.status = .ok
@@ -69,20 +59,12 @@ class TraceLogger {
     }
 
     func setActiveSpan(_ span: Span?) {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
+        if let isSpan = span {
+            OpenTelemetrySDK.instance.contextProvider.setActiveSpan(isSpan)
         }
-        activeSpan = span
     }
     func getActiveSpan() -> Span? {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
-        }
-        return activeSpan
-        /* contextProvider isn't dependible at this time */
-        // return OpenTelemetry.instance.contextProvider.activeSpan
+        return OpenTelemetry.instance.contextProvider.activeSpan
     }
 
     func setAssociatedSpan(_ vc: AnyObject, _ span: Span) {

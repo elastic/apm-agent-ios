@@ -97,7 +97,7 @@ public class Agent {
                 _ = spanData[i].settingResource(newResource)
             }
         }
-
+        OpenTelemetry.registerContextManager(contextManager: IOSActivityContextManager.instance)
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
             .add(spanProcessor: b)
             .with(resource: AgentResource.get().merging(other: AgentEnvResource.resource))
