@@ -40,7 +40,7 @@ class TraceLogger {
             let span = builder.startSpan()
             span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
             
-            os_log("Starting trace: %@ - %@ - %@",log:logger,type:.debug,name, span.context.traceId.description, span.context.spanId.description)
+            os_log("Started trace: %@ - %@ - %@",log:logger,type:.debug,name, span.context.traceId.description, span.context.spanId.description)
             span.setAttribute(key: "session.id", value: SessionManager.instance.session())
             setActiveSpan(span)
             setAssociatedSpan(associatedObject,span)

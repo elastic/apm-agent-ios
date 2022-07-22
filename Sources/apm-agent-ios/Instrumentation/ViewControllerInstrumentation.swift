@@ -18,8 +18,10 @@
     import OpenTelemetrySdk
     import SwiftUI
     import UIKit
+    import os
 
     internal class ViewControllerInstrumentation {
+        static let logger = OSLog(subsystem: "co.elastic.viewControllerInstrumentation", category: "Instrumentation")
         var activeSpan : Span? = nil
         static let traceLogger = TraceLogger()
         let viewDidLoad: ViewDidLoad
@@ -67,7 +69,10 @@
                             }
                                 
                             let name = "\(type(of: viewController)) - view appearing"
-                            
+                                let className = "\(type(of: viewController))"
+
+                            os_log("instance[0x%x] called -[%s viewDidLoad]",log:ViewControllerInstrumentation.logger,type:.debug,unsafeBitCast(self, to: Int.self), className)
+
                             _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: title)
                             previousImplementation(viewController, self.selector)
                         }
@@ -96,7 +101,8 @@
                             let name = "\(type(of: viewController)) - view appearing"
 
                             _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: title)
-
+                            let className = "\(type(of: viewController))"
+                            os_log("instance[0x%x] called -[%s ViewWillAppear]",log:ViewControllerInstrumentation.logger,type:.debug, unsafeBitCast(self, to: Int.self), className)
                             previousImplementation(viewController, self.selector, animated)
                         }
                     }
@@ -114,6 +120,8 @@
                 func swizzle() {
                     swap { previousImplementation -> BlockSignature in
                         { viewController, animated -> Void in
+                            let className = "\(type(of: viewController))"
+                            os_log("instance[0x%x] called -[%s viewDidAppear]",log:ViewControllerInstrumentation.logger,type:.debug, unsafeBitCast(self, to: Int.self), className)
                             previousImplementation(viewController, self.selector, animated)
                             ViewControllerInstrumentation.traceLogger.stopTrace(associatedObject: viewController)
                         }
