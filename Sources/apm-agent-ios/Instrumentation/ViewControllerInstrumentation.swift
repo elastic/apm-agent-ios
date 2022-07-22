@@ -20,6 +20,16 @@
     import UIKit
     import os
 
+
+@available(iOS 13.0, *)
+public extension View {
+
+    func reportName(_ name: String) -> Self {
+        OpenTelemetry.instance.contextProvider.activeSpan?.name = name
+        return self
+    }
+}
+
     internal class ViewControllerInstrumentation {
         static let logger = OSLog(subsystem: "co.elastic.viewControllerInstrumentation", category: "Instrumentation")
         var activeSpan : Span? = nil
@@ -130,4 +140,8 @@
             }
     }
 
+
 #endif // #if os(iOS)
+
+
+
