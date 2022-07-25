@@ -35,7 +35,7 @@ import Foundation
         }
 
         func swizzle() {
-            sendEvent.swizzle()
+            //sendEvent.swizzle()
         }
 
         class SendEvent: MethodSwizzler<

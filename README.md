@@ -17,3 +17,14 @@ export GIT_HOME="/<fullPathToYourRepos>"
 # Build the APM iOS documentation
 $GIT_HOME/docs/build_docs --doc $GIT_HOME/apm-agent-ios/docs/index.asciidoc --chunk 1 --open
 ```
+
+## Notes
+
+### disabling noisy logs
+
+- CoreTelephony in simulator
+```xcrun simctl spawn booted log config --mode "level:off" --subsystem com.apple.CoreTelephony```
+
+- Layout Constraints warnings
+```xcrun simctl spawn booted log config --mode "level:off" --subsystem com.apple
+.UIKit```
