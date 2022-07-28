@@ -4,14 +4,14 @@ Copyright 2021-2022 Elasticsearch B.V.
 ###############################################################################
 
 This product includes software licensed under Apache 2.0 from the following sources:
-- OpenTelemetry-Swift (https://github.com/open-telemetry/opentelemetry-swift/LICENSE)
+- OpenTelemetry-Swift (https://github.com/open-telemetry/opentelemetry-swift/)
 - grpc-swift (https://github.com/grpc/grpc-swift/)
 - swift-atomic (https://github.com/apple/swift-atomics)
 - swift-log (https://github.com/apple/swift-log)
 - swift-metrics (https://github.com/apple/swift-metrics.git)
 - swift-nio (https://github.com/apple/swift-nio.git)
 - swift-nio-extras (https://github.com/apple/swift-nio-extras.git)
-- swift-nio-http2 ( https://github.com/apple/swift-nio-http2.git)
+- swift-nio-http2 (https://github.com/apple/swift-nio-http2.git)
 - swift-nio-ssl (https://github.com/apple/swift-nio-ssl.git)
 - swift-nio-transport-services (https://github.com/apple/swift-nio-transport-services.git)
 - swift-protobuf (https://github.com/apple/swift-protobuf.git)
@@ -282,3 +282,152 @@ THE SOFTWARE.
 
 ------------------------------------------------------------------------------
 
+                            The SwiftNIO Project
+                            ====================
+
+Please visit the SwiftNIO web site for more information:
+
+  * https://github.com/apple/swift-nio
+
+Copyright 2017, 2018 The SwiftNIO Project
+
+The SwiftNIO Project licenses this file to you under the Apache License,
+version 2.0 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at:
+
+  https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+Also, please refer to each LICENSE.<component>.txt file, which is located in
+the 'license' directory of the distribution file, for the license terms of the
+components that this product depends on.
+
+
+This product is heavily influenced by Netty.
+
+  * LICENSE (Apache License 2.0):
+    * https://github.com/netty/netty/blob/4.1/LICENSE.txt
+  * HOMEPAGE:
+    * https://netty.io
+
+-------------------------------------------------------------------------------
+
+This product contains a derivation of the Tony Stone's 'process_test_files.rb'.
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://codegists.com/snippet/ruby/generate_xctest_linux_runnerrb_tonystone_ruby
+
+---
+
+This product contains code derived from grpc-swift.
+
+  * LICENSE (Apache License 2.0):
+    * https://github.com/grpc/grpc-swift/blob/0.7.0/LICENSE
+  * HOMEPAGE:
+    * https://github.com/grpc/grpc-swift
+
+---
+
+This product contains code from boringssl.
+
+  * LICENSE (Combination ISC and OpenSSL license)
+    * https://boringssl.googlesource.com/boringssl/+/refs/heads/master/LICENSE
+  * HOMEPAGE:
+    * https://boringssl.googlesource.com/boringssl/
+
+
+                            The SwiftMetrics Project
+                            ========================
+
+Please visit the SwiftMetrics web site for more information:
+
+  * https://github.com/apple/swift-metrics
+
+Copyright 2018, 2019 The SwiftMetrics Project
+
+The SwiftMetrics Project licenses this file to you under the Apache License,
+version 2.0 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at:
+
+  https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+Also, please refer to each LICENSE.<component>.txt file, which is located in
+the 'license' directory of the distribution file, for the license terms of the
+components that this product depends on.
+
+-------------------------------------------------------------------------------
+
+This product contains a derivation of the Tony Stone's 'process_test_files.rb'.
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://codegists.com/snippet/ruby/generate_xctest_linux_runnerrb_tonystone_ruby
+
+---
+
+This product contains a derivation of the lock implementation and various scripts from SwiftNIO.
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://github.com/apple/swift-nio
+
+
+
+                            The SwiftLog Project
+                            ========================
+
+Please visit the SwiftLog web site for more information:
+
+  * https://github.com/apple/swift-log
+
+Copyright 2018, 2019 The SwiftLog Project
+
+The SwiftLog Project licenses this file to you under the Apache License,
+version 2.0 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at:
+
+  https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+Also, please refer to each LICENSE.<component>.txt file, which is located in
+the 'license' directory of the distribution file, for the license terms of the
+components that this product depends on.
+
+-------------------------------------------------------------------------------
+
+This product contains a derivation of the Tony Stone's 'process_test_files.rb'.
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://codegists.com/snippet/ruby/generate_xctest_linux_runnerrb_tonystone_ruby
+
+---
+
+This product contains a derivation of the lock implementation and various
+scripts from SwiftNIO.
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://github.com/apple/swift-nio
