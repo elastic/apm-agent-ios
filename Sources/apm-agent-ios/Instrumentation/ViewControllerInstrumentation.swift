@@ -23,9 +23,12 @@
 
 @available(iOS 13.0, *)
 public extension View {
-
     func reportName(_ name: String) -> Self {
-        OpenTelemetry.instance.contextProvider.activeSpan?.name = name
+        if let span = OpenTelemetry.instance.contextProvider.activeSpan {
+//            if span.name.hasSuffix(" - view appearing") {
+                span.name = name
+//            }
+        }
         return self
     }
 }
@@ -59,6 +62,18 @@ public extension View {
         }
 
         
+        static func getViewControllerName(_ vc : UIViewController) -> String? {
+            var title = vc.navigationItem.title
+                
+            if let accessibiltyLabel = vc.accessibilityLabel {
+                title = "\(accessibiltyLabel) - view appearing"
+            } else if let navTitle = title {
+                title = "\(navTitle) - view appearing"
+            }
+            return title
+        }
+        
+        
         class ViewDidLoad: MethodSwizzler<
         @convention(c) (UIViewController, Selector) -> Void, // IMPSignature
             @convention(block) (UIViewController) -> Void // BlockSignature
@@ -72,18 +87,13 @@ public extension View {
                         swap { previousImplementation -> BlockSignature in
                             { viewController -> Void in
                                 
-                            var title = viewController.navigationItem.title
-                                
-                            if let navTitle = title {
-                                title = "\(navTitle) - view appearing"
-                            }
-                                
-                            let name = "\(type(of: viewController)) - view appearing"
+                                let name = "\(type(of: viewController)) - view appearing"
+                            
                                 let className = "\(type(of: viewController))"
 
                             os_log("instance[0x%x] called -[%s viewDidLoad]",log:ViewControllerInstrumentation.logger,type:.debug,unsafeBitCast(self, to: Int.self), className)
 
-                            _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: title)
+                                _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: ViewControllerInstrumentation.getViewControllerName(viewController))
                             previousImplementation(viewController, self.selector)
                         }
                     }
@@ -102,15 +112,13 @@ public extension View {
                 func swizzle() {
                     swap { previousImplementation -> BlockSignature in
                         { viewController, animated -> Void in
-                            var title = viewController.navigationItem.title
-                            
-                            if let navTitle = title {
-                                title = "\(navTitle) - view appearing"
-                            }
-                                                    
+                                                                                
                             let name = "\(type(of: viewController)) - view appearing"
 
-                            _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: title)
+                            _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(),
+                                                                                     associatedObject: viewController,
+                                                                                     name: name,
+                                                                                     preferredName:  ViewControllerInstrumentation.getViewControllerName(viewController))
                             let className = "\(type(of: viewController))"
                             os_log("instance[0x%x] called -[%s ViewWillAppear]",log:ViewControllerInstrumentation.logger,type:.debug, unsafeBitCast(self, to: Int.self), className)
                             previousImplementation(viewController, self.selector, animated)
