@@ -23,6 +23,10 @@
 
     class TouchLogger {
         private static var objectKey: UInt8 = 0
+        private static let logger = OSLog(subsystem: "co.elastic.tapInstrumentation", category: "Instrumentation")
+        private static var activeSpan : Span? = nil
+        private static let spanLock = NSRecursiveLock()
+
         static func printAccessibility(view: UIView) {
             print("Traits: \(view.accessibilityTraits)")
             print("Elements : \(String(describing: view.accessibilityElements))")
@@ -36,6 +40,9 @@
             }
         }
 
+        
+        
+        
         static func startTrace(tracer: TracerSdk, event: UIEvent, config: UIApplicationInstrumentationConfiguration) -> Span? {
             if config.shouldInstrumentEvent(type: event.type) {
                 for touch in event.allTouches ?? [] {
@@ -45,28 +52,53 @@
                                 return nil
                             }
 
-                            var spanName = "tapped \(type(of: view))"
+                            spanLock.lock()
+                            defer {
+                                spanLock.unlock()
+                            }
+                            
+                            if let currentSpan = activeSpan, currentSpan.status == .unset {
+                                currentSpan.end()
+                            }
+
+                            var spanName = "Tapped "
 
                             if config.useAccessibility, let accessibilityView = Self.findAccessibility(ofView: view) {
                                 if let label = accessibilityView.accessibilityLabel {
-                                    spanName += " \"\(label)\" "
+                                    spanName += "\(label)"
                                 }
+                            } else {
+                                spanName += "\(type(of: self.findUseful(view: view) ?? view))"
                             }
 
-                            spanName += " in \(type(of: parentVc))"
-                            os_log("%@", spanName)
-
-                            if let customName = config.customName?(touch, spanName) {
+                            if config.useAccessibility, let vcAccessibility = parentVc.accessibilityLabel {
+                                spanName += " in \(vcAccessibility)"
+                            } else if let vcName = parentVc.title {
+                                spanName += " in \(vcName)"
+                            } else {
+                                spanName += " in \(type(of: parentVc))"
+                            }
+                            
+                
+                            if let customName = config.customName?(touch, spanName), !spanName.isEmpty {
                                 spanName = customName
                             }
 
-                            let span = tracer.spanBuilder(spanName: spanName).setSpanKind(spanKind: .client).startSpan()
+
+                            
+                            let span = tracer.spanBuilder(spanName: spanName)
+                                .setSpanKind(spanKind: .client)
+                                .setNoParent()
+                                .startSpan()
                             span.setAttribute(key: "touch.targetView", value: AttributeValue.string("\(type(of: view))"))
+                            span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
                             span.setAttribute(key: "touch.viewController", value: AttributeValue.string("\(type(of: parentVc))"))
                             span.setAttribute(key: "touch.type", value: AttributeValue.string(String(describing: touch.type)))
                             span.setAttribute(key: "event.type", value: AttributeValue.string(String(describing: event.type)))
                             span.setAttribute(key: "session.id", value: SessionManager.instance.session())
                             OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
+                            os_log("Started trace: %@ - %@ - %@",log:Self.logger,type:.debug, spanName, span.context.traceId.description, span.context.spanId.description)
+                            activeSpan = span
                             return span
                         }
                     }
@@ -76,9 +108,19 @@
             return nil
         }
 
+        static func findUseful(view: UIView?) -> UIView? {
+            if let isView = view {
+                if String(describing: type(of: isView)).contains("CGDrawingView") {
+                    return Self.findUseful(view: isView.superview)
+                } else {
+                    return isView
+                }
+            }
+            return nil
+        }
         static func findAccessibility(ofView view: UIView?) -> UIView? {
             if let isView = view {
-                if isView.isAccessibilityElement {
+                if isView.accessibilityLabel != nil && !(isView.isKind(of: UIViewController.self)) {
                     return isView
                 } else {
                     return Self.findAccessibility(ofView: isView.superview)

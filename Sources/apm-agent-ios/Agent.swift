@@ -112,7 +112,7 @@ public class Agent {
         initializeNetworkInstrumentation()
         #if os(iOS)
             vcInstrumentation?.swizzle()
-            applicationInstrumentation?.swizzle()
+//            applicationInstrumentation?.swizzle()
         #endif // os(iOS)
     }
 

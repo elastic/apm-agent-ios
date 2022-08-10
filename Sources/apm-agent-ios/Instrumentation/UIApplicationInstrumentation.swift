@@ -26,7 +26,7 @@ import Foundation
         let sendEvent: SendEvent
 
         static func tracer() -> TracerSdk {
-            OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "UIApplication", instrumentationVersion: "0.0.1") as! TracerSdk
+            OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "Touch", instrumentationVersion: "0.0.2") as! TracerSdk
         }
 
         init(configuration: UIApplicationInstrumentationConfiguration = UIApplicationInstrumentationConfiguration.defaultConfiguration) throws {
@@ -35,7 +35,7 @@ import Foundation
         }
 
         func swizzle() {
-            //sendEvent.swizzle()
+            sendEvent.swizzle()
         }
 
         class SendEvent: MethodSwizzler<
@@ -68,11 +68,14 @@ import Foundation
                                                               event: event,
                                                               config: self.config)
                             }
-
+                            
                             previousImplementation(application, self.selector, event)
-
-                            span?.status = .ok
-                            span?.end()
+                            let endDate = Date()
+                            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 0.5) { [span, endDate] in
+                                span?.status = .ok
+                                span?.end(time: endDate)
+                            }
+                            
                         }
                     }
                 }
