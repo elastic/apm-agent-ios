@@ -18,7 +18,7 @@ let package = Package(
         .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", .branch("main")),
+        .package(name: "opentelemetry-swift", url: "https://github.com/bryce-b/opentelemetry-swift", .branch("change-metric-internals")),
         .package(name: "Reachability", url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
     ],
     targets: [

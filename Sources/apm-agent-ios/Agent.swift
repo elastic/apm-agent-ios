@@ -40,6 +40,9 @@ public class Agent {
 
     var memorySampler: MemorySampler
     var cpuSampler: CPUSampler
+    
+    @available(iOS 13.0, *)
+        lazy var appMetrics = AppMetrics()
 
     #if os(iOS)
         var vcInstrumentation: ViewControllerInstrumentation?
@@ -73,8 +76,8 @@ public class Agent {
         } else {
             channel = ClientConnection.insecure(group: group)
                 .connect(host: configuration.collectorHost, port: configuration.collectorPort)
-        }
-
+        } 
+        
         let vars = AgentResource.get().merging(other: AgentEnvResource.resource)
         // create meter provider
         OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
@@ -98,7 +101,7 @@ public class Agent {
         OpenTelemetry.registerContextManager(contextManager: SimpleActivityContextManager.instance)
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
             .add(spanProcessor: b)
-            .with(resource: AgentResource.get().merging(other: AgentEnvResource.resource))
+            .with(resource: vars)
             .build())
 
         memorySampler = MemorySampler()
@@ -107,6 +110,9 @@ public class Agent {
     }
 
     private func initialize() {
+        if #available(iOS 13.0, *) {
+            appMetrics.receiveReports()
+        }
         initializeNetworkInstrumentation()
         #if os(iOS)
             vcInstrumentation?.swizzle()
