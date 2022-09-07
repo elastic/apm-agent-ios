@@ -63,7 +63,7 @@ class SimpleActivityContextManager : ContextManager {
                 contextMap[span.context.spanId]?[key.rawValue] = ActivityStack()
             }
             contextMap[span.context.spanId]?[key.rawValue]?.push(value)
-            activityStack.append(Activity(id: span.context.spanId))
+            activityStack.append(rootToActivityMap.object(forKey: value)!)
           }
     }
     
@@ -77,7 +77,7 @@ class SimpleActivityContextManager : ContextManager {
                 defer {
                     self.rlock.unlock()
                 }
-                if self.contextMap[id] != nil && self.contextMap[id]!.isEmpty {
+                if self.contextMap[id] != nil && !self.contextMap[id]!.isEmpty {
                     self.contextMap.removeValue(forKey: id)
                 }
                 self.rootToActivityMap.removeObject(forKey: value)

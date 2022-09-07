@@ -45,7 +45,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
             if let timeToFirstDrawEnumerator = metric.applicationLaunchMetrics?.histogrammedTimeToFirstDraw.bucketEnumerator {
         
             
-            let rawHistogram = meter.createRawDoubleHistogram(name: "TimeToFirstDraw")
+            let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.timeToFirstDraw")
             var bounds = [Double]()
             var counts = [Int]()
             var sum = 0.0
@@ -66,7 +66,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
 
             }
             if let resumeTimeEnumerator = metric.applicationLaunchMetrics?.histogrammedApplicationResumeTime.bucketEnumerator {
-                let rawHistogram = meter.createRawDoubleHistogram(name: "ApplicationResumeTime")
+                let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.resumeTime")
                 var bounds = [Double]()
                 var counts = [Int]()
                 var sum = 0.0
@@ -88,7 +88,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
             
             if #available(iOS 15.2, *) {
                 if let optimizedTimeToFirstDraw = metric.applicationLaunchMetrics?.histogrammedOptimizedTimeToFirstDraw.bucketEnumerator {
-                let rawHistogram = meter.createRawDoubleHistogram(name: "OptimizeTimeToFirstDraw")
+                let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.optimizedTimeToFirstDraw")
                 var bounds = [Double]()
                 var counts = [Int]()
                 var sum = 0.0
@@ -110,7 +110,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
             }
         
             if let applicationHangTime = metric.applicationResponsivenessMetrics?.histogrammedApplicationHangTime.bucketEnumerator {
-                let rawHistogram = meter.createRawDoubleHistogram(name: "ApplicationHangTime")
+                let rawHistogram = meter.createRawDoubleHistogram(name: "application.responsiveness.hangetime")
                 var bounds = [Double]()
                 var counts = [Int]()
                 var sum = 0.0
@@ -130,9 +130,75 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
                 rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum)
             }
 
-
-            
             // add Application Exit Data metrics
+            if #available(iOS 14.0, *) {
+                let appExit = meter.createRawIntCounter(name: "application.exit")
+
+                if let foregroundApplicationExit = metric.applicationExitMetrics?.foregroundExitData {
+                    appExit.record(sum: foregroundApplicationExit.cumulativeMemoryResourceLimitExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels:["appState" : "foreground", "type" : "memoryResourceLimit"])
+                    
+                    appExit.record(sum: foregroundApplicationExit.cumulativeAppWatchdogExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels:["appState": "foreground", "type" : "watchdog"])
+                    
+                    appExit.record(sum: foregroundApplicationExit.cumulativeBadAccessExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels: ["appState": "foreground", "type" : "badAccess"])
+                    
+                    appExit.record(sum: foregroundApplicationExit.cumulativeAbnormalExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels: ["appState": "foreground", "type": "abnormal"])
+
+                    appExit.record(sum: foregroundApplicationExit.cumulativeIllegalInstructionExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels:["appState":"foreground", "type": "illegalInstruction"])
+
+                    appExit.record(sum: foregroundApplicationExit.cumulativeNormalAppExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels: ["appState":"foreground", "type": "normal"])
+                }
+                
+                if let backgroundApplicationExit = metric.applicationExitMetrics?.backgroundExitData {
+                    appExit.record(sum: backgroundApplicationExit.cumulativeMemoryResourceLimitExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels:["appState" : "background", "type": "memoryResourceLimit"])
+                    
+                    appExit.record(sum: backgroundApplicationExit.cumulativeAppWatchdogExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels:["appState": "background", "type": "watchdog"])
+                    
+                    appExit.record(sum: backgroundApplicationExit.cumulativeBadAccessExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels: ["appState": "background", "type": "badAccess"])
+                    
+                    appExit.record(sum: backgroundApplicationExit.cumulativeAbnormalExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels: ["appState": "background", "type": "abnormal"])
+
+                    appExit.record(sum: backgroundApplicationExit.cumulativeIllegalInstructionExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels:["appState": "background", "type": "illegalInstruction"])
+
+                    appExit.record(sum: backgroundApplicationExit.cumulativeNormalAppExitCount,
+                                   startDate: metric.timeStampBegin,
+                                   endDate: metric.timeStampEnd,
+                                   labels: ["appState": "background", "type": "normal"])
+                }
+        
+            }
         }
     }
 

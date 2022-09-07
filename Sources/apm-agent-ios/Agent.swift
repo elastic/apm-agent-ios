@@ -80,14 +80,17 @@ public class Agent {
         
         let vars = AgentResource.get().merging(other: AgentEnvResource.resource)
         // create meter provider
+        
+        
+        
         OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
             .with(processor: MetricProcessorSdk())
             .with(resource: vars)
-            .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration))
+            .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:"OTLPMetricExporter")))
             .build())
 
         // create tracer provider
-        let e = OtlpTraceExporter(channel: channel, config: otlpConfiguration)
+        let e = OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:"OTLPTraceExporter"))
 
         let b = BatchSpanProcessor(spanExporter: e) { spanData in
             // This is for clock skew compensation
