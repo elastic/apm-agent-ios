@@ -62,7 +62,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
             counts.append(0)
             
 //            SummaryData
-            rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum)
+                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: [String: String]())
 
             }
             if let resumeTimeEnumerator = metric.applicationLaunchMetrics?.histogrammedApplicationResumeTime.bucketEnumerator {
@@ -83,7 +83,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
                 counts.append(0)
                 
     //            SummaryData
-                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum)
+                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: [String: String]())
             }
             
             if #available(iOS 15.2, *) {
@@ -104,7 +104,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
                 }
                 counts.append(0)
                 
-                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum)
+                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: [String: String]())
             }
                 
             }
@@ -127,7 +127,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
                 counts.append(0)
                 
     //            SummaryData
-                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum)
+                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: [String: String]())
             }
 
             // add Application Exit Data metrics
