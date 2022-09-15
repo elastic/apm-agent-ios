@@ -43,7 +43,6 @@ public class Agent {
 
     #if os(iOS)
         var vcInstrumentation: ViewControllerInstrumentation?
-        var applicationInstrumentation: UIApplicationInstrumentation?
     #endif
 
     var urlSessionInstrumentation: URLSessionInstrumentation?
@@ -60,7 +59,6 @@ public class Agent {
         #if os(iOS)
             do {
                 vcInstrumentation = try ViewControllerInstrumentation()
-                applicationInstrumentation = try UIApplicationInstrumentation()
             } catch {
                 print("failed to initalize view controller instrumentation: \(error)")
             }
