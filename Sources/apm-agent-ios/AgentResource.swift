@@ -31,9 +31,10 @@ public class AgentResource  {
             ResourceAttributes.telemetrySdkName.rawValue :  AttributeValue.string("iOS"),
         ]
         
-        
+        let osDataSource = OperatingSystemDataSource()
         overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] = AttributeValue.string(Agent.ELASTIC_SWIFT_AGENT_VERSION)
-                
+        overridingAttributes[ResourceAttributes.processRuntimeName.rawValue] = AttributeValue.string(osDataSource.name)
+        overridingAttributes[ResourceAttributes.processRuntimeVersion.rawValue] = AttributeValue.string(osDataSource.version)
         if let deviceId = AgentResource.identifier()  {
             overridingAttributes["device.id"] = AttributeValue.string(deviceId)
         }
