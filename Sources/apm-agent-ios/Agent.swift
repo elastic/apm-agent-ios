@@ -41,8 +41,7 @@ public class Agent {
     var memorySampler: MemorySampler
     var cpuSampler: CPUSampler
     
-    @available(iOS 13.0, *)
-        lazy var appMetrics = AppMetrics()
+    var appMetrics : Any?
 
     #if os(iOS)
         var vcInstrumentation: ViewControllerInstrumentation?
@@ -114,7 +113,10 @@ public class Agent {
 
     private func initialize() {
         if #available(iOS 13.0, *) {
-            appMetrics.receiveReports()
+            appMetrics = AppMetrics()
+            if let metrics = appMetrics as? AppMetrics {
+                metrics.receiveReports()
+            }
         }
         initializeNetworkInstrumentation()
         #if os(iOS)

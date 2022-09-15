@@ -45,7 +45,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
             if let timeToFirstDrawEnumerator = metric.applicationLaunchMetrics?.histogrammedTimeToFirstDraw.bucketEnumerator {
         
             
-            let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.timeToFirstDraw")
+            let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.time")
             var bounds = [Double]()
             var counts = [Int]()
             var sum = 0.0
@@ -62,11 +62,12 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
             counts.append(0)
             
 //            SummaryData
-                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: [String: String]())
+                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: ["type": "first draw"])
 
             }
             if let resumeTimeEnumerator = metric.applicationLaunchMetrics?.histogrammedApplicationResumeTime.bucketEnumerator {
-                let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.resumeTime")
+                let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.time")
+    
                 var bounds = [Double]()
                 var counts = [Int]()
                 var sum = 0.0
@@ -83,12 +84,12 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
                 counts.append(0)
                 
     //            SummaryData
-                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: [String: String]())
+                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: ["type": "resume"])
             }
             
             if #available(iOS 15.2, *) {
                 if let optimizedTimeToFirstDraw = metric.applicationLaunchMetrics?.histogrammedOptimizedTimeToFirstDraw.bucketEnumerator {
-                let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.optimizedTimeToFirstDraw")
+                let rawHistogram = meter.createRawDoubleHistogram(name: "application.launch.time")
                 var bounds = [Double]()
                 var counts = [Int]()
                 var sum = 0.0
@@ -104,13 +105,13 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
                 }
                 counts.append(0)
                 
-                rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: [String: String]())
+                    rawHistogram.record(explicitBoundaries: bounds, counts: counts, startDate: metric.timeStampBegin, endDate: metric.timeStampEnd, count: count, sum: sum, labels: ["type": "optimized first draw"])
             }
                 
             }
         
             if let applicationHangTime = metric.applicationResponsivenessMetrics?.histogrammedApplicationHangTime.bucketEnumerator {
-                let rawHistogram = meter.createRawDoubleHistogram(name: "application.responsiveness.hangetime")
+                let rawHistogram = meter.createRawDoubleHistogram(name: "application.responsiveness.hangtime")
                 var bounds = [Double]()
                 var counts = [Int]()
                 var sum = 0.0
