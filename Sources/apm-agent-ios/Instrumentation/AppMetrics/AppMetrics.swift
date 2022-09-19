@@ -21,7 +21,7 @@ public extension Meter {
         //noop
     }
 }
-
+#if os(iOS)
 @available(iOS 13.0, *)
 class AppMetrics : NSObject, MXMetricManagerSubscriber {
     
@@ -38,6 +38,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
     }
 
     // Receive daily metrics.
+    
     func didReceive(_ payloads: [MXMetricPayload]) {
        // Process metrics.
         
@@ -210,3 +211,4 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
     }
 
 }
+#endif

@@ -112,12 +112,14 @@ public class Agent {
     }
 
     private func initialize() {
+        #if os(iOS)
         if #available(iOS 13.0, *) {
             appMetrics = AppMetrics()
             if let metrics = appMetrics as? AppMetrics {
                 metrics.receiveReports()
             }
         }
+        #endif
         initializeNetworkInstrumentation()
         #if os(iOS)
             vcInstrumentation?.swizzle()
