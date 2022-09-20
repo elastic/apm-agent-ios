@@ -40,6 +40,8 @@ public class Agent {
 
     var memorySampler: MemorySampler
     var cpuSampler: CPUSampler
+    
+    var appMetrics : Any?
 
     #if os(iOS)
         var vcInstrumentation: ViewControllerInstrumentation?
@@ -73,18 +75,21 @@ public class Agent {
         } else {
             channel = ClientConnection.insecure(group: group)
                 .connect(host: configuration.collectorHost, port: configuration.collectorPort)
-        }
-
+        } 
+        
         let vars = AgentResource.get().merging(other: AgentEnvResource.resource)
         // create meter provider
+        
+        
+        
         OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
             .with(processor: MetricProcessorSdk())
             .with(resource: vars)
-            .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration))
+            .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:"OTLPMetricExporter")))
             .build())
 
         // create tracer provider
-        let e = OtlpTraceExporter(channel: channel, config: otlpConfiguration)
+        let e = OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:"OTLPTraceExporter"))
 
         let b = BatchSpanProcessor(spanExporter: e) { spanData in
             // This is for clock skew compensation
@@ -98,7 +103,7 @@ public class Agent {
         OpenTelemetry.registerContextManager(contextManager: SimpleActivityContextManager.instance)
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
             .add(spanProcessor: b)
-            .with(resource: AgentResource.get().merging(other: AgentEnvResource.resource))
+            .with(resource: vars)
             .build())
 
         memorySampler = MemorySampler()
@@ -107,6 +112,14 @@ public class Agent {
     }
 
     private func initialize() {
+        #if os(iOS)
+        if #available(iOS 13.0, *) {
+            appMetrics = AppMetrics()
+            if let metrics = appMetrics as? AppMetrics {
+                metrics.receiveReports()
+            }
+        }
+        #endif
         initializeNetworkInstrumentation()
         #if os(iOS)
             vcInstrumentation?.swizzle()

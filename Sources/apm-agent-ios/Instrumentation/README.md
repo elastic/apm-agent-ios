@@ -39,7 +39,7 @@ Apply this extension to a view in the targeted `SwiftUI.View`'s `body` attribute
 struct MainView : View {
     var body : some View {
         View {
-        }.reportName("My Main View - view appearing")
+        }.onAppear(perform: { _ = reportName("My Main View - view appearing")})
     }
 }
 ```
