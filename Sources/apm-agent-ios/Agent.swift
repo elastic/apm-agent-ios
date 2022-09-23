@@ -24,7 +24,7 @@ public class Agent {
     }
 
     public static func start() {
-        Agent.start(with: AgentConfiguration())
+        Agent.start(with: AgentConfiguration(noop: ""))
     }
 
     private static var instance: Agent?
