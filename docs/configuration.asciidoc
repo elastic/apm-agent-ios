@@ -1,55 +1,63 @@
 [[configuration]]
 == Configuration
 
-Configure the agent with `AgentConfiguration` in the agent's `start()` function.
+Configure the agent with `AgentConfigBuilder` passing the `AgentConfiguration` to the `start` function.
 
 // some config example that preferably is correct unlike mine
 [source,swift]
 ----
-let config =  AgentConfiguration()
-config.collectorHost = "192.168.0.1"
-config.collectorPort = 8200
-config.collectorTLS = true
-config.secretToken = "<secret token>"
+let config = AgentConfigBuilder()
+                .withURL(URL(string: "http://localhost:8200"))
+                .withSecretToken("<Token>")
+                .build()
+
 Agent.start(with:config)
 ----
+
+The `AgentConfigBuilder` can be configured with the following functions
 
 [discrete]
 [[configuration-options]]
 === Configuration options
 
+[discrete]
+[[withURL]]
+==== `withURL`
+
+* *Type:* URL
+* *Default:* `http://127.0.0.1:8200`
 
 [discrete]
 [[collectorHost]]
-==== `collectorHost`
+==== `withHost`
 
 * *Type:* String
 * *Default:* `127.0.0.1`
 // * *Env:* ``
 
-The APM Server host.
+The APM Server host. This will override the host set using `withURL`.
 
 [discrete]
 [[collectorPort]]
-==== `collectorPort`
+==== `withPort`
 
 * *Type:* Int
 * *Default:* `8200`
 // * *Env:* ``
 
-The APM Server port.
+The APM Server port. This will override the port set using `withURL`.
 
 [discrete]
-[[collectorTLS]]
-==== `collectorTLS`
+[[withTLS]]
+==== `withTLS`
 * *Type:* Bool
 * *Default:* false
 
-Flags whether the APM Server is secured with TLS.
+Flags whether the APM Server is secured with TLS. This will override the protocol set using `withURL`.
 
 [discrete]
-[[secretToken]]
-==== `secretToken`
+[[withSecretToken]]
+==== `withSecretToken`
 * *Type:* String
 * *Default:* nil
 * *Env:* `OTEL_EXPORTER_OTLP_HEADERS`
