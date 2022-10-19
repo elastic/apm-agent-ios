@@ -93,16 +93,14 @@ class TraceLogger {
         defer {
             spanLock.unlock()
         }
-        if let span = span {
-            OpenTelemetry.instance.contextProvider.setActiveSpan(span)
-        }
+        activeSpan = span
     }
     func getActiveSpan() -> Span? {
         spanLock.lock()
         defer {
             spanLock.unlock()
         }
-        return OpenTelemetry.instance.contextProvider.activeSpan
+        return activeSpan
         /* contextProvider isn't dependible at this time */
         // return OpenTelemetry.instance.contextProvider.activeSpan
     }
