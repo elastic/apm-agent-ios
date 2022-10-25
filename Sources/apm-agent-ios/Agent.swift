@@ -100,7 +100,7 @@ public class Agent {
                 _ = spanData[i].settingResource(newResource)
             }
         }
-        OpenTelemetry.registerContextManager(contextManager: SimpleActivityContextManager.instance)
+                
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
             .add(spanProcessor: b)
             .with(resource: vars)

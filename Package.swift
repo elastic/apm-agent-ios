@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.7
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,7 +9,7 @@ let package = Package(
         .iOS(.v11),
         .macOS(.v10_13),
         .tvOS(.v11),
-        .watchOS(.v3),
+        .watchOS(.v4),
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other package.
@@ -18,8 +18,8 @@ let package = Package(
         .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", .exact("1.1.7")),
-        .package(name: "Reachability", url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
+        .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
+        .package(url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.2.0"),
     ],
     targets: [
         .target(name: "MemorySampler",
@@ -40,7 +40,7 @@ let package = Package(
                 .product(name: "OpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
                 .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift"),
                 .product(name: "ResourceExtension", package: "opentelemetry-swift"),
-                .product(name: "Reachability", package: "Reachability"),
+                .product(name: "Reachability", package: "Reachability.swift"),
                 "MemorySampler",
                 "CPUSampler"
             ],

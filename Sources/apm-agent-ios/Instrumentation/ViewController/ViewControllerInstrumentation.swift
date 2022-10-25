@@ -14,6 +14,7 @@
 
 #if os(iOS)
     import Foundation
+    import NIOConcurrencyHelpers
     import OpenTelemetryApi
     import OpenTelemetrySdk
     import SwiftUI
@@ -24,12 +25,35 @@
 @available(iOS 13.0, *)
 public extension View {
     func reportName(_ name: String) -> Self {
-        if let span = OpenTelemetry.instance.contextProvider.activeSpan {
-//            if span.name.hasSuffix(" - view appearing") {
-                span.name = name
-//            }
-        }
+        VCNameOverrideStore.instance().name = name
         return self
+    }
+}
+
+internal class VCNameOverrideStore {
+    let nameLock = NIOLock()
+    private var _name = ""
+    public var name : String {
+        set {
+            nameLock.withLockVoid {
+                self._name = newValue
+            }
+        }
+        get {
+            var newValue = ""
+            nameLock.withLockVoid {
+                newValue = self._name
+            }
+            return newValue
+        }
+        
+    }
+    static var _instance = VCNameOverrideStore()
+    private init() {
+    }
+    
+    static func instance() -> VCNameOverrideStore {
+        return _instance
     }
 }
 
@@ -52,7 +76,7 @@ public extension View {
         }
 
         func swizzle() {
-            viewDidLoad.swizzle()
+//            viewDidLoad.swizzle()
             viewWillAppear.swizzle()
             viewDidAppear.swizzle()
         }
@@ -65,7 +89,7 @@ public extension View {
         static func getViewControllerName(_ vc : UIViewController) -> String? {
             var title = vc.navigationItem.title
                 
-            if let accessibiltyLabel = vc.accessibilityLabel {
+            if let accessibiltyLabel = vc.accessibilityLabel, !accessibiltyLabel.isEmpty {
                 title = "\(accessibiltyLabel) - view appearing"
             } else if let navTitle = title {
                 title = "\(navTitle) - view appearing"
@@ -73,6 +97,7 @@ public extension View {
             return title
         }
         
+      
         
         class ViewDidLoad: MethodSwizzler<
         @convention(c) (UIViewController, Selector) -> Void, // IMPSignature
@@ -87,14 +112,13 @@ public extension View {
                         swap { previousImplementation -> BlockSignature in
                             { viewController -> Void in
                                 
-                                let name = "\(type(of: viewController)) - view appearing"
-                            
-                                let className = "\(type(of: viewController))"
+                                let name = "\(type(of: viewController)) - view loading"
+                
+                                    _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: ViewControllerInstrumentation.getViewControllerName(viewController))
+                                
+                                previousImplementation(viewController, self.selector)
+                                ViewControllerInstrumentation.traceLogger.stopTrace(associatedObject: viewController, preferredName: name)
 
-                            os_log("instance[0x%x] called -[%s viewDidLoad]",log:ViewControllerInstrumentation.logger,type:.debug,unsafeBitCast(self, to: Int.self), className)
-
-                                _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: ViewControllerInstrumentation.getViewControllerName(viewController))
-                            previousImplementation(viewController, self.selector)
                         }
                     }
                 }
@@ -119,9 +143,8 @@ public extension View {
                                                                                      associatedObject: viewController,
                                                                                      name: name,
                                                                                      preferredName:  ViewControllerInstrumentation.getViewControllerName(viewController))
-                            let className = "\(type(of: viewController))"
-                            os_log("instance[0x%x] called -[%s ViewWillAppear]",log:ViewControllerInstrumentation.logger,type:.debug, unsafeBitCast(self, to: Int.self), className)
                             previousImplementation(viewController, self.selector, animated)
+                            
                         }
                     }
                 }
@@ -138,10 +161,8 @@ public extension View {
                 func swizzle() {
                     swap { previousImplementation -> BlockSignature in
                         { viewController, animated -> Void in
-                            let className = "\(type(of: viewController))"
-                            os_log("instance[0x%x] called -[%s viewDidAppear]",log:ViewControllerInstrumentation.logger,type:.debug, unsafeBitCast(self, to: Int.self), className)
                             previousImplementation(viewController, self.selector, animated)
-                            ViewControllerInstrumentation.traceLogger.stopTrace(associatedObject: viewController)
+                            ViewControllerInstrumentation.traceLogger.stopTrace(associatedObject: viewController, preferredName: getViewControllerName(viewController))
                         }
                     }
                 }
