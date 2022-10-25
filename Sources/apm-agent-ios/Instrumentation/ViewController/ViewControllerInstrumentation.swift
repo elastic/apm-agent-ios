@@ -31,7 +31,7 @@ public extension View {
 }
 
 internal class VCNameOverrideStore {
-    let nameLock = Lock()
+    let nameLock = NIOLock()
     private var _name = ""
     public var name : String {
         set {
@@ -113,10 +113,7 @@ internal class VCNameOverrideStore {
                             { viewController -> Void in
                                 
                                 let name = "\(type(of: viewController)) - view loading"
-                            
-                                let className = "\(type(of: viewController))"
-
-                                
+                
                                     _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: ViewControllerInstrumentation.getViewControllerName(viewController))
                                 
                                 previousImplementation(viewController, self.selector)
@@ -146,7 +143,6 @@ internal class VCNameOverrideStore {
                                                                                      associatedObject: viewController,
                                                                                      name: name,
                                                                                      preferredName:  ViewControllerInstrumentation.getViewControllerName(viewController))
-                            let className = "\(type(of: viewController))"
                             previousImplementation(viewController, self.selector, animated)
                             
                         }
@@ -165,7 +161,6 @@ internal class VCNameOverrideStore {
                 func swizzle() {
                     swap { previousImplementation -> BlockSignature in
                         { viewController, animated -> Void in
-                            let className = "\(type(of: viewController))"
                             previousImplementation(viewController, self.selector, animated)
                             ViewControllerInstrumentation.traceLogger.stopTrace(associatedObject: viewController, preferredName: getViewControllerName(viewController))
                         }

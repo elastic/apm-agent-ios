@@ -46,6 +46,7 @@ class TraceLogger {
 
             span.setAttribute(key: "session.id", value: SessionManager.instance.session())
             setAssociatedSpan(associatedObject,span)
+            setActiveSpan(span)
             activeSpan = span
         }
         if let preferredName = preferredName, activeSpan?.name != preferredName {
