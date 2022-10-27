@@ -27,33 +27,6 @@ The `AgentConfigBuilder` can be configured with the following functions
 * *Type:* URL
 * *Default:* `http://127.0.0.1:8200`
 
-[discrete]
-[[collectorHost]]
-==== `withHost`
-
-* *Type:* String
-* *Default:* `127.0.0.1`
-// * *Env:* ``
-
-The APM Server host. This will override the host set using `withURL`.
-
-[discrete]
-[[collectorPort]]
-==== `withPort`
-
-* *Type:* Int
-* *Default:* `8200`
-// * *Env:* ``
-
-The APM Server port. This will override the port set using `withURL`.
-
-[discrete]
-[[withTLS]]
-==== `withTLS`
-* *Type:* Bool
-* *Default:* false
-
-Flags whether the APM Server is secured with TLS. This will override the protocol set using `withURL`.
 
 [discrete]
 [[withSecretToken]]

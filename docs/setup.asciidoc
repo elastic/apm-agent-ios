@@ -64,7 +64,7 @@ import iOSAgent
 struct MyApp: App {
     init() {
         var config = AgentConfigBuilder()
-                       .withURL(URL(string:"http://127.0.0.1:8200")) <1>
+                       .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
                        .withSecretToken("<SecretToken>") <2>
 
         Agent.start(with: config)
