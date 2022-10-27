@@ -35,9 +35,11 @@ class TraceLogger {
         }
         loadCount+=1
         var activeSpan = getActiveSpan()
+
         if activeSpan == nil {
             let builder = tracer.spanBuilder(spanName: "\(name)")
                 .setActive(true)
+                .setNoParent()
                 .setSpanKind(spanKind: .client)
             
             let span = builder.startSpan()
@@ -45,10 +47,15 @@ class TraceLogger {
             os_log("Started trace: %@ - %@ - %@",log:logger,type:.debug,name, span.context.traceId.description, span.context.spanId.description)
 
             span.setAttribute(key: "session.id", value: SessionManager.instance.session())
-            setAssociatedSpan(associatedObject,span)
             setActiveSpan(span)
             activeSpan = span
         }
+        
+        if let span = activeSpan {
+            OpenTelemetry.instance.contextProvider.setActiveSpan(span)
+
+        }
+        
         if let preferredName = preferredName, activeSpan?.name != preferredName {
                 activeSpan?.name = preferredName
     
@@ -84,7 +91,6 @@ class TraceLogger {
 
             associatedSpan.status = .ok
             associatedSpan.end()
-            clearAssociatedSpan(associatedObject)
             setActiveSpan(nil)
         }
     }
@@ -102,20 +108,8 @@ class TraceLogger {
             spanLock.unlock()
         }
         return activeSpan
-        /* contextProvider isn't dependible at this time */
-        // return OpenTelemetry.instance.contextProvider.activeSpan
     }
 
-    func setAssociatedSpan(_ vc: AnyObject, _ span: Span) {
-        objc_setAssociatedObject(vc, UnsafeRawPointer(&Self.objectKey), span, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
-    }
-    func getAssociatedSpan(_ vc: AnyObject) -> Span? {
-        return objc_getAssociatedObject(vc, UnsafeRawPointer(&Self.objectKey)) as? OpenTelemetryApi.Span
-    }
-    func clearAssociatedSpan(_ vc: AnyObject) {
-        objc_setAssociatedObject(vc, UnsafeRawPointer(&Self.objectKey), nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
-
-    }
         
 }
 #endif // #if os(iOS)

@@ -16,30 +16,12 @@ import Foundation
 
 public class AgentConfigBuilder {
     var url : URL?
-    var host : String?
-    var port : Int?
-    var tls : Bool?
     var secretToken : String?
     
     public init() {}
     
-    public func withURL(_ url: URL) -> Self {
+    public func withServerUrl(_ url: URL) -> Self {
         self.url = url
-        return self
-    }
-    
-    public func withHost(_ host: String) -> Self {
-        self.host = host
-        return self
-    }
-    
-    public func withPort(_ port: Int) -> Self {
-        self.port = port
-        return self
-    }
-    
-     public func withTLS(_ tls: Bool) -> Self {
-        self.tls = tls
         return self
     }
     
@@ -60,28 +42,9 @@ public class AgentConfigBuilder {
             }
             if let port = url.port {
                 config.collectorPort = port
-            } else {
-                if config.collectorTLS {
-                    config.collectorPort = 443
-                } else {
-                    config.collectorPort = 80
-                }
             }
-            
             if let secret = secretToken {
                 config.secretToken = secret
-            }
-            
-            if let host = self.host {
-                config.collectorHost = host
-            }
-            
-            if let port = self.port {
-                config.collectorPort = port
-            }
-            
-            if let tls = self.tls {
-                config.collectorTLS = tls 
             }
         }
         return config
