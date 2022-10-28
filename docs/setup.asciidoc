@@ -64,7 +64,7 @@ import iOSAgent
 struct MyApp: App {
     init() {
         var config = AgentConfigBuilder()
-                       .withURL(URL(string:"http://127.0.0.1:8200")) <1>
+                       .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
                        .withSecretToken("<SecretToken>") <2>
 
         Agent.start(with: config)
@@ -90,7 +90,7 @@ import iOSAgent
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 var config = AgentConfigBuilder()
-                       .withURL(URL(string:"http://127.0.0.1:8200")) <1>
+                       .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
                        .withSecretToken("<SecretToken>") <2>
 
         Agent.start(with: config)
@@ -101,3 +101,59 @@ var config = AgentConfigBuilder()
 <1> APM Server URL
 <2> Set secret token for APM server connection
 
+[[View Instrumentation]]
+
+The Agent provides SwiftUI.View & UIViewController instrumentation, where the load time of a View is measured using spans.
+All Views simultaneously loaded will be grouped under the same starting span.
+The spans' names will be dictated by the following rules from least to highest precedence:
+
+1. `<view's class name> - view appearing`
+2. `<navigation title> - view appearing`
+3. The `name` passed to View extension method  `reportName(_ name: String) -> View`
+
+
+The View's class name will be a swift name-mangled string, and is the least desirable naming method. If it's possible, set a navigation title on your views:
+
+`AllProductsList.swift`
+[source,swift,linenums, highlight=12]
+----
+struct AllProductsList: View {
+    @EnvironmentObject var modelData : ModelData
+
+    var body: some View {
+        VStack {
+            List(modelData.products, id: \.id) { product in
+                AdminProductRow(product: product)
+
+            }
+        }.onAppear  {
+            modelData.loadProducts()
+        }.navigationTitle("All Products")
+    }
+}
+----
+
+You'll see "All Products - view appearing" in Kibana.
+
+
+If it isn't possible to set a navigation title, use `reportName(_ name: String) -> View` to set the name that will show in Kibana:
+
+`AllProductsList.swift`
+[source,swift,linenums, highlight=12]
+----
+struct AllProductsList: View {
+    @EnvironmentObject var modelData : ModelData
+
+    var body: some View {
+        VStack {
+            List(modelData.products, id: \.id) { product in
+                AdminProductRow(product: product)
+
+            }
+        }.onAppear  {
+            modelData.loadProducts()
+        }.reportName("All Products - view appearing")
+    }
+}
+----
+Note: The whole string `All Products - view appearing` needs to be inserted to match the default formatting used for the other two naming options.

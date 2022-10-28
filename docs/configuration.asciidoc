@@ -7,7 +7,7 @@ Configure the agent with `AgentConfigBuilder` passing the `AgentConfiguration` t
 [source,swift]
 ----
 let config = AgentConfigBuilder()
-                .withURL(URL(string: "http://localhost:8200"))
+                .withServerUrl(URL(string: "http://localhost:8200"))
                 .withSecretToken("<Token>")
                 .build()
 
@@ -21,39 +21,11 @@ The `AgentConfigBuilder` can be configured with the following functions
 === Configuration options
 
 [discrete]
-[[withURL]]
-==== `withURL`
+[[withServerUrl]]
+==== `withServerUrl`
 
 * *Type:* URL
 * *Default:* `http://127.0.0.1:8200`
-
-[discrete]
-[[collectorHost]]
-==== `withHost`
-
-* *Type:* String
-* *Default:* `127.0.0.1`
-// * *Env:* ``
-
-The APM Server host. This will override the host set using `withURL`.
-
-[discrete]
-[[collectorPort]]
-==== `withPort`
-
-* *Type:* Int
-* *Default:* `8200`
-// * *Env:* ``
-
-The APM Server port. This will override the port set using `withURL`.
-
-[discrete]
-[[withTLS]]
-==== `withTLS`
-* *Type:* Bool
-* *Default:* false
-
-Flags whether the APM Server is secured with TLS. This will override the protocol set using `withURL`.
 
 [discrete]
 [[withSecretToken]]
@@ -62,4 +34,6 @@ Flags whether the APM Server is secured with TLS. This will override the protoco
 * *Default:* nil
 * *Env:* `OTEL_EXPORTER_OTLP_HEADERS`
 
-Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be define per https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md[OpenTelemetry Protocol Exporter Config] (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
+Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md[OpenTelemetry Protocol Exporter Config] (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
+
+

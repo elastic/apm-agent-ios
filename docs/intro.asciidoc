@@ -9,11 +9,18 @@ The Elastic APM iOS Agent measures the performance of your mobile applications i
 The Elastic APM iOS Agent uses the https://github.com/open-telemetry/opentelemetry-swift[OpenTelemetry-Swift SDK].
 The agent automatically traces URLSessions and provides distributed traces annotated with device information along
 with your back-end services instrumented with Open-Telemetry.
-The agent also captures any custom open-telemetry traces or measurements created using the OpenTelemetry-Swift API.
-
+The agent also captures any custom open-telemetry traces or measurements created using the OpenTelemetry-Swift API. More details on how to add your own custom instrumentation to your app can be found at https://opentelemetry.io/docs/instrumentation/swift/manual/[opentelemetry.io swift/manual-instrumentation]
+Examples can be found in https://github.com/open-telemetry/opentelemetry-swift/tree/main/Examples[opentelemetry-swift/examples]
 [discrete]
 [[additional-components]]
 === Additional components
 APM Agents work in conjunction with the {apm-guide-ref}/index.html[APM Server], {ref}/index.html[{es}], and {kibana-ref}/index.html[{kib}].
 The {apm-guide-ref}/index.html[APM Guide] provides details on how these components work together,
 and provides a matrix outlining {apm-guide-ref}/agent-server-compatibility.html[Agent and Server compatibility].
+
+=== Open Telemetry Components
+The iOS Agent utilizes several instrumentation libraries provided by OpenTelemetry-Swift to provide automatic instrumentation. Details on the instrumentation libraries can be found at https://opentelemetry.io/docs/instrumentation/swift/libraries/[opentelementry.io swift/libraries]
+
+For network instrumentation, the `NSURLSessionInstrumentation` is used. This will provide network instrumentation in the form of spans as well as distributed tracing for all downstream services also instrumented by Elastic.
+
+Detailed information on the device, operating system, and application is provided by `SDKResourceExtension`. More information on which data points are capture can be found at https://opentelemetry.io/docs/instrumentation/swift/manual/#SDKResourceExtension[opentelementry.io SDKResourceExtension]
