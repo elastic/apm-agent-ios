@@ -42,4 +42,4 @@ For network instrumentation, the agent uses `NSURLSessionInstrumentation`. This 
 
 Detailed information on the device, operating system, and application is provided by `SDKResourceExtension`. More information on which data points are captured can be found in the  https://opentelemetry.io/docs/instrumentation/swift/manual/#SDKResourceExtension[opentelementry.io SDKResourceExtension documentation].
 
-Elastic maps Open Telemetry attributes to Elastic compatible names. Those mappings can be found in the https://github.com/elastic/apm/tree/main/specs/agents/mobile[Mobile Agent Spec]
+Elastic maps OpenTelemetry attributes to Elastic-specific fields. Details of these mappings can be found in the https://github.com/elastic/apm/tree/main/specs/agents/mobile[Elastic Mobile Agent Spec].
