@@ -17,10 +17,11 @@ The agent also captures any custom open-telemetry traces or measurements created
 === How to add instrumentation
 This agent will configure the OpenTelementry-Swift `TracerProvider` and `MetricProvider`, and set them as the global OpenTelemetry providers. They can be accessed through the OpenTelemetry SDK as follows:
 
-```
+[source,swift]
+----
 let tracerProvider = OpenTelemetry.instance.tracerProvider
 let meterProvider = OpenTelemetry.instance.meterProvider
-```
+----
 
 These objects can be used to acquire new tracers and meters that will send their captured data to the Elastic APM server. More details on how to use OpenTelemetry to instrument your app can be found in the [OpenTelemetry.io Swift manual instrumentation docs](https://opentelemetry.io/docs/instrumentation/swift/manual/)
 
