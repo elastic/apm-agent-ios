@@ -36,7 +36,7 @@ and provides a matrix outlining {apm-guide-ref}/agent-server-compatibility.html[
 
 [discrete]
 === Open Telemetry Components
-The iOS Agent utilizes several instrumentation libraries provided by OpenTelemetry-Swift to provide automatic instrumentation. Details on the instrumentation libraries can be found at https://opentelemetry.io/docs/instrumentation/swift/libraries/[opentelementry.io swift/libraries]
+The iOS Agent utilizes several OpenTelemetry-Swift libraries to provide automatic instrumentation of your applications and services. Details about these instrumentation libraries can be found in the official https://opentelemetry.io/docs/instrumentation/swift/libraries/[opentelementry.io Swift Libraries documentation].
 
 For network instrumentation, the `NSURLSessionInstrumentation` is used. This will provide network instrumentation in the form of spans as well as distributed tracing for all downstream services also instrumented by Elastic.
 
