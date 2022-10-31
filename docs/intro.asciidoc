@@ -34,6 +34,7 @@ APM Agents work in conjunction with the {apm-guide-ref}/index.html[APM Server], 
 The {apm-guide-ref}/index.html[APM Guide] provides details on how these components work together,
 and provides a matrix outlining {apm-guide-ref}/agent-server-compatibility.html[Agent and Server compatibility].
 
+[discrete]
 === Open Telemetry Components
 The iOS Agent utilizes several instrumentation libraries provided by OpenTelemetry-Swift to provide automatic instrumentation. Details on the instrumentation libraries can be found at https://opentelemetry.io/docs/instrumentation/swift/libraries/[opentelementry.io swift/libraries]
 
