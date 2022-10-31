@@ -25,7 +25,7 @@ let meterProvider = OpenTelemetry.instance.meterProvider
 
 These objects can be used to acquire new tracers and meters that will send their captured data to the Elastic APM Server. More details on how to use OpenTelemetry to instrument your app can be found in the https://opentelemetry.io/docs/instrumentation/swift/manual[OpenTelemetry.io Swift manual instrumentation docs].
 
-Examples can be found in https://github.com/open-telemetry/opentelemetry-swift/tree/main/Examples[opentelemetry-swift/examples]
+Examples can be found in https://github.com/open-telemetry/opentelemetry-swift/tree/main/Examples[opentelemetry-swift/examples].
 
 [discrete]
 [[additional-components]]
