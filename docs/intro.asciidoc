@@ -41,3 +41,5 @@ The iOS Agent utilizes several OpenTelemetry-Swift libraries to provide automati
 For network instrumentation, the agent uses `NSURLSessionInstrumentation`. This provides network instrumentation in the form of spans and enables distributed tracing for all instrumented downstream services.
 
 Detailed information on the device, operating system, and application is provided by `SDKResourceExtension`. More information on which data points are captured can be found in the  https://opentelemetry.io/docs/instrumentation/swift/manual/#SDKResourceExtension[opentelementry.io SDKResourceExtension documentation].
+
+Elastic takes steps to map attributes captured by Open Telemetry into common Elastic attributes. Those mappings can be found in the https://github.com/elastic/apm/tree/main/specs/agents/mobile[Elastic Mobile Spec].
