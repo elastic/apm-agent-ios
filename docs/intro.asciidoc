@@ -15,7 +15,7 @@ The agent also captures any custom open-telemetry traces or measurements created
 [float]
 [[manual-instrumentation]]
 === How to add instrumentation
-This agent will configure the OpenTelementry-Swift `TracerProvider` & `MetricProvider`, and sets them as the global OpenTelemetry providers. They can be accessed through the OpenTelemetry SDK as follows:
+This agent will configure the OpenTelementry-Swift `TracerProvider` and `MetricProvider`, and set them as the global OpenTelemetry providers. They can be accessed through the OpenTelemetry SDK as follows:
 
 ```
 let tracerProvider = OpenTelemetry.instance.tracerProvider
