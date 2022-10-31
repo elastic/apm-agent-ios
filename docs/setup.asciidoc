@@ -101,11 +101,13 @@ var config = AgentConfigBuilder()
 <1> APM Server URL
 <2> Set secret token for APM server connection
 
-[[View Instrumentation]]
+[discrete]
+[[view-instrumentation]]
+=== View instrumentation
 
-The Agent provides SwiftUI.View & UIViewController instrumentation, where the load time of a View is measured using spans.
+The agent provides SwiftUI.View and UIViewController instrumentation, where the load time of a View is measured using spans.
 All Views simultaneously loaded will be grouped under the same starting span.
-The spans' names will be dictated by the following rules from least to highest precedence:
+The spans' names will be dictated by the following rules, from least to highest precedence:
 
 1. `<view's class name> - view appearing`
 2. `<navigation title> - view appearing`
@@ -156,4 +158,5 @@ struct AllProductsList: View {
     }
 }
 ----
-Note: The whole string `All Products - view appearing` needs to be inserted to match the default formatting used for the other two naming options.
+
+NOTE: The entire string `All Products - view appearing` must be inserted to match the default formatting used for the other two naming options.
