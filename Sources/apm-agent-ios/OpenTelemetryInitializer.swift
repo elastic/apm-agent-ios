@@ -29,12 +29,10 @@ class OpenTelemetryInitializer {
     struct Headers {
         static let userAgent = "user-agent"
         static let authorization = "authorization"
-        static let bearer = "bearer"
-        static let api = "ApiKey"
     }
 
     static func initialize(_ configuration : AgentConfiguration) -> EventLoopGroup {
-        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: Self.generateExporterHeaders(configuration.secretToken))
+        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: Self.generateExporterHeaders(configuration.auth))
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let channel = Self.getChannel(with: configuration, group: group)
         
@@ -78,10 +76,10 @@ class OpenTelemetryInitializer {
          
     }
     
-    private static func generateExporterHeaders(_ token: String?) -> [(String, String)]? {
+    private static func generateExporterHeaders(_ auth: String?) -> [(String, String)]? {
         var headers = [(String, String)]()
-        if let t = token {
-            headers.append((Headers.authorization, "\(Headers.bearer) \(t)"))
+        if let auth = auth {
+            headers.append((Headers.authorization, "\(auth)"))
         }
         headers.append((Headers.userAgent, generateExporterUserAgent()))
 

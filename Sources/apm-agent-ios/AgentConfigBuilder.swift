@@ -16,7 +16,9 @@ import Foundation
 
 public class AgentConfigBuilder {
     var url : URL?
-    var secretToken : String?
+    var auth : String?
+    static let bearer = "bearer"
+    static let api = "ApiKey"
     
     public init() {}
     
@@ -25,8 +27,13 @@ public class AgentConfigBuilder {
         return self
     }
     
-    public func withSecretToken(_ token: String) ->Self {
-        self.secretToken = secretToken
+    public func withSecretToken(_ token: String) -> Self {
+        self.auth = "\(Self.bearer) \(token)"
+        return self
+    }
+    
+    public func withApiKey(_ key: String) -> Self {
+        self.auth = "\(Self.api) \(key)"
         return self
     }
     
@@ -43,8 +50,8 @@ public class AgentConfigBuilder {
             if let port = url.port {
                 config.collectorPort = port
             }
-            if let secret = secretToken {
-                config.secretToken = secret
+            if let auth = self.auth {
+                config.auth = auth
             }
         }
         return config
