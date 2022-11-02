@@ -30,9 +30,9 @@ public class Agent {
 
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
-        _ = OpenTelemetry.instance // initialize api, or else it will over write our providers
-        _ = OpenTelemetrySDK.instance
-       
+        
+        _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
+
         group = OpenTelemetryInitializer.initialize(configuration)
 
         os_log("Initializing Elastic APM Agent.")
