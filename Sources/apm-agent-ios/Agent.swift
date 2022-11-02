@@ -1,18 +1,10 @@
-import CPUSampler
 import Foundation
 import Logging
-import MemorySampler
-import NetworkStatus
 import NIO
 import OpenTelemetryApi
 import OpenTelemetrySdk
-import os
-import URLSessionInstrumentation
-#if os(iOS)
-    import UIKit
-#endif
-
 import os.log
+
 public class Agent {
     
     public static func start(with configuaration: AgentConfiguration) {
@@ -30,15 +22,11 @@ public class Agent {
     
     private static var instance: Agent?
 
- 
     var configuration: AgentConfiguration
     
     let group : EventLoopGroup
     
     let instrumentation = InstrumentationWrapper()
-
-    
-
 
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
@@ -47,13 +35,12 @@ public class Agent {
        
         group = OpenTelemetryInitializer.initialize(configuration)
 
-        os_log("Initializing Elastic iOS Agent.")
+        os_log("Initializing Elastic APM Agent.")
     }
 
     private func initialize() {
         instrumentation.initalize()
     }
-
 
     deinit {
         try! group.syncShutdownGracefully()
