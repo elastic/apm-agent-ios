@@ -22,6 +22,10 @@
 
 [[release-notes-next]]
 ==== Next
+-
+
+[[release-notes-v0.3.0]]
+==== v0.3.0
 This version requires APM Server `v8.5.0` and Swift `v5.7`
 [float]
 ===== Features
@@ -35,7 +39,7 @@ This version requires APM Server `v8.5.0` and Swift `v5.7`
 - Improved creation and naming of spans in View instrumentation.
 
 ==== Deprecated
-- Deprecated directly creating `AgentConfiguration` objects, in favor or `AgentConfigBuilder`
+- Deprecated directly creating `AgentConfiguration` objects, in favor of `AgentConfigBuilder`.
 - Removed Tap logger instrumentation.
 
 [[release-notes-0.2.1]]
