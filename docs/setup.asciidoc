@@ -7,7 +7,19 @@
 [[requirements]]
 === Requirements
 
-This project requires Swift `5.3`, and is intended for use in Swift-base mobile apps.
+This project requires Swift `5.7`, and is intended for use in Swift-base mobile apps.
+
+Other platform requires:
+
+[options="header"]
+|===
+| platform | version
+| `iOS` | `11`
+|`macOS` | `10.13`
+| `tvOS` | `v11`
+| `watchOS` | `3`
+|===
+
 
 [discrete]
 [[add-agent-dependency]]
@@ -24,13 +36,13 @@ Below is a helpful code-snippet:
 ----
 Package(
     dependencies:[
-        .package(name: "iOSAgent", url: "git@github.com:elastic/apm-agent-ios.git", .branch("main")),
+        .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "0.3.0"),
     ],
   targets:[
     .target(
         name: "MyApp",
         dependencies: [
-            .product(name: "iOSAgent", package: "iOSAgent")
+            .product(name: "iOSAgent", package: "apm-agent-ios")
         ]
     ),
 ])
@@ -39,7 +51,7 @@ Package(
 [discrete]
 [[initialize]]
 === Initialize the agent
-Once the Agent has been added as a dependency, it must be intialized.
+Once the Agent has been added as a dependency, it must be initialized.
 
 If you're using `SwiftUI` to build your app add the following to your `App.swift`:
 
@@ -51,11 +63,10 @@ import iOSAgent
 @main
 struct MyApp: App {
     init() {
-        var config = AgentConfiguration()
-        config.collectorAddress = "127.0.0.1" <1>
-        config.collectorPort = 8200 <2>
-        config.collectorTLS = false <3>
-        config.secretToken = "<secret token>" <4>
+        var config = AgentConfigBuilder()
+                       .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
+                       .withSecretToken("<SecretToken>") <2>
+
         Agent.start(with: config)
     }
     var body: some Scene {
@@ -65,10 +76,8 @@ struct MyApp: App {
     }
 }
 ----
-<1> APM Server URL or IP address
-<2> APM Server port number
-<3> Enable TLS for Open telemetry exporters
-<4> Set secret token for APM server connection
+<1> APM Server URL
+<2> Set secret token for APM server connection
 
 If you're not using `SwiftUI` you can alternatively add the same thing to your AppDelegate file:
 
@@ -80,18 +89,100 @@ import iOSAgent
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        var config = AgentConfiguration()
-        config.collectorAddress = "127.0.0.1" <1>
-        config.collectorPort = 8200 <2>
-        config.collectorTLS = false <3>
-        config.secretToken = "<secret token>" <4>
+var config = AgentConfigBuilder()
+                       .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
+                       .withSecretToken("<SecretToken>") <2>
+
         Agent.start(with: config)
         return true
     }
 }
 ----
-<1> APM Server url or ip address
-<2> APM Server port number
-<3> Enable TLS for Open telemetry exporters
-<4> Set secret token for APM server connection
+<1> APM Server URL
+<2> Set secret token for APM server connection
 
+[discrete]
+[[view-instrumentation]]
+=== View instrumentation
+
+The agent provides SwiftUI.View and UIViewController instrumentation, where the load time of a View is measured using spans.
+All Views simultaneously loaded will be grouped under the same starting span.
+The spans' names will be dictated by the following rules, from least to highest precedence:
+
+1. `<view's class name> - view appearing`
+2. `<navigation title> - view appearing`
+3. The `name` passed to View extension method  `reportName(_ name: String) -> View`
+
+
+The View's class name will be a swift name-mangled string, and is the least desirable naming method. If it's possible, set a navigation title on your views:
+
+`AllProductsList.swift`
+[source,swift,linenums, highlight=12]
+----
+struct AllProductsList: View {
+    @EnvironmentObject var modelData : ModelData
+
+    var body: some View {
+        VStack {
+            List(modelData.products, id: \.id) { product in
+                AdminProductRow(product: product)
+
+            }
+        }.onAppear  {
+            modelData.loadProducts()
+        }.navigationTitle("All Products")
+    }
+}
+----
+
+You'll see "All Products - view appearing" in Kibana.
+
+
+If it isn't possible to set a navigation title, use `reportName(_ name: String) -> View` to set the name that will show in Kibana:
+
+`AllProductsList.swift`
+[source,swift,linenums, highlight=12]
+----
+struct AllProductsList: View {
+    @EnvironmentObject var modelData : ModelData
+
+    var body: some View {
+        VStack {
+            List(modelData.products, id: \.id) { product in
+                AdminProductRow(product: product)
+
+            }
+        }.onAppear  {
+            modelData.loadProducts()
+        }.reportName("All Products - view appearing")
+    }
+}
+----
+
+NOTE: The entire string `All Products - view appearing` must be inserted to match the default formatting used for the other two naming options.
+
+[descrete]
+[[metrickit-instrumentation]]
+=== MetricKit Instrumentation
+Available for iOS 13 and greater, the agent provides instrumentation of key MetricKit data points:
+* Application Launch times
+* Application responsiveness
+* Application exit counts
+
+Technical details on the metric generated can be found in the https://github.com/elastic/apm/blob/main/specs/agents/mobile/metrics.md#application-metrics[Mobile spec]
+
+[descrete]
+[[app-launch-time]]
+==== `application.launch.time`
+This histogram metric provides launch duration broken down by `first draw`, `first draw (optimized)`, and `resumed`. More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxapplaunchmetric[Apple documentation].
+
+[descrete]
+[[hangtime]]
+==== `application.responsiveness.hangtime`
+A histogram of the different durations of time in which the app is too busy to handle user interaction responsively.
+More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxappresponsivenessmetric[Apple documentation].
+[descrete]
+[[exits]]
+==== `application.exits`
+A count of application exits categorized by various attributes: `foreground` or `background`, and `normal` or abnormal, where abnormal exits are further subdivided.
+More details can be found in the https://developer.apple.com/documentation/metrickit/mxappexitmetric[Apple documentation].

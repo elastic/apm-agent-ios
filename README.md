@@ -1,4 +1,4 @@
-[![Build Status](https://apm-ci.elastic.co/buildStatus/icon?job=apm-agent-ios%2Fapm-agent-ios-mbp%2Fmain)](https://apm-ci.elastic.co/job/apm-agent-ios/job/apm-agent-ios-mbp/job/main/)
+[![macos](https://github.com/elastic/apm-agent-ios/actions/workflows/macos.yml/badge.svg)](https://github.com/elastic/apm-agent-ios/actions/workflows/macos.yml)
 
 # apm-agent-ios : APM Agent for iOS
 This is the official iOS package for [Elastic APM](https://www.elastic.co/solutions/apm)
@@ -17,3 +17,13 @@ export GIT_HOME="/<fullPathToYourRepos>"
 # Build the APM iOS documentation
 $GIT_HOME/docs/build_docs --doc $GIT_HOME/apm-agent-ios/docs/index.asciidoc --chunk 1 --open
 ```
+
+## Notes
+
+### disabling noisy logs
+
+- CoreTelephony in simulator
+```xcrun simctl spawn booted log config --mode "level:off" --subsystem com.apple.CoreTelephony```
+
+- Layout Constraints warnings
+```xcrun simctl spawn booted log config --mode "level:off" --subsystem com.apple.UIKit```

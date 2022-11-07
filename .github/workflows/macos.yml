@@ -1,0 +1,29 @@
+name: macos
+
+on:
+  push:
+    branches:
+      - main
+      - 8.*
+      - "7.17"
+  pull_request:
+    branches:
+      - main
+      - 8.*
+      - "7.17"
+
+jobs:
+  macos:
+    runs-on: macos-12
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '14.0'
+        
+    - uses: actions/checkout@v2
+
+    - name: Run build
+      run: .ci/scripts/build.sh
+
+    - name: Run test
+      run: xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test

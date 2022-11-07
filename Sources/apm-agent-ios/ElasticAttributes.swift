@@ -1,4 +1,4 @@
-// Copyright © 2021 Elasticsearch BV
+// Copyright © 2022 Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -13,30 +13,26 @@
 //   limitations under the License.
 
 import Foundation
-import Reachability
 
-public class NetworkMonitor : INetworkMonitor {
-    public private(set) var reachability :Reachability
-    
-    public init() throws {
-        reachability = try Reachability()
-        try reachability.startNotifier()
-    }
 
-    deinit {
-        reachability.stopNotifier()
-    }
+public enum ElasticAttributes: String {
+    /**
+    Timestamp applied to all spans at time of export. To help with clock drift.
+     */
+    case exportTimestamp = "telemetry.sdk.elastic_export_timestamp"
     
-    public func getConnection() -> Connection {
-        switch reachability.connection {
-        case .wifi:
-            return .wifi
-        case .cellular:
-            return .cellular
-        case .unavailable:
-            return .unavailable
-        }
-    }
+    /**
+    The id of the device
+     */
+    case deviceIdentifier = "device.id"
     
-    
+    /**
+        histogram metric describing application launch time
+     */
+}
+
+public enum ElasticMetrics : String {
+    case appLaunchTime = "application.launch.time"
+    case appHangtime = "application.responsiveness.hangtime"
+    case appExits = "application.exits"
 }

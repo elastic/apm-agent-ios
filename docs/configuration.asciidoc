@@ -1,57 +1,50 @@
 [[configuration]]
 == Configuration
 
-Configure the agent with `AgentConfiguration` in the agent's `start()` function.
+Configure the agent with `AgentConfigBuilder` passing the `AgentConfiguration` to the `start` function.
 
 // some config example that preferably is correct unlike mine
 [source,swift]
 ----
-let config =  AgentConfiguration()
-config.collectorHost = "192.168.0.1"
-config.collectorPort = 8200
-config.collectorTLS = true
-config.secretToken = "<secret token>"
+let config = AgentConfigBuilder()
+                .withServerUrl(URL(string: "http://localhost:8200"))
+                .withSecretToken("<Token>")
+                .build()
+
 Agent.start(with:config)
 ----
+
+The `AgentConfigBuilder` can be configured with the following functions
 
 [discrete]
 [[configuration-options]]
 === Configuration options
 
-
 [discrete]
-[[collectorHost]]
-==== `collectorHost`
+[[withServerUrl]]
+==== `withServerUrl`
 
-* *Type:* String
-* *Default:* `127.0.0.1`
-// * *Env:* ``
-
-The APM Server host.
-
+* *Type:* URL
+* *Default:* `http://127.0.0.1:8200`
 [discrete]
-[[collectorPort]]
-==== `collectorPort`
-
-* *Type:* Int
-* *Default:* `8200`
-// * *Env:* ``
-
-The APM Server port.
-
-[discrete]
-[[collectorTLS]]
-==== `collectorTLS`
-* *Type:* Bool
-* *Default:* false
-
-Flags whether the APM Server is secured with TLS.
-
-[discrete]
-[[secretToken]]
-==== `secretToken`
+[[withSecretToken]]
+==== `withSecretToken`
 * *Type:* String
 * *Default:* nil
 * *Env:* `OTEL_EXPORTER_OTLP_HEADERS`
 
-Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be define per https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md[OpenTelemetry Protocol Exporter Config] (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
+Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md[OpenTelemetry Protocol Exporter Config] (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
+
+This setting is mutually exclusive with `withApiKey`
+
+[discrete]
+[[withApiKey]]
+==== `withApiKey`
+* *Type:* String
+* Default:* nil
+* *Env:* `OTEL_EXPORTER_OTLP_HEADERS`
+
+Sets the API Token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md[OpenTelemetry Protocol Exporter Config] (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=ApiKey <key>"`)
+
+This setting is mutually exclusive with `withSecretToken`
+

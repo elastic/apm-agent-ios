@@ -13,7 +13,13 @@
 //   limitations under the License.
 
 import Foundation
-import UIKit
+#if os(watchOS)
+    import WatchKit
+#elseif os(macOS)
+    import AppKit
+#else
+    import UIKit
+#endif
 import ResourceExtension
 import OpenTelemetryApi
 import OpenTelemetrySdk
@@ -25,15 +31,33 @@ public class AgentResource  {
             ResourceAttributes.telemetrySdkName.rawValue :  AttributeValue.string("iOS"),
         ]
         
-        
-        overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] = AttributeValue.string(Agent.ELASTIC_SWIFT_AGENT_VERSION)
-                
-        if let deviceId = UIDevice.current.identifierForVendor?.uuidString {
-            overridingAttributes["device.id"] = AttributeValue.string(deviceId)
+        let osDataSource = OperatingSystemDataSource()
+        overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] = AttributeValue.string("semver:\(Agent.ELASTIC_SWIFT_AGENT_VERSION)")
+        overridingAttributes[ResourceAttributes.processRuntimeName.rawValue] = AttributeValue.string(osDataSource.name)
+        overridingAttributes[ResourceAttributes.processRuntimeVersion.rawValue] = AttributeValue.string(osDataSource.version)
+        if let deviceId = AgentResource.identifier()  {
+            overridingAttributes[ElasticAttributes.deviceIdentifier.rawValue] = AttributeValue.string(deviceId)
         }
         
         overridingAttributes[ResourceAttributes.deploymentEnvironment.rawValue] = AttributeValue.string("default")
         
         return defaultResource.merging(other: Resource.init(attributes:overridingAttributes))
     }
+    
+    static private func identifier() -> String? {
+        #if os(watchOS)
+            if #available(watchOS 6.3, *) {
+                return WKInterfaceDevice.current().identifierForVendor?.uuidString
+            } else {
+                return nil
+            }
+        #elseif os(macOS)
+            return nil
+        #else
+            return UIDevice.current.identifierForVendor?.uuidString
+
+        #endif
+    }
+    
+    
 }

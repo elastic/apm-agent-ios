@@ -20,8 +20,39 @@
 [[release-notes-preview-1]]
 ==== Technical preview
 
+[[release-notes-next]]
+==== Next
+-
+
+[[release-notes-v0.3.0]]
+==== v0.3.0
+This version requires APM Server `v8.5.0` and Swift `v5.7`
+[float]
+===== Features
+- Updated Opentelemetry-swift to `v1.2.0`
+- Added agent configuration builder.
+- Added API-Key authorization option to Agent Configuration
+- added `swiftUI.View` extension `reportName(_ name: String) -> View` for optional naming override of auto-generated spans from View instrumentation.
+- Added MetricKit instrumentation.
+
+==== Improvements
+- Improved creation and naming of spans in View instrumentation.
+
+==== Deprecated
+- Deprecated directly creating `AgentConfiguration` objects, in favor of `AgentConfigBuilder`.
+- Removed Tap logger instrumentation.
+
+[[release-notes-0.2.1]]
+==== v0.2.1
+[float]
+===== Features
+* Updated Opentelemetry-swift to `v1.1.2`
+* Added `SwiftUI.View` and `UIViewController` instrumentation.
+* Added `session.id` attributes to spans created by the `View` instrumentation.
+
+
 [[release-notes-0.1.0]]
-==== 0.1.0 - Technical Preview
+==== v0.1.0 - Technical Preview
 [float]
 ===== Features
 * Network status attributes {pull}20[#20]
