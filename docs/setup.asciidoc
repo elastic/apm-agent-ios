@@ -36,7 +36,7 @@ Below is a helpful code-snippet:
 ----
 Package(
     dependencies:[
-        .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "0.2.1"),
+        .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "0.3.0"),
     ],
   targets:[
     .target(
@@ -160,3 +160,29 @@ struct AllProductsList: View {
 ----
 
 NOTE: The entire string `All Products - view appearing` must be inserted to match the default formatting used for the other two naming options.
+
+[descrete]
+[[metrickit-instrumentation]]
+=== MetricKit Instrumentation
+Available for iOS 13 and greater, the agent provides instrumentation of key MetricKit data points:
+* Application Launch times
+* Application responsiveness
+* Application exit counts
+
+Technical details on the metric generated can be found in the https://github.com/elastic/apm/blob/main/specs/agents/mobile/metrics.md#application-metrics[Mobile spec]
+
+[descrete]
+[[app-launch-time]]
+==== `application.launch.time`
+This histogram metric provides launch duration broken down by `first draw`, `first draw (optimized)`, and `resumed`. More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxapplaunchmetric[Apple documentation].
+
+[descrete]
+[[hangtime]]
+==== `application.responsiveness.hangtime`
+A histogram of the different durations of time in which the app is too busy to handle user interaction responsively.
+More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxappresponsivenessmetric[Apple documentation].
+[descrete]
+[[exits]]
+==== `application.exits`
+A count of application exits categorized by various attributes: `foreground` or `background`, and `normal` or abnormal, where abnormal exits are further subdivided.
+More details can be found in the https://developer.apple.com/documentation/metrickit/mxappexitmetric[Apple documentation].
