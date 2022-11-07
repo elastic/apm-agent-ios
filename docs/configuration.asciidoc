@@ -27,7 +27,7 @@ The `AgentConfigBuilder` can be configured with the following functions
 * *Type:* URL
 * *Default:* `http://127.0.0.1:8200`
 [discrete]
-[[withSecretToken]]
+[[secretToken]]
 ==== `withSecretToken`
 * *Type:* String
 * *Default:* nil
