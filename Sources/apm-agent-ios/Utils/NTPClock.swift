@@ -24,7 +24,7 @@ class NTPClock : Clock {
         if let date = TrueTimeClient.sharedInstance.referenceTime?.now() {
             return date
         }
-        os_log("failed to fetch ntp date. using system clock as fallback.")
+        os_log("TrueTime referenceTime unavailable. using system clock as fallback.")
         return Date()
     }
 }

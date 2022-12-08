@@ -49,15 +49,7 @@ class OpenTelemetryInitializer {
 
          // initialize trace provider
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
-            .add(spanProcessor: BatchSpanProcessor(spanExporter: OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL))) { spanData in
-                // This is for clock skew compensation
-                    let exportTimestamp = Date().timeIntervalSince1970.toNanoseconds
-                    for i in spanData.indices {
-                    // This is for clock skew compensation
-                        let newResource = spanData[i].resource.merging(other: Resource(attributes: [ElasticAttributes.exportTimestamp.rawValue: AttributeValue.int(Int(exportTimestamp))]))
-                        _ = spanData[i].settingResource(newResource)
-                }
-            })
+            .add(spanProcessor: BatchSpanProcessor(spanExporter: OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL))))
             .with(resource: resources)
             .with(clock: NTPClock())
             .build())
