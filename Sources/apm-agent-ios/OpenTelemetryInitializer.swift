@@ -59,6 +59,7 @@ class OpenTelemetryInitializer {
                 }
             })
             .with(resource: resources)
+            .with(clock: NTPClock())
             .build())
 
         return group

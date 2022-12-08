@@ -1,13 +1,14 @@
 import Foundation
-import Logging
 import NIO
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import os.log
+import TrueTime
 
 public class Agent {
     
     public static func start(with configuaration: AgentConfiguration) {
+        TrueTimeClient.sharedInstance.start()
         instance = Agent(configuration: configuaration)
         instance?.initialize()
     }
