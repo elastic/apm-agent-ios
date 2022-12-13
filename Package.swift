@@ -20,6 +20,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
         .package(url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.2.0"),
+        .package(url:"https://github.com/elastic/TrueTime.swift.git", branch: "master")
     ],
     targets: [
         .target(name: "MemorySampler",
@@ -41,6 +42,7 @@ let package = Package(
                 .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift"),
                 .product(name: "ResourceExtension", package: "opentelemetry-swift"),
                 .product(name: "Reachability", package: "Reachability.swift"),
+                .product(name: "TrueTime", package: "TrueTime.swift"),
                 "MemorySampler",
                 "CPUSampler"
             ],

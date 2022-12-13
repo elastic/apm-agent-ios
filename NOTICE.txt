@@ -16,6 +16,7 @@ This product includes software licensed under Apache 2.0 from the following sour
 - swift-nio-transport-services (https://github.com/apple/swift-nio-transport-services.git)
 - swift-protobuf (https://github.com/apple/swift-protobuf.git)
 - Thrift-Swift (https://github.com/undefinedlabs/Thrift-Swift)
+- TrueTime.swift (https://github.com/instacart/TrueTime.swift)
 
 ------------------------------------------------------------------------------
 
