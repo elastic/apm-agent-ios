@@ -17,7 +17,7 @@ import Foundation
 public class AgentConfigBuilder {
     var url : URL?
     var auth : String?
-    static let bearer = "bearer"
+    static let bearer = "Bearer"
     static let api = "ApiKey"
     
     public init() {}
