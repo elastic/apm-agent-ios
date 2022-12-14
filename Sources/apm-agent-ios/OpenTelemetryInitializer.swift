@@ -27,8 +27,8 @@ class OpenTelemetryInitializer {
     static let LOG_LABEL = "Elastic-OTLP-Exporter"
     static let AGENT_NAME = "apm-agent-ios"
     struct Headers {
-        static let userAgent = "user-agent"
-        static let authorization = "authorization"
+        static let userAgent = "User-Agent"
+        static let authorization = "Authorization"
     }
 
     static func initialize(_ configuration : AgentConfiguration) -> EventLoopGroup {
