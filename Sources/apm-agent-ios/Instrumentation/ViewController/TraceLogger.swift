@@ -46,7 +46,6 @@ class TraceLogger {
             span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
             os_log("Started trace: %@ - %@ - %@",log:logger,type:.debug,name, span.context.traceId.description, span.context.spanId.description)
 
-            span.setAttribute(key: "session.id", value: SessionManager.instance.session())
             setActiveSpan(span)
             activeSpan = span
         }
