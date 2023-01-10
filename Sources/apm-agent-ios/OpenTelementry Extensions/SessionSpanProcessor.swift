@@ -57,6 +57,7 @@ public struct SessionSpanProcessor : SpanProcessor {
         if let networkStatusInjector = Self.netstatInjector {
             networkStatusInjector.inject(span: span)
         }
+        span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
         processor.onStart(parentContext: parentContext, span: span)
     }
     
