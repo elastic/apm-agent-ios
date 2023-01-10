@@ -15,6 +15,8 @@
 import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import NetworkStatus
+import os.log
 
 public struct SessionSpanProcessor : SpanProcessor {
     var processor : SpanProcessor
@@ -22,6 +24,20 @@ public struct SessionSpanProcessor : SpanProcessor {
     public let isStartRequired: Bool
     public let isEndRequired: Bool
     
+    static var netstatInjector: NetworkStatusInjector? = { () -> NetworkStatusInjector? in
+        do {
+            let netstats = try NetworkStatus()
+            return NetworkStatusInjector(netstat: netstats)
+        } catch {
+            if #available(iOS 14, macOS 11, tvOS 14, *) {
+                os_log(.error, "failed to initialize network connection status: %@", error.localizedDescription)
+            } else {
+                NSLog("failed to initialize network connection status: %@", error.localizedDescription)
+            }
+            return nil
+        }
+    }()
+
     
     public init(spanExporter: SpanExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
                 maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [SpanData]) -> Void)? = nil) {
@@ -38,6 +54,9 @@ public struct SessionSpanProcessor : SpanProcessor {
     
     public func onStart(parentContext: OpenTelemetryApi.SpanContext?, span: OpenTelemetrySdk.ReadableSpan) {
         span.setAttribute(key: ElasticAttributes.sessionId.rawValue, value: AttributeValue.string(SessionManager.instance.session()))
+        if let networkStatusInjector = Self.netstatInjector {
+            networkStatusInjector.inject(span: span)
+        }
         processor.onStart(parentContext: parentContext, span: span)
     }
     

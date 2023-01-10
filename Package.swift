@@ -43,6 +43,7 @@ let package = Package(
                 .product(name: "ResourceExtension", package: "opentelemetry-swift"),
                 .product(name: "Reachability", package: "Reachability.swift"),
                 .product(name: "TrueTime", package: "TrueTime.swift"),
+                .product(name: "NetworkStatus", package: "opentelemetry-swift"),
                 "MemorySampler",
                 "CPUSampler"
             ],
