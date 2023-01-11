@@ -19,22 +19,17 @@ import OpenTelemetryProtocolExporter
 import GRPC
 import NIO
 import Logging
-import ResourceExtension
+
 
 
 
 class OpenTelemetryInitializer {
     static let LOG_LABEL = "Elastic-OTLP-Exporter"
-    static let AGENT_NAME = "apm-agent-ios"
-    struct Headers {
-        static let userAgent = "User-Agent"
-        static let authorization = "Authorization"
-    }
 
     static func initialize(_ configuration : AgentConfiguration) -> EventLoopGroup {
-        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: Self.generateExporterHeaders(configuration.auth))
+        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: OpenTelemetryHelper.generateExporterHeaders(configuration.auth))
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let channel = Self.getChannel(with: configuration, group: group)
+        let channel = OpenTelemetryHelper.getChannel(with: configuration, group: group)
         
         let resources = AgentResource.get().merging(other: AgentEnvResource.resource)
         
@@ -57,38 +52,7 @@ class OpenTelemetryInitializer {
         return group
     }
     
-    private static func getChannel(with config: AgentConfiguration, group: EventLoopGroup) -> ClientConnection {
-      
-        if config.collectorTLS {
-             return ClientConnection.usingPlatformAppropriateTLS(for: group)
-                 .connect(host: config.collectorHost, port: config.collectorPort)
-         } else {
-              return ClientConnection.insecure(group: group)
-                 .connect(host: config.collectorHost, port: config.collectorPort)
-         }
-         
-    }
     
-    private static func generateExporterHeaders(_ auth: String?) -> [(String, String)]? {
-        var headers = [(String, String)]()
-        if let auth = auth {
-            headers.append((Headers.authorization, "\(auth)"))
-        }
-        headers.append((Headers.userAgent, generateExporterUserAgent()))
-
-        return headers
-    }
-
-    private static func generateExporterUserAgent() -> String {
-        var userAgent = "\(AGENT_NAME)/\(Agent.ELASTIC_SWIFT_AGENT_VERSION)"
-        let appInfo = ApplicationDataSource()
-        if let appName = appInfo.name {
-            var appIdent = appName
-            if let appVersion = appInfo.version {
-                appIdent += " \(appVersion)"
-            }
-            userAgent += " (\(appIdent))"
-        }
-        return userAgent
-    }
+    
+   
 }

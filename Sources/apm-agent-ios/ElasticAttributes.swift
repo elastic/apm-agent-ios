@@ -14,6 +14,9 @@
 
 import Foundation
 
+public enum ElasticAgent: String {
+    case name = "apm-agent-ios"
+}
 
 public enum ElasticAttributes: String {
     /**
@@ -29,6 +32,7 @@ public enum ElasticAttributes: String {
     /**
         histogram metric describing application launch time
      */
+    
 }
 
 public enum ElasticMetrics : String {
