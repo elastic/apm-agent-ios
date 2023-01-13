@@ -19,7 +19,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
-        .package(url: "https://github.com/open-telemetry/opentelemetry-swift", branch: "logRecord-memberwise"),
+        .package(url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.3.1"),
         .package(url: "https://github.com/elastic/TrueTime.swift.git", branch: "master")
     ],
     targets: [
