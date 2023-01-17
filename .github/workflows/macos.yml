@@ -1,16 +1,8 @@
-name: macos
+name: ci
 
 on:
   push:
-    branches:
-      - main
-      - 8.*
-      - "7.17"
   pull_request:
-    branches:
-      - main
-      - 8.*
-      - "7.17"
 
 jobs:
   macos:
@@ -19,7 +11,7 @@ jobs:
     - uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: '14.0'
-        
+
     - uses: actions/checkout@v2
 
     - name: Run build
