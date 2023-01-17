@@ -83,7 +83,7 @@ struct CrashManager {
         if crashReporter.hasPendingCrashReport() {
           do {
             let data = try crashReporter.loadPendingCrashReportDataAndReturnError()
-              let lp = loggerProvider.loggerBuilder(instrumentationScopeName: "CrashReport")
+              let lp = loggerProvider.loggerBuilder(instrumentationScopeName: "PLCrashReporter")
                   .setInstrumentationVersion(Self.CRASH_MANAGER_VERSION)
                   .setEventDomain("device")
                   .build()
