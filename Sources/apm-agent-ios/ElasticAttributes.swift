@@ -29,6 +29,8 @@ public enum ElasticAttributes: String {
     /**
         histogram metric describing application launch time
      */
+    
+    case sessionId = "session.id"
 }
 
 public enum ElasticMetrics : String {
