@@ -100,3 +100,6 @@ iOSInjectionProject/
 
 # Elastic documentation
 html_docs
+
+## Dist folder
+dist/
