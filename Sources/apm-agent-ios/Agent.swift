@@ -2,6 +2,7 @@ import Foundation
 import NIO
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import CrashReporter
 import os.log
 import TrueTime
 
@@ -28,6 +29,8 @@ public class Agent {
     let group : EventLoopGroup
     
     let instrumentation = InstrumentationWrapper()
+    
+    let crashManager : CrashManager
 
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
@@ -36,12 +39,18 @@ public class Agent {
 
         group = OpenTelemetryInitializer.initialize(configuration)
 
+        crashManager = CrashManager(resource:AgentResource.get().merging(other: AgentEnvResource.resource),
+                                    group: group,
+                                    agentConfiguration: configuration)
         os_log("Initializing Elastic APM Agent.")
     }
 
     private func initialize() {
+        crashManager.initializeCrashReporter()
         instrumentation.initalize()
     }
+
+
 
     deinit {
         try! group.syncShutdownGracefully()
