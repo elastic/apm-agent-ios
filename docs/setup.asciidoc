@@ -102,6 +102,29 @@ var config = AgentConfigBuilder()
 <2> Set secret token for APM server connection
 
 [discrete]
+[[instrumentation-config]]
+=== Instrumentation Configuration
+
+An optional parameter for configuring instrumentation is also available on `Agent.start`:
+[source,swift]
+----
+    ...
+
+    let instrumentationConfig = InstrumentationConfigBuilder()
+                                         .disableAgent()
+                                         .build()
+
+    Agent.start(with: config, instrumentationConfig)
+----
+
+==== Configuration Options
+===== `disableAgent() -> Self`
+Disables the Elastic agent. This is useful for disabling the agent during development without having to remove the Elastic agent completely. A log will report
+`"Elastic APM Agent has been disabled."`.
+
+===== `withCrashReporting(enable _: Bool) -> Self`
+Toggle for crash reporting. Enabled by default. Since only one crash reporter can be set in iOS, this allows for 3rd party crash reporter preference without conflict.
+[discrete]
 [[view-instrumentation]]
 === View instrumentation
 
