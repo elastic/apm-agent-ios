@@ -48,3 +48,11 @@ Sets the API Token for connecting to an authenticated APM Server. If using the e
 
 This setting is mutually exclusive with `withSecretToken`
 
+
+[discrete]
+[[withSessionTimeout]]
+==== `withSessionTimeout`
+* *Type:* TimeInterval
+* *Default:* 30 minutes
+
+Sets the session timeout interval. After this period of inactivity, the next recorded activity will be the start of a new session.

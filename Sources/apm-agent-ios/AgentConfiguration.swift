@@ -12,6 +12,8 @@ public struct AgentConfiguration {
     public var collectorHost = "127.0.0.1"
     public var collectorPort = 8200
     public var collectorTLS = false
+    public var sessionTimeout : TimeInterval? = nil
+    
     var auth : String? = nil
     var token : String? = nil
     public var secretToken : String {
