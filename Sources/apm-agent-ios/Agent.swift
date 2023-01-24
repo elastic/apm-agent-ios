@@ -34,7 +34,9 @@ public class Agent {
 
     private init(configuration: AgentConfiguration) {
         self.configuration = configuration
-        
+        if let timeout = configuration.sessionTimeout {
+            SessionManager.instance.setSessionTimeout(timeout)
+        }
         _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
 
         group = OpenTelemetryInitializer.initialize(configuration)

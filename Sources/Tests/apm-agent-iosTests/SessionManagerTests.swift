@@ -36,4 +36,30 @@ final class SessionManagerTests: XCTestCase {
 
         XCTAssertTrue(SessionManager.instance.isValid())
     }
+    
+    func testMaxSessionLength() {
+        _ = SessionManager.instance
+        let uuid = UUID()
+        UserDefaults.standard.setValue(uuid.uuidString, forKey: SessionManager.sessionIdKey)
+
+        UserDefaults.standard.setValue(Date().timeIntervalSince1970, forKey: SessionManager.sessionTimerKey)
+        
+        UserDefaults.standard.setValue(Date().timeIntervalSince1970, forKey: SessionManager.sessionStartKey)
+        
+        XCTAssertTrue(SessionManager.instance.session() == uuid.uuidString)
+
+        XCTAssertTrue(SessionManager.instance.isValid())
+        
+        // Set 4 hours ago session start
+        UserDefaults.standard.setValue(Date(timeInterval: -SessionManager.sessionMax, since: Date()).timeIntervalSince1970, forKey: SessionManager.sessionStartKey)
+
+        XCTAssertFalse(SessionManager.instance.isValid())
+        
+        
+        XCTAssertTrue(SessionManager.instance.session() != uuid.uuidString)
+
+        XCTAssertTrue(SessionManager.instance.isValid())
+
+    
+    }
 }

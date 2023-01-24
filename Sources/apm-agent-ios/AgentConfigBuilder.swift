@@ -17,6 +17,7 @@ import Foundation
 public class AgentConfigBuilder {
     var url : URL?
     var auth : String?
+    var sessionTimeout : TimeInterval?
     static let bearer = "Bearer"
     static let api = "ApiKey"
     
@@ -37,6 +38,11 @@ public class AgentConfigBuilder {
         return self
     }
     
+    public func withSessionTimeout(_ timeout: TimeInterval) -> Self {
+        self.sessionTimeout = timeout
+        return self
+    }
+    
     public func build() -> AgentConfiguration {
         
         var config = AgentConfiguration(noop: "")
@@ -52,6 +58,10 @@ public class AgentConfigBuilder {
             }
             if let auth = self.auth {
                 config.auth = auth
+            }
+            
+            if let sessionTimeout = sessionTimeout {
+                config.sessionTimeout = sessionTimeout
             }
         }
         return config
