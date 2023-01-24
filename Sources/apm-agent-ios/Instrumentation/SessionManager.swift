@@ -17,8 +17,14 @@ import Foundation
 public class SessionManager {
     static let sessionIdKey = "elastic.session.id"
     static let sessionTimerKey = "elastic.session.timer"
-    static let sessionTimeout: TimeInterval = 30 * 60
-    public static var instance = SessionManager()
+    static let defaultSessionTimeout: TimeInterval = 30 * 60 // 30 minutes
+    static let sessionMax : TimeInterval = 4 * 60 * 60 // 4 hours
+    
+    private var sessionStart : Date = Date.distantPast
+    private var sessionTimeout : TimeInterval = defaultSessionTimeout
+    private let timeoutLock = NSLock()
+    public private(set) static var instance = SessionManager()
+    
     private var currentId: UUID {
         get {
             UUID(uuidString: UserDefaults.standard.object(forKey: Self.sessionIdKey) as? String ?? "") ?? UUID()
@@ -43,6 +49,14 @@ public class SessionManager {
         }
     }
 
+    public func setSessionTimeout(_ timeout: TimeInterval) {
+        timeoutLock.lock()
+        defer {
+            timeoutLock.unlock()
+        }
+        self.sessionTimeout = timeout
+    }
+    
     public func session() -> String {
         if isValid() {
             updateTimeout()
@@ -62,6 +76,10 @@ public class SessionManager {
     }
 
     func isValid() -> Bool {
-        lastUpdated.timeIntervalSinceNow.magnitude < Self.sessionTimeout
+        timeoutLock.lock()
+        let timeout = sessionTimeout
+        timeoutLock.unlock()
+        
+        return lastUpdated.timeIntervalSinceNow.magnitude < timeout && Date().timeIntervalSince(sessionStart) >= Self.sessionMax
     }
 }
