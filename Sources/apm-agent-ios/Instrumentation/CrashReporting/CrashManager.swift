@@ -74,7 +74,9 @@ struct CrashManager {
 
         // Enable the Crash Reporter.
         do {
-          try crashReporter.enableAndReturnError()
+            if (!isDebuggerAttached()) {
+                try crashReporter.enableAndReturnError()
+            }
         } catch let error {
           print("Warning: Could not enable crash reporter: \(error)")
         }
@@ -122,5 +124,28 @@ struct CrashManager {
 
         // Purge the report.
         crashReporter.purgePendingCrashReport()
+    }
+    
+    private func isDebuggerAttached() -> Bool {
+        var info = kinfo_proc()
+        let info_size = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+        info_size[0] = MemoryLayout<kinfo_proc>.size
+        let name  = UnsafeMutablePointer<Int32>.allocate(capacity: 4)
+        
+        name[0] = CTL_KERN
+        name[1] = KERN_PROC
+        name[2] = KERN_PROC_PID
+        name[3] = getpid()
+        
+        if (sysctl(name, 4, &info, info_size, nil, 0) == -1) {
+            print("sysctl() failed: \(String(describing: strerror(errno)))")
+            return false
+        }
+        
+        if ((info.kp_proc.p_flag & P_TRACED) != 0) {
+            return true
+        }
+    
+    return false
     }
 }
