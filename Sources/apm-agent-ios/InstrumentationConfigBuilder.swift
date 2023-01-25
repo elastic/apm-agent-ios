@@ -17,29 +17,60 @@ import Foundation
 
 public class InstrumentationConfigBuilder {
     var enableCrashReporting : Bool?
-    var enableAgent : Bool?
-    
+    var enableURLSessionInstrumentation: Bool?
+    var enableViewControllerInstrumentation: Bool?
+    var enableAppMetricInstrumentation: Bool?
+    var enableSystemMetrics: Bool?
+
     public init() {}
     
     public func withCrashReporting(_ enable: Bool) -> Self {
         self.enableCrashReporting = enable
         return self
     }
-    
-    public func disableAgent() -> Self {
-        enableAgent = false
+
+    public func withURLSessionInstrumentation(_ enable: Bool) -> Self {
+        self.enableURLSessionInstrumentation = enable
         return self
     }
-    
+
+    public func withViewControllerInstrumentation(_ enable: Bool) -> Self {
+        self.enableViewControllerInstrumentation = enable
+        return self
+    }
+    public func withAppMetricInstrumentation(_ enable: Bool) -> Self {
+        self.enableAppMetricInstrumentation = enable
+        return self
+    }
+
+    public func withSystemMetrics(_ enable: Bool) -> Self {
+        self.enableSystemMetrics = enable
+        return self
+    }
+
     public func build() -> InstrumentationConfiguration {
         var config = InstrumentationConfiguration()
-        if let enableAgent = self.enableAgent {
-            config.enableAgent = enableAgent
-        }
         
         if let enableCrashReporting = self.enableCrashReporting  {
             config.enableCrashReporting = enableCrashReporting
         }
+
+        if let enableURLSessionInstrumentation = self.enableURLSessionInstrumentation {
+            config.enableURLSessionInstrumentation = enableURLSessionInstrumentation
+        }
+
+        if let enableViewControllerInstrumentation = self.enableViewControllerInstrumentation {
+            config.enableViewControllerInstrumentation = enableViewControllerInstrumentation
+        }
+
+        if let enableAppMetricInstrumentation = self.enableAppMetricInstrumentation {
+            config.enableAppMetricInstrumentation = enableAppMetricInstrumentation
+        }
+
+        if let enableSystemMetrics = self.enableSystemMetrics {
+            config.enableSystemMetrics = enableSystemMetrics
+        }
+
         return config
     }
 }

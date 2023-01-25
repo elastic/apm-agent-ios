@@ -16,8 +16,11 @@ import Foundation
 
 
 public struct InstrumentationConfiguration {
-    
-    public var enableAgent = true
     public var enableCrashReporting = true
+    public var enableURLSessionInstrumentation = true
+    public var enableViewControllerInstrumentation = true
+    public var enableAppMetricInstrumentation = true
+    public var enableSystemMetrics = true
+
     public init() {}
 }

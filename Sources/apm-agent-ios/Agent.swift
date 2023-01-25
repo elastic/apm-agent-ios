@@ -10,14 +10,14 @@ public class Agent {
     
     
     
-    public static func start(with configuaration: AgentConfiguration, _ instrumentationConfiguration: InstrumentationConfiguration = InstrumentationConfiguration()) {
-        if !instrumentationConfiguration.enableAgent {
+    public static func start(with configuration: AgentConfiguration, _ instrumentationConfiguration: InstrumentationConfiguration = InstrumentationConfiguration()) {
+        if !configuration.enableAgent {
             os_log("Elastic APM Agent has been disabled.")
             return
         }
         
         TrueTimeClient.sharedInstance.start()
-        instance = Agent(configuration: configuaration, instrumentationConfiguration: instrumentationConfiguration)
+        instance = Agent(configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
         instance?.initialize()
     }
 
@@ -35,7 +35,7 @@ public class Agent {
     
     let group : EventLoopGroup
     
-    let instrumentation = InstrumentationWrapper()
+    let instrumentation : InstrumentationWrapper
     
     let instrumentationConfiguration : InstrumentationConfiguration
     
@@ -44,6 +44,7 @@ public class Agent {
     private init(configuration: AgentConfiguration, instrumentationConfiguration : InstrumentationConfiguration) {
         self.configuration = configuration
         self.instrumentationConfiguration = instrumentationConfiguration
+        instrumentation = InstrumentationWrapper(config: instrumentationConfiguration)
         _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
 
         group = OpenTelemetryInitializer.initialize(configuration)

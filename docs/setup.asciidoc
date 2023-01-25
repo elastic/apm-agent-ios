@@ -111,7 +111,7 @@ An optional parameter for configuring instrumentation is also available on `Agen
     ...
 
     let instrumentationConfig = InstrumentationConfigBuilder()
-                                         .disableAgent()
+                                         .withCrashReporting(true)
                                          .build()
 
     Agent.start(with: config, instrumentationConfig)
@@ -119,14 +119,47 @@ An optional parameter for configuring instrumentation is also available on `Agen
 [discrete]
 [[config-opts]]
 ==== Configuration Options
-[discrete]
-[[disableAgent]]
-===== `disableAgent() -> Self`
-Disables the Elastic agent. This is useful for disabling the agent during development without having to remove the Elastic agent completely. A log will report `"Elastic APM Agent has been disabled."`
+
 [discrete]
 [[with-crash-reporting]]
-===== `withCrashReporting(enable _: Bool) -> Self`
+===== `withCrashReporting(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
 Toggle for crash reporting. Enabled by default. Since only one crash reporter can be set in iOS, this allows for 3rd party crash reporter preference without conflict.
+
+[discrete]
+[[with-app-metrics]]
+===== `withAppMetricInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles AppMetric instrumentation.
+
+[discrete]
+[[with-url-session-instrumentation]]
+===== `withURLSessionInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles network instrumentation.
+
+[discrete]
+[[with-view-controller-instrumentation]]
+===== `withViewControllerInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles view controller instrumentation.
+
+[discrete]
+[[with-System-Metrics]]
+===== `withSystemMetrics(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles metric generation for memory and cpu usage.
+
 [discrete]
 [[view-instrumentation]]
 === View instrumentation
