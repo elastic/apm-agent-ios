@@ -116,12 +116,15 @@ An optional parameter for configuring instrumentation is also available on `Agen
 
     Agent.start(with: config, instrumentationConfig)
 ----
-
+[discrete]
+[[config-opts]]
 ==== Configuration Options
+[discrete]
+[[disableAgent]]
 ===== `disableAgent() -> Self`
-Disables the Elastic agent. This is useful for disabling the agent during development without having to remove the Elastic agent completely. A log will report
-`"Elastic APM Agent has been disabled."`.
-
+Disables the Elastic agent. This is useful for disabling the agent during development without having to remove the Elastic agent completely. A log will report `"Elastic APM Agent has been disabled."`
+[discrete]
+[[with-crash-reporting]]
 ===== `withCrashReporting(enable _: Bool) -> Self`
 Toggle for crash reporting. Enabled by default. Since only one crash reporter can be set in iOS, this allows for 3rd party crash reporter preference without conflict.
 [discrete]
