@@ -15,13 +15,19 @@
 import Foundation
 
 public class AgentConfigBuilder {
+    var enableAgent : Bool?
     var url : URL?
     var auth : String?
     static let bearer = "Bearer"
     static let api = "ApiKey"
     
     public init() {}
-    
+
+    public func disableAgent() -> Self {
+        enableAgent = false
+        return self
+    }
+
     public func withServerUrl(_ url: URL) -> Self {
         self.url = url
         return self
@@ -53,6 +59,9 @@ public class AgentConfigBuilder {
             if let auth = self.auth {
                 config.auth = auth
             }
+        }
+        if let enableAgent = enableAgent {
+            config.enableAgent = enableAgent
         }
         return config
     }

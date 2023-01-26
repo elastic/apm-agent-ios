@@ -8,9 +8,16 @@ import TrueTime
 
 public class Agent {
     
-    public static func start(with configuaration: AgentConfiguration) {
+    
+    
+    public static func start(with configuration: AgentConfiguration, _ instrumentationConfiguration: InstrumentationConfiguration = InstrumentationConfiguration()) {
+        if !configuration.enableAgent {
+            os_log("Elastic APM Agent has been disabled.")
+            return
+        }
+        
         TrueTimeClient.sharedInstance.start()
-        instance = Agent(configuration: configuaration)
+        instance = Agent(configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
         instance?.initialize()
     }
 
@@ -28,25 +35,34 @@ public class Agent {
     
     let group : EventLoopGroup
     
-    let instrumentation = InstrumentationWrapper()
+    let instrumentation : InstrumentationWrapper
     
-    let crashManager : CrashManager
+    let instrumentationConfiguration : InstrumentationConfiguration
+    
+    let crashManager : CrashManager?
 
-    private init(configuration: AgentConfiguration) {
+    private init(configuration: AgentConfiguration, instrumentationConfiguration : InstrumentationConfiguration) {
         self.configuration = configuration
-        
+        self.instrumentationConfiguration = instrumentationConfiguration
+        instrumentation = InstrumentationWrapper(config: instrumentationConfiguration)
         _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
 
         group = OpenTelemetryInitializer.initialize(configuration)
 
-        crashManager = CrashManager(resource:AgentResource.get().merging(other: AgentEnvResource.resource),
-                                    group: group,
-                                    agentConfiguration: configuration)
+        if instrumentationConfiguration.enableCrashReporting {
+            crashManager = CrashManager(resource:AgentResource.get().merging(other: AgentEnvResource.resource),
+                                        group: group,
+                                        agentConfiguration: configuration)
+        } else {
+            crashManager = nil
+        }
         os_log("Initializing Elastic APM Agent.")
     }
 
     private func initialize() {
-        crashManager.initializeCrashReporter()
+        if instrumentationConfiguration.enableCrashReporting {
+            crashManager?.initializeCrashReporter()
+        }
         instrumentation.initalize()
     }
 
