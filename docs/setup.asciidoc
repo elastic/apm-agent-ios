@@ -220,22 +220,23 @@ struct AllProductsList: View {
 
 NOTE: The entire string `All Products - view appearing` must be inserted to match the default formatting used for the other two naming options.
 
-[descrete]
+[discrete]
 [[metrickit-instrumentation]]
 === MetricKit Instrumentation
 Available for iOS 13 and greater, the agent provides instrumentation of key MetricKit data points:
+
 * Application Launch times
 * Application responsiveness
 * Application exit counts
 
 Technical details on the metric generated can be found in the https://github.com/elastic/apm/blob/main/specs/agents/mobile/metrics.md#application-metrics[Mobile spec]
 
-[descrete]
+[discrete]
 [[app-launch-time]]
 ==== `application.launch.time`
 This histogram metric provides launch duration broken down by `first draw`, `first draw (optimized)`, and `resumed`. More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxapplaunchmetric[Apple documentation].
 
-[descrete]
+[discrete]
 [[hangtime]]
 ==== `application.responsiveness.hangtime`
 A histogram of the different durations of time in which the app is too busy to handle user interaction responsively.
