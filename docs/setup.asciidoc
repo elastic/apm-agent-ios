@@ -241,7 +241,8 @@ This histogram metric provides launch duration broken down by `first draw`, `fir
 ==== `application.responsiveness.hangtime`
 A histogram of the different durations of time in which the app is too busy to handle user interaction responsively.
 More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxappresponsivenessmetric[Apple documentation].
-[descrete]
+
+[discrete]
 [[exits]]
 ==== `application.exits`
 A count of application exits categorized by various attributes: `foreground` or `background`, and `normal` or abnormal, where abnormal exits are further subdivided.
