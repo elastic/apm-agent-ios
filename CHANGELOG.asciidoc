@@ -22,7 +22,21 @@
 
 [[release-notes-next]]
 ==== Next
--
+
+[[release-notes-v0.4.0]]
+==== v0.4.0 - 2023/01/26
+===== Features
+- Updated Opentelemetry-Swift to `v1.3.1`
+- Added TrueTime for managing agent-server clock-skew.
+- Added configuration options for Session timeout.
+- Added configuration for all instrumentation options.
+- Added configuration that completely disables the agent.
+- Added PLCrashReporter.
+
+===== Improvements
+- Expanded `session.id` attributes to all relevant signals (Spans & Logs)
+- Expanded network status attributes to all spans (not just networking spans)
+
 
 [[release-notes-v0.3.0]]
 ==== v0.3.0

@@ -1,4 +1,4 @@
-// Copyright © 2021 Elasticsearch BV
+// Copyright © 2022 Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -13,7 +13,18 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetryApi
+import OpenTelemetrySdk
+import TrueTime
+import os.log
 
-extension Agent {
-    public static let ELASTIC_SWIFT_AGENT_VERSION : String = "0.4.0"
+
+class NTPClock : Clock {
+    var now: Date {
+        if let date = TrueTimeClient.sharedInstance.referenceTime?.now() {
+            return date
+        }
+        os_log("TrueTime referenceTime unavailable. using system clock as fallback.")
+        return Date()
+    }
 }

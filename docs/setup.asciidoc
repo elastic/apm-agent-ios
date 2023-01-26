@@ -36,7 +36,7 @@ Below is a helpful code-snippet:
 ----
 Package(
     dependencies:[
-        .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "0.3.0"),
+=         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "0.4.0"),
     ],
   targets:[
     .target(
@@ -102,6 +102,65 @@ var config = AgentConfigBuilder()
 <2> Set secret token for APM server connection
 
 [discrete]
+[[instrumentation-config]]
+=== Instrumentation Configuration
+
+An optional parameter for configuring instrumentation is also available on `Agent.start`:
+[source,swift]
+----
+    ...
+
+    let instrumentationConfig = InstrumentationConfigBuilder()
+                                         .withCrashReporting(true)
+                                         .build()
+
+    Agent.start(with: config, instrumentationConfig)
+----
+[discrete]
+[[config-opts]]
+==== Configuration Options
+
+[discrete]
+[[with-crash-reporting]]
+===== `withCrashReporting(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggle for crash reporting. Enabled by default. Since only one crash reporter can be set in iOS, this allows for 3rd party crash reporter preference without conflict.
+
+[discrete]
+[[with-app-metrics]]
+===== `withAppMetricInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles AppMetric instrumentation.
+
+[discrete]
+[[with-url-session-instrumentation]]
+===== `withURLSessionInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles network instrumentation.
+
+[discrete]
+[[with-view-controller-instrumentation]]
+===== `withViewControllerInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles view controller instrumentation.
+
+[discrete]
+[[with-System-Metrics]]
+===== `withSystemMetrics(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles metric generation for memory and cpu usage.
+
+[discrete]
 [[view-instrumentation]]
 === View instrumentation
 
@@ -161,27 +220,29 @@ struct AllProductsList: View {
 
 NOTE: The entire string `All Products - view appearing` must be inserted to match the default formatting used for the other two naming options.
 
-[descrete]
+[discrete]
 [[metrickit-instrumentation]]
 === MetricKit Instrumentation
 Available for iOS 13 and greater, the agent provides instrumentation of key MetricKit data points:
+
 * Application Launch times
 * Application responsiveness
 * Application exit counts
 
 Technical details on the metric generated can be found in the https://github.com/elastic/apm/blob/main/specs/agents/mobile/metrics.md#application-metrics[Mobile spec]
 
-[descrete]
+[discrete]
 [[app-launch-time]]
 ==== `application.launch.time`
 This histogram metric provides launch duration broken down by `first draw`, `first draw (optimized)`, and `resumed`. More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxapplaunchmetric[Apple documentation].
 
-[descrete]
+[discrete]
 [[hangtime]]
 ==== `application.responsiveness.hangtime`
 A histogram of the different durations of time in which the app is too busy to handle user interaction responsively.
 More details about the MetricKit data point can be found in the https://developer.apple.com/documentation/metrickit/mxappresponsivenessmetric[Apple documentation].
-[descrete]
+
+[discrete]
 [[exits]]
 ==== `application.exits`
 A count of application exits categorized by various attributes: `foreground` or `background`, and `normal` or abnormal, where abnormal exits are further subdivided.

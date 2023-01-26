@@ -30,12 +30,15 @@ class InstrumentationWrapper {
     #endif
 
     var urlSessionInstrumentation: URLSessionInstrumentation?
-
+    let config : InstrumentationConfiguration
     
-    init() {
+    init(config: InstrumentationConfiguration) {
+        self.config = config
         #if os(iOS)
             do {
-                vcInstrumentation = try ViewControllerInstrumentation()
+                if self.config.enableViewControllerInstrumentation {
+                    vcInstrumentation = try ViewControllerInstrumentation()
+                }
             } catch {
                 print("failed to initalize view controller instrumentation: \(error)")
             }
@@ -43,21 +46,26 @@ class InstrumentationWrapper {
     }
     
     func initalize() {
-#if os(iOS)
-if #available(iOS 13.0, *) {
-    _ = MemorySampler()
-    _ = CPUSampler()
-    appMetrics = AppMetrics()
-    if let metrics = appMetrics as? AppMetrics {
-        metrics.receiveReports()
-    }
-}
-#endif
-initializeNetworkInstrumentation()
-#if os(iOS)
-    vcInstrumentation?.swizzle()
-//            applicationInstrumentation?.swizzle()
-#endif // os(iOS)
+        #if os(iOS)
+        if #available(iOS 13.0, *) {
+            if config.enableSystemMetrics {
+                _ = MemorySampler()
+                _ = CPUSampler()
+            }
+            if config.enableAppMetricInstrumentation {
+                appMetrics = AppMetrics()
+                if let metrics = appMetrics as? AppMetrics {
+                   metrics.receiveReports()
+               }
+            }
+        }
+        #endif
+        if config.enableURLSessionInstrumentation {
+            initializeNetworkInstrumentation()
+        }
+        #if os(iOS)
+            vcInstrumentation?.swizzle()
+        #endif // os(iOS)
     }
     
     private func initializeNetworkInstrumentation() {

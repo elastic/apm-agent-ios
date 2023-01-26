@@ -8,12 +8,13 @@ public struct AgentConfiguration {
     init(noop: Any) {
         
     }
-    
+    public var enableAgent = true
     public var collectorHost = "127.0.0.1"
     public var collectorPort = 8200
     public var collectorTLS = false
     var auth : String? = nil
     var token : String? = nil
+
     public var secretToken : String {
         set (token) {
             self.token = token

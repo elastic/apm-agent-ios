@@ -48,3 +48,7 @@ Sets the API Token for connecting to an authenticated APM Server. If using the e
 
 This setting is mutually exclusive with `withSecretToken`
 
+[discrete]
+[[disableAgent]]
+===== `disableAgent() -> Self`
+Disables the Elastic agent. This is useful for disabling the agent during development without having to remove the Elastic agent completely. A log will report `"Elastic APM Agent has been disabled."`

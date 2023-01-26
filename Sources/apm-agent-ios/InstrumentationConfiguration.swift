@@ -1,4 +1,4 @@
-// Copyright © 2021 Elasticsearch BV
+// Copyright © 2023 Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -14,6 +14,13 @@
 
 import Foundation
 
-extension Agent {
-    public static let ELASTIC_SWIFT_AGENT_VERSION : String = "0.4.0"
+
+public struct InstrumentationConfiguration {
+    public var enableCrashReporting = true
+    public var enableURLSessionInstrumentation = true
+    public var enableViewControllerInstrumentation = true
+    public var enableAppMetricInstrumentation = true
+    public var enableSystemMetrics = true
+
+    public init() {}
 }
