@@ -15,5 +15,5 @@
 import Foundation
 
 extension Agent {
-    public static let ELASTIC_SWIFT_AGENT_VERSION : String = "0.4.0"
+    public static let ELASTIC_SWIFT_AGENT_VERSION : String = "0.4.1"
 }

@@ -23,6 +23,11 @@
 [[release-notes-next]]
 ==== Next
 
+[[release-notes-v0.4.1]]
+==== v0.4.1 - 2023/02/06
+===== Fixes
+- Added a version to TrueTime.swift in package.swift
+
 [[release-notes-v0.4.0]]
 ==== v0.4.0 - 2023/01/26
 ===== Features
