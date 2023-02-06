@@ -60,7 +60,7 @@ class AppMetrics : NSObject, MXMetricManagerSubscriber {
         }
     }
     
-    let meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: instrumentation_name, instrumentationVersion: instrumentation_version)
+    let meter = OpenTelemetry.instance.meterProvider.get(instrumentationName: instrumentation_name, instrumentationVersion: instrumentation_version)
     
     func receiveReports() {
         let shared = MXMetricManager.shared
