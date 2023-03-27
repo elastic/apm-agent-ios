@@ -22,7 +22,7 @@ public class Agent {
     }
 
     public static func start() {
-        Agent.start(with: AgentConfiguration(noop: ""))
+        Agent.start(with: AgentConfiguration())
     }
 
     public class func shared() -> Agent? {
@@ -40,11 +40,17 @@ public class Agent {
     let instrumentationConfiguration : InstrumentationConfiguration
     
     let crashManager : CrashManager?
+    
+    let agentConfigManager : AgentConfigManager
 
     private init(configuration: AgentConfiguration, instrumentationConfiguration : InstrumentationConfiguration) {
         self.configuration = configuration
         self.instrumentationConfiguration = instrumentationConfiguration
         instrumentation = InstrumentationWrapper(config: instrumentationConfiguration)
+
+       agentConfigManager = AgentConfigManager(resource: AgentResource.get().merging(other: AgentEnvResource.resource), config: configuration)
+        
+        agentConfigManager.fetch()
         
         group = OpenTelemetryInitializer.initialize(configuration)
 

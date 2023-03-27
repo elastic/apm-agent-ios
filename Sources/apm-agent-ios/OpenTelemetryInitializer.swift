@@ -33,7 +33,7 @@ class OpenTelemetryInitializer {
         
         let resources = AgentResource.get().merging(other: AgentEnvResource.resource)
         
-        
+                
         // initialize meter provider
         OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
             .with(processor: MetricProcessorSdk())
