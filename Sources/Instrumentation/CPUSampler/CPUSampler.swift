@@ -20,7 +20,7 @@ public class CPUSampler {
     let meter: Meter
     var gauge: DoubleObserverMetric
     public init() {
-        meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "CPU Sampler", instrumentationVersion: "0.0.1")
+        meter = OpenTelemetry.instance.meterProvider.get(instrumentationName: "CPU Sampler", instrumentationVersion: "0.0.1")
         gauge = meter.createDoubleObservableGauge(name: "system.cpu.usage") {
             gauge in
             gauge.observe(value: CPUSampler.cpuFootprint(), labels: ["state": "app"])

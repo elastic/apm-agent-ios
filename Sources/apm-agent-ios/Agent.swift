@@ -45,8 +45,7 @@ public class Agent {
         self.configuration = configuration
         self.instrumentationConfiguration = instrumentationConfiguration
         instrumentation = InstrumentationWrapper(config: instrumentationConfiguration)
-        _ = OpenTelemetrySDK.instance // initialize sdk, or else it will over write our providers
-
+        
         group = OpenTelemetryInitializer.initialize(configuration)
 
         if instrumentationConfiguration.enableCrashReporting {

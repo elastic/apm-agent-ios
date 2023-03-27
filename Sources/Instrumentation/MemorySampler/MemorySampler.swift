@@ -22,7 +22,7 @@ public class MemorySampler {
     var gauge : IntObserverMetric
     
     public init() {
-        meter = OpenTelemetrySDK.instance.meterProvider.get(instrumentationName: "Memory Sampler", instrumentationVersion: "0.0.1")
+        meter = OpenTelemetry.instance.meterProvider.get(instrumentationName: "Memory Sampler", instrumentationVersion: "0.0.1")
         gauge = meter.createIntObservableGauge(name: "system.memory.usage") { gauge in
             if let memoryUsage = MemorySampler.memoryFootprint() {
                 gauge.observe(value: Int(memoryUsage), labels: ["state": "app"])
