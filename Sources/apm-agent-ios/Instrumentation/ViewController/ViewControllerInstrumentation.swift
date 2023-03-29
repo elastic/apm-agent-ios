@@ -82,7 +82,7 @@ internal class VCNameOverrideStore {
         }
 
         static func getTracer() -> TracerSdk {
-            OpenTelemetry.instance.tracerProvider.get(instrumentationName: "UIViewController", instrumentationVersion: "0.0.2") as! TracerSdk
+            OpenTelemetry.instance.tracerProvider.get(instrumentationName: "UIViewController", instrumentationVersion: "0.0.3") as! TracerSdk
         }
 
         

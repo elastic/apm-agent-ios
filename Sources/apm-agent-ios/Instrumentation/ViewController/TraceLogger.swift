@@ -74,16 +74,16 @@ class TraceLogger {
         if let activeSpan = getActiveSpan() {
             if let preferredName = preferredName, activeSpan.name != preferredName {
                 activeSpan.name = preferredName
-                
             }
             if !VCNameOverrideStore.instance().name.isEmpty {
                 activeSpan.name = VCNameOverrideStore.instance().name
                 VCNameOverrideStore.instance().name = ""
             }
-            
+            OpenTelemetry.instance.contextProvider.removeContextForSpan(activeSpan)
         }
             
         loadCount -= 1
+
         if  let associatedSpan = getActiveSpan(), loadCount == 0 {
             os_log("Stopping trace: %@ - %@ - %@", log:logger, type:.debug,associatedSpan.name,associatedSpan.context.traceId.description, associatedSpan.context.spanId.description)
 

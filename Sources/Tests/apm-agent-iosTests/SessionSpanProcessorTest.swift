@@ -42,7 +42,7 @@ class SessionSpanProcessorTest : XCTestCase {
     func testSessionId() {
         let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
 
-        tracerSdkFactory.addSpanProcessor(SessionSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
+        tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
         let span1 = createSampledEndedSpan(spanName: spanName1)
         let exported = waitingSpanExporter.waitForExport()
         XCTAssertEqual(exported?.count, 1)
