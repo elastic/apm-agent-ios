@@ -18,6 +18,18 @@ import OpenTelemetrySdk
 class CentralConfig {
     static let CentralConfigKey = "elastic.central.configuration"
     
+    public var data : CentralConfigData {
+        get {
+            if let config = self.config {
+                do {
+                    return try JSONDecoder().decode(CentralConfigData.self, from: config.data(using: .utf8)!)
+                } catch {
+                    return CentralConfigData()
+                }
+            }
+            return CentralConfigData()
+        }
+    }
     
     public var config : String? {
         get {

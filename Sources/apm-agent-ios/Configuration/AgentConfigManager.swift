@@ -17,22 +17,23 @@ import OpenTelemetrySdk
 import Logging
 
 enum CentralConfigResponse : Int {
-    case ok = 200,
-    case not_modified = 304,
-    case forbidden = 403,
-    case not_found = 404
-    case unavailable = 503,
+    case ok = 200
+    case not_modified = 304
+    case forbidden = 403
+    case not_found = 40
+    case unavailable = 503
 }
 
 class AgentConfigManager {
-    static let LOG_LABEL = "co.elastic.centralConfigFetcher"
     static let ETAG_KEY = "elastic.central.config.etag"
-    static let MAXAGE_KEY = "elastic.central.config.etag"
+    static let MAXAGE_KEY = "elastic.central.config.maxAge"
+
+    public let agent : AgentConfiguration
+    public let central : CentralConfig
+    public let instrumentation : InstrumentationConfiguration
 
     let logger : Logger
-    let centralConfig : CentralConfig
     let resource: Resource
-    let configuration : AgentConfiguration
     let serviceEnvironment : String
     let serviceName : String
     let fetchQueue = DispatchQueue(label: "co.elastic.centralConfigFetch")
@@ -41,30 +42,37 @@ class AgentConfigManager {
     
     var etag : String? {
         get {
-            UserDefaults.standard.object(forKey: ETAG_KEY) as? String
+            UserDefaults.standard.object(forKey: Self.ETAG_KEY) as? String
         }
         set(etag) {
-            UserDefaults.standard.setValue(etag, forKey:   ETAG_KEY)
+            UserDefaults.standard.setValue(etag, forKey:   Self.ETAG_KEY)
         }
     }
 
-    var maxAge : String? {
+    var maxAge : TimeInterval? {
         get {
-            UserDefaults.standard.object(forKey: MAXAGE_KEY) as? String
+            UserDefaults.standard.object(forKey: Self.MAXAGE_KEY) as? TimeInterval
         }
         
         set(maxAge) {
-            UserDefaults.standard.setValue(maxAge, forKey: MAXAGE_KEY)
+            fetchTimer.suspend()
+
+            fetchTimer.schedule(deadline: .now() + (maxAge ?? 60.0), repeating: maxAge ?? 60.0 )
+            fetchTimer.activate()
+
+            UserDefaults.standard.setValue(maxAge, forKey: Self.MAXAGE_KEY)
         }
     }
     
-    init(resource: Resource, config: AgentConfiguration, logger: Logging.Logger = Logger(label: Self.LOG_LABEL) { _ in
+    
+    
+    init(resource: Resource, config: AgentConfiguration, instrumentationConfig: InstrumentationConfiguration, logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
         SwiftLogNoOpLogHandler()
-    })) {
+    }) {
         self.resource = resource
-        self.configuration = config
+        self.agent = config
+        self.instrumentation = instrumentationConfig
         self.logger = logger
-        
         switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
         case let .string(value) :
             serviceEnvironment = value
@@ -82,9 +90,9 @@ class AgentConfigManager {
                 serviceName = ""
         }
         
-        self.centralConfig = CentralConfig(resource, config: config)
+        self.central = CentralConfig(resource, config: config)
         
-        DispatchSource.makeTimerSource(flags: DispatchSource.TimerFlags(), queue: pushMetricQueue)
+        fetchTimer = DispatchSource.makeTimerSource(flags: DispatchSource.TimerFlags(), queue: fetchQueue)
         fetchTimer.setEventHandler { [weak self] in
             autoreleasepool {
                 guard let self = self else {
@@ -92,10 +100,9 @@ class AgentConfigManager {
                 }
                 
                 self.fetch()
-                
             }
         }
-        fetchTimer.schedule(deadline: .now() + 60, repeating: 60)
+        fetchTimer.schedule(deadline: .now(), repeating: self.maxAge ?? 60.0 )
         fetchTimer.activate()
     }
     
@@ -107,15 +114,21 @@ class AgentConfigManager {
         }
     }
     
-    func parseMaxAge(cacheControl : String) -> Int {
-        cacheControl.ranges(of: /max-age\s*=\s*(\d+)/)
+    func parseMaxAge(cacheControl : String) -> TimeInterval {
+        let range = cacheControl.range(of: #"max-age\s*=\s*(\d)"#, options: .regularExpression)
+        if let range = range {
+            return TimeInterval(cacheControl[range]) ?? 60.0
+        }
+        
+        return  60.0
+
     }
     
     func fetch() {
         if let task = self.task {
             task.cancel()
         }
-        var components = configuration.urlComponents()
+        var components = agent.urlComponents()
         
         components.path = "/config/v1/agents"
         
@@ -124,43 +137,44 @@ class AgentConfigManager {
         if let url = components.url {
             var request = URLRequest(url: url)
             
-            request.cachePolicy = .useProtocolCachePolicy
             request.setValue(self.etag, forHTTPHeaderField: "ETag")
             
-            if let auth = configuration.auth {
+            if let auth = agent.auth {
                 request.setValue(auth, forHTTPHeaderField: "Authorization")
             }
             
             task = URLSession.shared.dataTask(with: request  ,completionHandler: { data, response, error in
                 if let error = error {
-                    logger.error(error.localizedDescription)
+                    self.logger.error("\(error.localizedDescription)")
                     return
                 }
     
                 if let response = response as? HTTPURLResponse {
 
-                    if CentralConfigResponse(response.statusCode) == .ok {
+                    if CentralConfigResponse(rawValue: response.statusCode) == .ok {
                         if let data = data {
-                            self.centralConfig.config = String(data: data, encoding: .utf8)
+                            self.central.config = String(data: data, encoding: .utf8)
                             
-                            self.etag = response.value(forHTTPHeaderField: "ETag")
-                            self.maxAge = response.value(forHTTPHeaderField: "Cache-Control")
+                            self.etag = response.allHeaderFields["ETag"] as? String
+                            if let cacheControl = response.allHeaderFields["Cache-Control"] as? String {
+                                self.maxAge = self.parseMaxAge(cacheControl: cacheControl)
+                            }
                         }
                     } else {
-                        switch CentralConfigResponse(response.statusCode) {
+                        switch CentralConfigResponse(rawValue: response.statusCode) {
                         case .forbidden:
-                            logger.debug("Central configuration is disabled. Set kibana.enabled: true in your APM Server configuration.")
+                            self.logger.debug("Central configuration is disabled. Set kibana.enabled: true in your APM Server configuration.")
                             break
                         case .not_found:
-                            logger.debug("This APM Server does not support central configuration. Update to APM Server 7.3+")
+                            self.logger.debug("This APM Server does not support central configuration. Update to APM Server 7.3+")
                             break
                         case .not_modified:
-                            logger.debug("Central config did not change.")
+                            self.logger.debug("Central config did not change.")
                             break
                         case .unavailable:
-                            logger.error("Remote configuration is not available. Check the connection between APM Server and Kibana.")
+                            self.logger.error("Remote configuration is not available. Check the connection between APM Server and Kibana.")
                         default:
-                            logger.error("Unexpected status code (\(response.statusCode)) received.")
+                            self.logger.error("Unexpected status code (\(response.statusCode)) received.")
                         }
                     }
                 }

@@ -26,24 +26,24 @@ import Logging
 class OpenTelemetryInitializer {
     static let LOG_LABEL = "Elastic-OTLP-Exporter"
 
-    static func initialize(_ configuration : AgentConfiguration) -> EventLoopGroup {
-        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: OpenTelemetryHelper.generateExporterHeaders(configuration.auth))
+    static func initialize(_ configuration : AgentConfigManager) -> EventLoopGroup {
+        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let channel = OpenTelemetryHelper.getChannel(with: configuration, group: group)
+        let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
         
         let resources = AgentResource.get().merging(other: AgentEnvResource.resource)
         
                 
         // initialize meter provider
         OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
-            .with(processor: MetricProcessorSdk())
+            .with(processor: ElasticMetricProcessor(configManager: configuration))
             .with(resource: resources )
             .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL)))
             .build())
     
          // initialize trace provider
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
-            .add(spanProcessor: SessionSpanProcessor(spanExporter: OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL))))
+            .add(spanProcessor: SessionSpanProcessor(agentConfigManager:configuration, spanExporter: OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL))))
             .with(resource: resources)
             .with(clock: NTPClock())
             .build())
@@ -51,7 +51,7 @@ class OpenTelemetryInitializer {
         OpenTelemetry.registerLoggerProvider(loggerProvider: LoggerProviderBuilder()
             .with(clock: NTPClock())
             .with(resource: resources)
-            .with(processors: [SessionLogRecordProcessor(logRecordExporter: OtlpLogExporter(channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)))])
+            .with(processors: [SessionLogRecordProcessor(agentConfigManager:configuration, logRecordExporter: OtlpLogExporter(channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)))])
             .build())
         
         return group
