@@ -31,35 +31,12 @@ class CentralConfig {
         }
     }
     
-    public var config : String? {
+    internal var config : String? {
         get {
             UserDefaults.standard.object(forKey: Self.CentralConfigKey) as? String
         }
         set(config) {
             UserDefaults.standard.setValue(config, forKey: Self.CentralConfigKey)
-        }
-    }
-    
-    private let serviceName : String
-    private let serviceEnvironment : String
-    private let configuration : AgentConfiguration
-    init(_ resource: Resource, config: AgentConfiguration) {
-        configuration = config
-        switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
-        case let .string(value) :
-            serviceEnvironment = value
-            break
-        default:
-            serviceEnvironment = ""
-            break;
-        }
-        
-        switch resource.attributes[ResourceAttributes.serviceName.rawValue] {
-        case let .string(value):
-                serviceName = value
-                break;
-            default:
-                serviceName = ""
         }
     }
 }

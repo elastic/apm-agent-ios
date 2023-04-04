@@ -21,6 +21,7 @@ class SessionLogRecordProcessorTest : XCTestCase {
 
     func testSessionId() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
+        
         let  factory = LoggerProviderSdk(logRecordProcessors: [SessionLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
         let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
         let observedDate = Date()

@@ -20,10 +20,8 @@ public class ElasticMetricProcessor : MetricProcessor {
     
     private let lock : NSLock
     var metrics: [Metric]
-    var configManager : AgentConfigManager
     
-    internal init(configManager : AgentConfigManager) {
-        self.configManager = configManager
+    internal init() {
         metrics = [Metric]()
         lock = NSLock()
     }
@@ -39,7 +37,7 @@ public class ElasticMetricProcessor : MetricProcessor {
             lock.unlock()
         }
         
-        guard configManager.central.data.recording == "true" else {
+        guard CentralConfig().data.recording else {
             return [Metric]()
         }
         
@@ -55,7 +53,7 @@ public class ElasticMetricProcessor : MetricProcessor {
             lock.unlock()
         }
 
-        guard configManager.central.data.recording == "true" else {
+        guard CentralConfig().data.recording else {
             return
         }
         

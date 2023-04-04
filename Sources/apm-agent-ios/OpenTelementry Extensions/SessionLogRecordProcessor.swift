@@ -20,14 +20,12 @@ import OpenTelemetrySdk
 
 public struct SessionLogRecordProcessor : LogRecordProcessor {
     var processor : BatchLogRecordProcessor
-    let agentConfigManager: AgentConfigManager
-    internal init(agentConfigManager: AgentConfigManager, logRecordExporter: LogRecordExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord])->Void)? = nil) {
-        self.agentConfigManager = agentConfigManager
+    internal init(logRecordExporter: LogRecordExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord])->Void)? = nil) {
         processor = BatchLogRecordProcessor(logRecordExporter: logRecordExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout, maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)
     }
     
     public func onEmit(logRecord: OpenTelemetrySdk.ReadableLogRecord) {
-        guard agentConfigManager.central.data.recording == "true" else {
+        guard CentralConfig().data.recording else {
             return
         }
                 

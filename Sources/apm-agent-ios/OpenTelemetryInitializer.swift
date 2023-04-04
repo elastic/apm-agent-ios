@@ -36,14 +36,14 @@ class OpenTelemetryInitializer {
                 
         // initialize meter provider
         OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
-            .with(processor: ElasticMetricProcessor(configManager: configuration))
+            .with(processor: ElasticMetricProcessor())
             .with(resource: resources )
             .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL)))
             .build())
     
          // initialize trace provider
         OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
-            .add(spanProcessor: SessionSpanProcessor(agentConfigManager:configuration, spanExporter: OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL))))
+            .add(spanProcessor: SessionSpanProcessor(spanExporter: OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL))))
             .with(resource: resources)
             .with(clock: NTPClock())
             .build())
@@ -51,7 +51,7 @@ class OpenTelemetryInitializer {
         OpenTelemetry.registerLoggerProvider(loggerProvider: LoggerProviderBuilder()
             .with(clock: NTPClock())
             .with(resource: resources)
-            .with(processors: [SessionLogRecordProcessor(agentConfigManager:configuration, logRecordExporter: OtlpLogExporter(channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)))])
+            .with(processors: [SessionLogRecordProcessor(logRecordExporter: OtlpLogExporter(channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)))])
             .build())
         
         return group

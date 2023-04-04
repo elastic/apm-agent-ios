@@ -16,5 +16,23 @@ import Foundation
 
 
 struct CentralConfigData : Decodable {
-    public private(set) var recording : String = "true"
+    
+    public private(set) var recording : Bool = true
+    
+    enum CodingKeys : String, CodingKey {
+        case recording
+    }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        
+        do {
+            recording = (try values.decode(String.self, forKey: .recording) as NSString).boolValue
+        } catch DecodingError.valueNotFound(_, _)  {
+            recording = true
+        } catch DecodingError.keyNotFound(_, _) {
+            recording = true
+        }
+    }
+    
+    init() {}
 }

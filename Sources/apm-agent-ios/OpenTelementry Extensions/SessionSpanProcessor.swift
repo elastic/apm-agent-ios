@@ -23,7 +23,6 @@ public struct SessionSpanProcessor : SpanProcessor {
 
     public let isStartRequired: Bool
     public let isEndRequired: Bool
-    private let agentConfigManager : AgentConfigManager
     static var netstatInjector: NetworkStatusInjector? = { () -> NetworkStatusInjector? in
         do {
             let netstats = try NetworkStatus()
@@ -39,10 +38,9 @@ public struct SessionSpanProcessor : SpanProcessor {
     }()
 
     
-    internal init(agentConfigManager: AgentConfigManager, spanExporter: SpanExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
+    internal init(spanExporter: SpanExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
                 maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [SpanData]) -> Void)? = nil) {
         processor = BatchSpanProcessor(spanExporter: spanExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout, maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)
-        self.agentConfigManager = agentConfigManager
         isStartRequired = processor.isStartRequired
         isEndRequired = processor.isEndRequired
     }
@@ -57,7 +55,7 @@ public struct SessionSpanProcessor : SpanProcessor {
     }
     
     public mutating func onEnd(span: OpenTelemetrySdk.ReadableSpan) {
-        if agentConfigManager.central.data.recording == "true" {
+        if CentralConfig().data.recording {
             processor.onEnd(span: span)
         }
     }
