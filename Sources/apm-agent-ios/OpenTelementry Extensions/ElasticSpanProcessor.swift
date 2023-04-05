@@ -62,10 +62,8 @@ public struct ElasticSpanProcessor : SpanProcessor {
             if spanData.parentSpanId == nil, let transactionSpan = span as? RecordEventsReadableSpan {
                 
                 var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
-//                newAttributes.updateValues(attributes: spanData.attributes)
                 newAttributes.updateValue(value: AttributeValue.string("mobile"), forKey: "type")
                 newAttributes.updateValue(value: AttributeValue.string(SessionManager.instance.session()), forKey:  ElasticAttributes.sessionId.rawValue)
-                newAttributes.updateValue(value: AttributeValue.string("Request"), forKey: "transaction.type")
                 let parentSpanContext = SpanContext.create(traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(), traceState: TraceState())
 
                 let parentSpan = RecordEventsReadableSpan.startSpan(context: parentSpanContext,
@@ -83,7 +81,6 @@ public struct ElasticSpanProcessor : SpanProcessor {
                                                                     totalRecordedLinks: transactionSpan.totalRecordedLinks,
                                                                     startTime: transactionSpan.startTime)
                 
-     
                 parentSpan.end(time: transactionSpan.endTime!)
                 
 
@@ -91,14 +88,10 @@ public struct ElasticSpanProcessor : SpanProcessor {
                 
                 exporter.export(spans: [spanData,parentSpan.toSpanData()])
                 
-
-
-
                 return
             }
         }
         processor.onEnd(span: span)
-    
     }
     
     public mutating func shutdown() {
@@ -110,7 +103,6 @@ public struct ElasticSpanProcessor : SpanProcessor {
     }
     
 }
-
 
 internal struct NoopSpanProcessor: SpanProcessor {
     init() {}
