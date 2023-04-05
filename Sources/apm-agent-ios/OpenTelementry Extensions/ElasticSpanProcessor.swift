@@ -63,7 +63,7 @@ public struct ElasticSpanProcessor : SpanProcessor {
                 
                 var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
                 newAttributes.updateValue(value: AttributeValue.string("mobile"), forKey: "type")
-                newAttributes.updateValue(value: AttributeValue.string(SessionManager.instance.session()), forKey:  ElasticAttributes.sessionId.rawValue)
+                newAttributes.updateValue(value: AttributeValue.string(SessionManager.instance.session()), forKey:  ElasticAttributes.sessionId.rawValue)   
                 let parentSpanContext = SpanContext.create(traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(), traceState: TraceState())
 
                 let parentSpan = RecordEventsReadableSpan.startSpan(context: parentSpanContext,
