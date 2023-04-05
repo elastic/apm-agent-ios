@@ -66,22 +66,22 @@ public struct ElasticSpanProcessor : SpanProcessor {
                 newAttributes.updateValue(value: AttributeValue.string("mobile"), forKey: "type")
                 newAttributes.updateValue(value: AttributeValue.string(SessionManager.instance.session()), forKey:  ElasticAttributes.sessionId.rawValue)
                 newAttributes.updateValue(value: AttributeValue.string("Request"), forKey: "transaction.type")
-                let parentSpanContext = SpanContext.create(traceId: TraceId.random(), spanId: SpanId.random(), traceFlags: TraceFlags(), traceState: TraceState())
+                let parentSpanContext = SpanContext.create(traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(), traceState: TraceState())
 
                 let parentSpan = RecordEventsReadableSpan.startSpan(context: parentSpanContext,
-                                                                 name: "Network",
-                                                                 instrumentationScopeInfo: span.instrumentationScopeInfo,
-                                                                 kind: span.kind,
-                                                                 parentContext: nil,
-                                                                 hasRemoteParent: false,
-                                                                 spanLimits: transactionSpan.spanLimits,
-                                                                 spanProcessor: NoopSpanProcessor(),
-                                                                 clock:transactionSpan.clock,
-                                                                 resource: transactionSpan.resource,
-                                                                 attributes: newAttributes,
-                                                                 links: transactionSpan.links,
-                                                                 totalRecordedLinks: transactionSpan.totalRecordedLinks,
-                                                                 startTime: transactionSpan.startTime)
+                                                                    name: spanData.name,
+                                                                    instrumentationScopeInfo: span.instrumentationScopeInfo,
+                                                                    kind: span.kind,
+                                                                    parentContext: nil,
+                                                                    hasRemoteParent: false,
+                                                                    spanLimits: transactionSpan.spanLimits,
+                                                                    spanProcessor: NoopSpanProcessor(),
+                                                                    clock:transactionSpan.clock,
+                                                                    resource: transactionSpan.resource,
+                                                                    attributes: newAttributes,
+                                                                    links: transactionSpan.links,
+                                                                    totalRecordedLinks: transactionSpan.totalRecordedLinks,
+                                                                    startTime: transactionSpan.startTime)
                 
      
                 parentSpan.end(time: transactionSpan.endTime!)
