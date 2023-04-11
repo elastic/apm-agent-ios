@@ -19,6 +19,7 @@ class CentralConfigFetcher {
     
     static let ETAG_KEY = "elastic.central.config.etag"
     static let MAXAGE_KEY = "elastic.central.config.maxAge"
+    static let DEFAULT_MAXAGE : TimeInterval = 60.0
     let fetchQueue = DispatchQueue(label: "co.elastic.centralConfigFetch")
     let fetchTimer : DispatchSourceTimer
     let logger : Logger
@@ -44,11 +45,7 @@ class CentralConfigFetcher {
         }
         
         set(maxAge) {
-            fetchTimer.suspend()
-
-            fetchTimer.schedule(deadline: .now() + (maxAge ?? 60.0), repeating: maxAge ?? 60.0 )
-            fetchTimer.activate()
-
+            fetchTimer.schedule(deadline: .now() + (maxAge ?? Self.DEFAULT_MAXAGE), repeating: maxAge ?? Self.DEFAULT_MAXAGE )
             UserDefaults.standard.setValue(maxAge, forKey: Self.MAXAGE_KEY)
         }
     }
@@ -71,8 +68,12 @@ class CentralConfigFetcher {
                 self.fetch()
             }
         }
-        fetchTimer.schedule(deadline: .now(), repeating: self.maxAge ?? 60.0 )
+        fetchTimer.schedule(deadline: .now(), repeating: self.maxAge ?? Self.DEFAULT_MAXAGE )
         fetchTimer.activate()
+    }
+    
+    func scheduleFetchTimer(maxAge: TimeInterval) {
+        
     }
     
     deinit {
@@ -83,13 +84,22 @@ class CentralConfigFetcher {
         }
     }
     
-    func parseMaxAge(cacheControl : String) -> TimeInterval {
-        let range = cacheControl.range(of: #"max-age\s*=\s*(\d)"#, options: .regularExpression)
-        if let range = range {
-            return TimeInterval(cacheControl[range]) ?? 60.0
+    static func parseMaxAge(cacheControl : String) -> TimeInterval {
+        let search = #"max-age\s*=(?<maxage>\d+)"#
+        var regex : NSRegularExpression
+        do {
+            regex = try NSRegularExpression(pattern: search, options:.caseInsensitive)
+        } catch {
+            return Self.DEFAULT_MAXAGE
         }
         
-        return  60.0
+        let matches = regex.matches(in: cacheControl, range: NSRange(location: 0, length: cacheControl.count))
+        
+        guard let match = matches.first else { return Self.DEFAULT_MAXAGE }
+        
+        let range = match.range(withName: "maxage")
+        
+        return TimeInterval((cacheControl as NSString).substring(with: range)) ?? Self.DEFAULT_MAXAGE
 
     }
 
@@ -130,7 +140,7 @@ class CentralConfigFetcher {
                             
                             self.etag = response.allHeaderFields["ETag"] as? String
                             if let cacheControl = response.allHeaderFields["Cache-Control"] as? String {
-                                self.maxAge = self.parseMaxAge(cacheControl: cacheControl)
+                                self.maxAge = Self.parseMaxAge(cacheControl: cacheControl)
                             }
                         }
                     } else {

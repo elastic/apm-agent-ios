@@ -30,8 +30,6 @@ public class Agent {
     }
     
     private static var instance: Agent?
-
-//    var configuration: AgentConfiguration
     
     let group : EventLoopGroup
     

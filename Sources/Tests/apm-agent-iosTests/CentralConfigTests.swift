@@ -95,4 +95,10 @@ class CentralConfigTests : XCTestCase {
         
         XCTAssertFalse(three.data.recording)
     }
+    
+    func testMaxAgeParse() {
+        let cacheControl = "max-age=30, must-revalidate"
+        let result = CentralConfigFetcher.parseMaxAge(cacheControl: cacheControl)
+        XCTAssertEqual(result, 30.0)
+    }
 }
