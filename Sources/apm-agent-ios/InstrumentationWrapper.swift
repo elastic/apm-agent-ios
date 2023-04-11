@@ -30,13 +30,13 @@ class InstrumentationWrapper {
     #endif
 
     var urlSessionInstrumentation: URLSessionInstrumentation?
-    let config : InstrumentationConfiguration
+    let config : AgentConfigManager
     
-    init(config: InstrumentationConfiguration) {
+    init(config: AgentConfigManager) {
         self.config = config
         #if os(iOS)
             do {
-                if self.config.enableViewControllerInstrumentation {
+                if self.config.instrumentation.enableViewControllerInstrumentation {
                     vcInstrumentation = try ViewControllerInstrumentation()
                 }
             } catch {
@@ -48,11 +48,11 @@ class InstrumentationWrapper {
     func initalize() {
         #if os(iOS)
         if #available(iOS 13.0, *) {
-            if config.enableSystemMetrics {
+            if config.instrumentation.enableSystemMetrics {
                 _ = MemorySampler()
                 _ = CPUSampler()
             }
-            if config.enableAppMetricInstrumentation {
+            if config.instrumentation.enableAppMetricInstrumentation {
                 appMetrics = AppMetrics()
                 if let metrics = appMetrics as? AppMetrics {
                    metrics.receiveReports()
@@ -60,7 +60,7 @@ class InstrumentationWrapper {
             }
         }
         #endif
-        if config.enableURLSessionInstrumentation {
+        if config.instrumentation.enableURLSessionInstrumentation {
             initializeNetworkInstrumentation()
         }
         #if os(iOS)
@@ -78,7 +78,7 @@ class InstrumentationWrapper {
             }
         #endif
 
-        let config = URLSessionInstrumentationConfiguration(shouldRecordPayload: nil,
+        let config = URLSessionInstrumentationConfiguration(shouldRecordPayload:nil,
                                                             shouldInstrument: nil,
                                                             nameSpan: { request in
                                                                 if let host = request.url?.host, let method = request.httpMethod {

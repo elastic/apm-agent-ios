@@ -22,7 +22,7 @@ public class Agent {
     }
 
     public static func start() {
-        Agent.start(with: AgentConfiguration(noop: ""))
+        Agent.start(with: AgentConfiguration())
     }
 
     public class func shared() -> Agent? {
@@ -30,28 +30,29 @@ public class Agent {
     }
     
     private static var instance: Agent?
-
-    var configuration: AgentConfiguration
     
     let group : EventLoopGroup
     
     let instrumentation : InstrumentationWrapper
-    
-    let instrumentationConfiguration : InstrumentationConfiguration
-    
+        
     let crashManager : CrashManager?
+    
+    let agentConfigManager : AgentConfigManager
 
     private init(configuration: AgentConfiguration, instrumentationConfiguration : InstrumentationConfiguration) {
-        self.configuration = configuration
-        self.instrumentationConfiguration = instrumentationConfiguration
-        instrumentation = InstrumentationWrapper(config: instrumentationConfiguration)
+
+        agentConfigManager = AgentConfigManager(resource: AgentResource.get().merging(other: AgentEnvResource.resource), config: configuration,instrumentationConfig: instrumentationConfiguration)
+
         
-        group = OpenTelemetryInitializer.initialize(configuration)
+        instrumentation = InstrumentationWrapper(config: agentConfigManager)
+
+                
+        group = OpenTelemetryInitializer.initialize(agentConfigManager)
 
         if instrumentationConfiguration.enableCrashReporting {
             crashManager = CrashManager(resource:AgentResource.get().merging(other: AgentEnvResource.resource),
                                         group: group,
-                                        agentConfiguration: configuration)
+                                        agentConfiguration: agentConfigManager.agent)
         } else {
             crashManager = nil
         }
@@ -59,7 +60,7 @@ public class Agent {
     }
 
     private func initialize() {
-        if instrumentationConfiguration.enableCrashReporting {
+        if agentConfigManager.instrumentation.enableCrashReporting {
             crashManager?.initializeCrashReporter()
         }
         instrumentation.initalize()

@@ -45,7 +45,7 @@ public class AgentConfigBuilder {
     
     public func build() -> AgentConfiguration {
         
-        var config = AgentConfiguration(noop: "")
+        var config = AgentConfiguration()
         if let url = url {
             if let proto = url.scheme, proto == "https" {
                 config.collectorTLS = true

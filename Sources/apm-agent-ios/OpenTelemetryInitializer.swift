@@ -26,17 +26,17 @@ import Logging
 class OpenTelemetryInitializer {
     static let LOG_LABEL = "Elastic-OTLP-Exporter"
 
-    static func initialize(_ configuration : AgentConfiguration) -> EventLoopGroup {
-        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: OpenTelemetryHelper.generateExporterHeaders(configuration.auth))
+    static func initialize(_ configuration : AgentConfigManager) -> EventLoopGroup {
+        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let channel = OpenTelemetryHelper.getChannel(with: configuration, group: group)
+        let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
         
         let resources = AgentResource.get().merging(other: AgentEnvResource.resource)
         
-        
+                
         // initialize meter provider
         OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
-            .with(processor: MetricProcessorSdk())
+            .with(processor: ElasticMetricProcessor())
             .with(resource: resources )
             .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL)))
             .build())
