@@ -51,7 +51,7 @@ class SessionSpanProcessorTest : XCTestCase {
         let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
 
         tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
-        let span1 = createSampledEndedSpan(spanName: spanName1)
+        let _ = createSampledEndedSpan(spanName: spanName1)
         let exported = waitingSpanExporter.waitForExport()
         XCTAssertEqual(exported?.count, 1)
         XCTAssertNotNil(exported?[0].attributes["session.id"])
@@ -60,7 +60,7 @@ class SessionSpanProcessorTest : XCTestCase {
     func testOrphanHttpSpans() {
         let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
         tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
-        let span1 = createSampledHttpSpan(spanName: spanName1)
+        let _ = createSampledHttpSpan(spanName: spanName1)
         let exported = waitingSpanExporter.waitForExport()
         XCTAssertEqual(exported?.count, 2)
         XCTAssertNotNil(exported?[0].attributes["session.id"])
@@ -70,9 +70,9 @@ class SessionSpanProcessorTest : XCTestCase {
     func testHttpSpansWithParent() {
         let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
         tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
-        let span1 = createSampledHttpSpan(spanName: spanName1)
+        let _ = createSampledHttpSpan(spanName: spanName1)
         let exported = waitingSpanExporter.waitForExport()
-        XCTAssertEqual(exported?.count, 1)
+        XCTAssertEqual(exported?.count, 2)
         XCTAssertNotNil(exported?[0].attributes["session.id"])
         XCTAssertNotNil(exported?[1].attributes["session.id"])
         XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
