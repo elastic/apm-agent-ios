@@ -51,7 +51,7 @@ class OpenTelemetryInitializer {
         OpenTelemetry.registerLoggerProvider(loggerProvider: LoggerProviderBuilder()
             .with(clock: NTPClock())
             .with(resource: resources)
-            .with(processors: [SessionLogRecordProcessor(logRecordExporter: OtlpLogExporter(channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)))])
+            .with(processors: [ElasticLogRecordProcessor(logRecordExporter: OtlpLogExporter(channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)))])
             .build())
         
         return group

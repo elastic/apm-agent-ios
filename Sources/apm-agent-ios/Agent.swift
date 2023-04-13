@@ -45,10 +45,7 @@ public class Agent {
         instrumentation = InstrumentationWrapper(config: agentConfigManager)
 
                 
-        group = OpenTelemetryInitializer.initialize(agentConfigManager)
-
-        instrumentation = InstrumentationWrapper(config: instrumentationConfiguration)
-        
+        group = OpenTelemetryInitializer.initialize(agentConfigManager)        
 
         if instrumentationConfiguration.enableCrashReporting {
             crashManager = CrashManager(resource:AgentResource.get().merging(other: AgentEnvResource.resource),
