@@ -18,7 +18,7 @@ import OpenTelemetrySdk
 
 
 
-public struct SessionLogRecordProcessor : LogRecordProcessor {
+public struct ElasticLogRecordProcessor : LogRecordProcessor {
     var processor : BatchLogRecordProcessor
     internal init(logRecordExporter: LogRecordExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord])->Void)? = nil) {
         processor = BatchLogRecordProcessor(logRecordExporter: logRecordExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout, maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)

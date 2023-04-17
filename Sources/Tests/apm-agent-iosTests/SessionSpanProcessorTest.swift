@@ -33,6 +33,14 @@ class SessionSpanProcessorTest : XCTestCase {
     override func tearDown() {
         tracerSdkFactory.shutdown()
     }
+    
+    @discardableResult private func createSampledHttpSpan(spanName: String) -> ReadableSpan {
+        let span = tracer.spanBuilder(spanName: spanName).setNoParent()
+            .setAttribute(key: SemanticAttributes.httpUrl.rawValue, value: "http://localhost").startSpan()
+        span.end()
+        return span as! ReadableSpan
+    }
+    
     @discardableResult private func createSampledEndedSpan(spanName: String) -> ReadableSpan {
         let span = tracer.spanBuilder(spanName: spanName1).startSpan()
         span.end()
@@ -42,11 +50,32 @@ class SessionSpanProcessorTest : XCTestCase {
     func testSessionId() {
         let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
 
-        tracerSdkFactory.addSpanProcessor(SessionSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
-        let span1 = createSampledEndedSpan(spanName: spanName1)
+        tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
+        let _ = createSampledEndedSpan(spanName: spanName1)
         let exported = waitingSpanExporter.waitForExport()
         XCTAssertEqual(exported?.count, 1)
         XCTAssertNotNil(exported?[0].attributes["session.id"])
+    }
+    
+    func testOrphanHttpSpans() {
+        let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
+        tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
+        let _ = createSampledHttpSpan(spanName: spanName1)
+        let exported = waitingSpanExporter.waitForExport()
+        XCTAssertEqual(exported?.count, 2)
+        XCTAssertNotNil(exported?[0].attributes["session.id"])
+        XCTAssertNotNil(exported?[1].attributes["session.id"])
+        XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
+    }
+    func testHttpSpansWithParent() {
+        let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
+        tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
+        let _ = createSampledHttpSpan(spanName: spanName1)
+        let exported = waitingSpanExporter.waitForExport()
+        XCTAssertEqual(exported?.count, 2)
+        XCTAssertNotNil(exported?[0].attributes["session.id"])
+        XCTAssertNotNil(exported?[1].attributes["session.id"])
+        XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
     }
 }
 

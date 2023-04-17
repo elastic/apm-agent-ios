@@ -40,14 +40,12 @@ public class Agent {
     let agentConfigManager : AgentConfigManager
 
     private init(configuration: AgentConfiguration, instrumentationConfiguration : InstrumentationConfiguration) {
-
         agentConfigManager = AgentConfigManager(resource: AgentResource.get().merging(other: AgentEnvResource.resource), config: configuration,instrumentationConfig: instrumentationConfiguration)
-
         
         instrumentation = InstrumentationWrapper(config: agentConfigManager)
 
                 
-        group = OpenTelemetryInitializer.initialize(agentConfigManager)
+        group = OpenTelemetryInitializer.initialize(agentConfigManager)        
 
         if instrumentationConfiguration.enableCrashReporting {
             crashManager = CrashManager(resource:AgentResource.get().merging(other: AgentEnvResource.resource),
