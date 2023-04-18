@@ -23,6 +23,16 @@
 [[release-notes-next]]
 ==== Next
 
+[[release-notes-v0.5.0]]
+==== v0.5.0 - 2023/04/18
+===== Features
+- Remote config functionality for `recording` added.
+- Added application lifecycle events.
+
+===== Fixes
+- Added transaction wrapper for orphaned network spans
+- Updated Open Telemetry environmental variables compatibility, allowing set from plists. 
+
 [[release-notes-v0.4.1]]
 ==== v0.4.1 - 2023/02/06
 ===== Fixes
