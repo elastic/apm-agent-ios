@@ -31,7 +31,7 @@ class OpenTelemetryInitializer {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
         
-        let resources = AgentResource.get().merging(other: AgentEnvResource.resource)
+        let resources = AgentResource.get().merging(other: AgentEnvResource.get())
         
                 
         // initialize meter provider
