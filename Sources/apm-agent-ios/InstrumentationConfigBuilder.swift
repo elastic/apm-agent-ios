@@ -21,6 +21,7 @@ public class InstrumentationConfigBuilder {
     var enableViewControllerInstrumentation: Bool?
     var enableAppMetricInstrumentation: Bool?
     var enableSystemMetrics: Bool?
+    var enableLifecycleEvents : Bool?
 
     public init() {}
     
@@ -47,6 +48,11 @@ public class InstrumentationConfigBuilder {
         self.enableSystemMetrics = enable
         return self
     }
+    
+    public func withLifecycleEvents(_ enable: Bool) -> Self {
+        self.enableLifecycleEvents = enable
+        return self
+    }
 
     public func build() -> InstrumentationConfiguration {
         var config = InstrumentationConfiguration()
@@ -71,6 +77,9 @@ public class InstrumentationConfigBuilder {
             config.enableSystemMetrics = enableSystemMetrics
         }
 
+        if let enableLifecycleEvents = self.enableLifecycleEvents {
+            config.enableLifecycleEvents = enableLifecycleEvents
+        }
         return config
     }
 }
