@@ -27,14 +27,20 @@ class InstrumentationWrapper {
     #if os(iOS)
         var vcInstrumentation: ViewControllerInstrumentation?
         var netstatInjector: NetworkStatusInjector?
+    var applicationLifecycleInstrumentation : ApplicationLifecycleInstrumentation?
     #endif
+    
 
     var urlSessionInstrumentation: URLSessionInstrumentation?
     let config : AgentConfigManager
     
     init(config: AgentConfigManager) {
         self.config = config
+        
         #if os(iOS)
+            if config.instrumentation.enableLifecycleEvents {
+                applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
+            }
             do {
                 if self.config.instrumentation.enableViewControllerInstrumentation {
                     vcInstrumentation = try ViewControllerInstrumentation()

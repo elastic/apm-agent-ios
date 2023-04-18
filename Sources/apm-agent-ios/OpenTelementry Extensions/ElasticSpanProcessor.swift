@@ -83,11 +83,10 @@ public struct ElasticSpanProcessor : SpanProcessor {
                 
                 parentSpan.end(time: transactionSpan.endTime!)
                 
-
                 spanData.settingParentSpanId(parentSpanContext.spanId)
                 
                 exporter.export(spans: [spanData,parentSpan.toSpanData()])
-                
+
                 return
             }
         }

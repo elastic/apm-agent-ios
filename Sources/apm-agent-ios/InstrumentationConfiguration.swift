@@ -21,6 +21,7 @@ public struct InstrumentationConfiguration {
     public var enableViewControllerInstrumentation = true
     public var enableAppMetricInstrumentation = true
     public var enableSystemMetrics = true
+    public var enableLifecycleEvents = true
 
     public init() {}
 }
