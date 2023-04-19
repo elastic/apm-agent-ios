@@ -161,6 +161,14 @@ Toggles view controller instrumentation.
 Toggles metric generation for memory and cpu usage.
 
 [discrete]
+[[with-Lifecycle-Events]]
+===== `withLifecycleEvents(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* true
+
+Toggles event generation for lifecycle events.
+
+[discrete]
 [[view-instrumentation]]
 === View instrumentation
 
@@ -247,3 +255,10 @@ More details about the MetricKit data point can be found in the https://develope
 ==== `application.exits`
 A count of application exits categorized by various attributes: `foreground` or `background`, and `normal` or abnormal, where abnormal exits are further subdivided.
 More details can be found in the https://developer.apple.com/documentation/metrickit/mxappexitmetric[Apple documentation].
+
+
+[discrete]
+[[app-lifecycle-events]]
+=== Application Lifecycle Events
+In v0.5.0 the application lifecycle events are automatically instrumented.
+The technical details can be found in the https://github.com/elastic/apm/blob/main/specs/agents/mobile/events.md#application-lifecycle-events[Mobile spec].
