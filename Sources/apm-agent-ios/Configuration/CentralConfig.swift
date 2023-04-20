@@ -15,8 +15,10 @@
 import Foundation
 import OpenTelemetrySdk
 
-class CentralConfig {
+public class CentralConfig {
     static let CentralConfigKey = "elastic.central.configuration"
+        
+    public init () {}
     
     public var data : CentralConfigData {
         get {
@@ -28,6 +30,12 @@ class CentralConfig {
                 }
             }
             return CentralConfigData()
+        }
+        set(data)  {
+            do {
+                config = String(data: try JSONEncoder().encode(data), encoding: .utf8)
+            } catch {}
+
         }
     }
     
