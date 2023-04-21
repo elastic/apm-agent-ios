@@ -15,14 +15,15 @@
 import Foundation
 
 
-struct CentralConfigData : Decodable {
+public struct CentralConfigData : Codable {
     
-    public private(set) var recording : Bool = true
+    public var recording : Bool = true
     
     enum CodingKeys : String, CodingKey {
         case recording
     }
-    init(from decoder: Decoder) throws {
+     
+    public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         
         do {
