@@ -66,7 +66,8 @@ struct MyApp: App {
         var config = AgentConfigBuilder()
                        .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
                        .withSecretToken("<SecretToken>") <2>
-
+                       .build()
+                        
         Agent.start(with: config)
     }
     var body: some Scene {
