@@ -30,6 +30,8 @@ public enum ElasticAttributes: String {
     case deviceIdentifier = "device.id"
         
     case sessionId = "session.id"
+    
+    case serviceBuild = "service.build"
 }
 
 public enum ElasticMetrics : String {
