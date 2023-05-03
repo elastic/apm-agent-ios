@@ -20,7 +20,9 @@ import OpenTelemetrySdk
 
 public struct ElasticLogRecordProcessor : LogRecordProcessor {
     var processor : BatchLogRecordProcessor
-    internal init(logRecordExporter: LogRecordExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord])->Void)? = nil) {
+    var filters = [SignalFilter<ReadableLogRecord>]()
+    internal init(logRecordExporter: LogRecordExporter, filters : [SignalFilter<ReadableLogRecord>] = [SignalFilter<ReadableLogRecord>](), scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord])->Void)? = nil) {
+        self.filters = filters
         processor = BatchLogRecordProcessor(logRecordExporter: logRecordExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout, maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)
     }
     
@@ -31,14 +33,24 @@ public struct ElasticLogRecordProcessor : LogRecordProcessor {
                 
         var attributes = logRecord.attributes
         attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(SessionManager.instance.session())
-        processor.onEmit(logRecord:ReadableLogRecord(resource: logRecord.resource,
-                          instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
-                          timestamp: logRecord.timestamp,
-                          observedTimestamp: logRecord.observedTimestamp,
-                          spanContext: logRecord.spanContext,
-                          severity: logRecord.severity,
-                          body: logRecord.body,
-                          attributes: attributes))
+        
+        let appendedLogRecord = ReadableLogRecord(resource: logRecord.resource,
+                                          instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
+                                          timestamp: logRecord.timestamp,
+                                          observedTimestamp: logRecord.observedTimestamp,
+                                          spanContext: logRecord.spanContext,
+                                          severity: logRecord.severity,
+                                          body: logRecord.body,
+                                          attributes: attributes)
+        
+        
+        for filter in filters {
+            if !filter.shouldInclude(appendedLogRecord) {
+                return
+            }
+        }
+            
+        processor.onEmit(logRecord: appendedLogRecord)
                         
   
     }

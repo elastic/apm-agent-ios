@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetrySdk
 
 public class AgentConfigBuilder {
     var enableAgent : Bool?
@@ -20,6 +21,10 @@ public class AgentConfigBuilder {
     var auth : String?
     static let bearer = "Bearer"
     static let api = "ApiKey"
+    
+    var spanFilters = [SignalFilter<ReadableSpan>]()
+    var logFilters = [SignalFilter<ReadableLogRecord>]()
+    var metricFilters = [SignalFilter<Metric>]()
     
     public init() {}
 
@@ -43,9 +48,29 @@ public class AgentConfigBuilder {
         return self
     }
     
+    public func filterSpans(_ shouldInclude: @escaping (ReadableSpan) -> Bool) -> Self {
+        spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
+        return self
+    }
+    
+    public func filterMetrics(_ shouldInclude : @escaping (Metric) -> Bool) -> Self {
+        metricFilters.append(SignalFilter<Metric>(shouldInclude))
+        return self
+    }
+    
+    public func filterLogs(_ shouldInclude: @escaping (ReadableLogRecord) -> Bool) -> Self {
+        logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
+        return self
+    }
+    
     public func build() -> AgentConfiguration {
         
         var config = AgentConfiguration()
+        
+        config.logFilters = logFilters
+        config.spanFilters = spanFilters
+        config.metricFilters = metricFilters
+        
         if let url = url {
             if let proto = url.scheme, proto == "https" {
                 config.collectorTLS = true

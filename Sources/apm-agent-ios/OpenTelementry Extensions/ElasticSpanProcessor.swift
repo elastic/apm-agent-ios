@@ -21,6 +21,7 @@ import os.log
 public struct ElasticSpanProcessor : SpanProcessor {
     var processor : SpanProcessor
     var exporter : SpanExporter
+    var filters = [SignalFilter<ReadableSpan>]()
     public let isStartRequired: Bool
     public let isEndRequired: Bool
     
@@ -39,12 +40,13 @@ public struct ElasticSpanProcessor : SpanProcessor {
     }()
 
     
-    public init(spanExporter: SpanExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
+    public init(spanExporter: SpanExporter, filters: [SignalFilter<ReadableSpan>] = [SignalFilter<ReadableSpan>](), scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
                 maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [SpanData]) -> Void)? = nil) {
         processor = BatchSpanProcessor(spanExporter: spanExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout, maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)
         isStartRequired = processor.isStartRequired
         isEndRequired = processor.isEndRequired
         exporter = spanExporter
+        self.filters = filters
     }
     
     public func onStart(parentContext: OpenTelemetryApi.SpanContext?, span: OpenTelemetrySdk.ReadableSpan) {
@@ -57,6 +59,13 @@ public struct ElasticSpanProcessor : SpanProcessor {
     }
     
     public mutating func onEnd(span: OpenTelemetrySdk.ReadableSpan) {
+        
+        for filter in filters {
+            if !filter.shouldInclude(span) {
+                return
+            }
+        }
+        
         if span.isHttpSpan()  {
             var spanData = span.toSpanData()
             if spanData.parentSpanId == nil, let transactionSpan = span as? RecordEventsReadableSpan {

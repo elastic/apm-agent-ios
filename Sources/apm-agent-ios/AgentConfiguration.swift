@@ -1,4 +1,5 @@
 import Foundation
+import OpenTelemetrySdk
 
 public struct AgentConfiguration {
     init() {}
@@ -7,7 +8,11 @@ public struct AgentConfiguration {
     public var collectorPort = 8200
     public var collectorTLS = false
     var auth : String? = nil
-
+    
+    var spanFilters = [SignalFilter<ReadableSpan>]()
+    var logFilters = [SignalFilter<ReadableLogRecord>]()
+    var metricFilters = [SignalFilter<Metric>]()
+    
     
     public func urlComponents() -> URLComponents  {
         
