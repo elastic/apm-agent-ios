@@ -59,6 +59,7 @@ Disables the Elastic agent. This is useful for disabling the agent during develo
 [[resourceAttributeInjection]]
 == Resource Attribute Injection
 In v0.5.0, the agent provides a means to set https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable[resource attributes] using the `OTEL_RESOURCE_ATTRIBUTES` env-var. This env-var also works through the application plist. Any resource attribute  can be overridden using this method, so care should be taken, as some attributes are critical to the functioning of the kibana UI.
-
+[discrete]
+[[deplyoment-environment]]
 === `deployment.environment`
 Deployment environment is set to `default`. This can be overridden using the `OTEL_RESOURCE_ATTRIBUTES` set in your deployment's plist. Use the field key as `OTEL_RESOURCE_ATTRIBUTES` and the value as `deployment.environment=staging`
