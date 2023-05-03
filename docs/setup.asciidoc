@@ -36,7 +36,7 @@ Below is a helpful code-snippet:
 ----
 Package(
     dependencies:[
-         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "0.5.0"),
+         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "0.6.0"),
     ],
   targets:[
     .target(
@@ -66,7 +66,8 @@ struct MyApp: App {
         var config = AgentConfigBuilder()
                        .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
                        .withSecretToken("<SecretToken>") <2>
-
+                       .build()
+                        
         Agent.start(with: config)
     }
     var body: some Scene {

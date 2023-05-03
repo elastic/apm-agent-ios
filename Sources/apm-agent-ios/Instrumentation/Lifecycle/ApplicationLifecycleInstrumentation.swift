@@ -16,7 +16,14 @@ import Foundation
 import UIKit
 import OpenTelemetryApi
 public class ApplicationLifecycleInstrumentation : NSObject  {
-    
+    private static let eventName : String = "lifecycle"
+    private enum state : String {
+        case active
+        case inactive
+        case background
+        case foreground
+        case terminate
+}
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -41,31 +48,31 @@ public class ApplicationLifecycleInstrumentation : NSObject  {
     }
     
     @objc func active(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: "lifecycle")
-            .setAttributes(["lifecycle.state": AttributeValue.string("active")])
+        Self.getLogger().eventBuilder(name: Self.eventName)
+            .setAttributes(["lifecycle.state": AttributeValue.string(state.active.rawValue)])
             .emit()
     }
     
     @objc func inactive(_ notification: Notification){
-        Self.getLogger().eventBuilder(name: "inactive")
-            .setAttributes(["lifecycle.state": AttributeValue.string("active")])
+        Self.getLogger().eventBuilder(name: Self.eventName)
+            .setAttributes(["lifecycle.state": AttributeValue.string(state.inactive.rawValue)])
             .emit()
     }
     
     @objc func background(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: "background")
-            .setAttributes(["lifecycle.state": AttributeValue.string("active")])
+        Self.getLogger().eventBuilder(name: Self.eventName)
+            .setAttributes(["lifecycle.state": AttributeValue.string(state.background.rawValue)])
             .emit()
     }
     
     @objc func foreground(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: "lifecycle")
-            .setAttributes(["lifecycle.state": AttributeValue.string("foreground")])
+        Self.getLogger().eventBuilder(name: Self.eventName)
+            .setAttributes(["lifecycle.state": AttributeValue.string(state.foreground.rawValue)])
             .emit()
     }
     
     @objc func terminate(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: "lifecycle")
-            .setAttributes(["lifecycle.state": AttributeValue.string("terminate")])
+        Self.getLogger().eventBuilder(name: Self.eventName)
+            .setAttributes(["lifecycle.state": AttributeValue.string(state.terminate.rawValue)])
             .emit()}
 }

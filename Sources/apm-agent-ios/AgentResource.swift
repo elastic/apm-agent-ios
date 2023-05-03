@@ -38,6 +38,19 @@ public class AgentResource  {
         if let deviceId = AgentResource.identifier()  {
             overridingAttributes[ElasticAttributes.deviceIdentifier.rawValue] = AttributeValue.string(deviceId)
         }
+        let appDataSource = ApplicationDataSource()
+        
+        if let build = appDataSource.build {
+            if let version = appDataSource.version {
+                overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(version)
+                overridingAttributes[ElasticAttributes.serviceBuild.rawValue] = AttributeValue.string(build)
+            } else {
+                overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(build)
+            }
+        } else if let version = appDataSource.version {
+            overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(version)
+
+        }
         
         overridingAttributes[ResourceAttributes.deploymentEnvironment.rawValue] = AttributeValue.string("default")
             
