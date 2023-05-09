@@ -39,7 +39,7 @@ class OpenTelemetryInitializer {
         .with(resource: resources)
         .with(
           exporter: OtlpMetricExporter(
-            channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL))
+            channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
         )
         .build())
 
@@ -49,7 +49,7 @@ class OpenTelemetryInitializer {
         .add(
           spanProcessor: ElasticSpanProcessor(
             spanExporter: OtlpTraceExporter(
-              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)),
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
             configuration.agent.spanFilters)
         )
         .with(resource: resources)
@@ -63,7 +63,7 @@ class OpenTelemetryInitializer {
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: OtlpLogExporter(
-              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)),
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
             configuration.agent.logFilters)
         ])
         .build())
