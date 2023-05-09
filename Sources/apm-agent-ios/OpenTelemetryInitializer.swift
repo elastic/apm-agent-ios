@@ -13,51 +13,62 @@
 //   limitations under the License.
 
 import Foundation
-import OpenTelemetryApi
-import OpenTelemetrySdk
-import OpenTelemetryProtocolExporter
 import GRPC
-import NIO
 import Logging
-
-
-
+import NIO
+import OpenTelemetryApi
+import OpenTelemetryProtocolExporter
+import OpenTelemetrySdk
 
 class OpenTelemetryInitializer {
-    static let LOG_LABEL = "Elastic-OTLP-Exporter"
+  static let logLabel = "Elastic-OTLP-Exporter"
 
-    static func initialize(_ configuration : AgentConfigManager) -> EventLoopGroup {
-        let otlpConfiguration = OtlpConfiguration(timeout: OtlpConfiguration.DefaultTimeoutInterval, headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
-        
-        let resources = AgentResource.get().merging(other: AgentEnvResource.get())
-        
-                
-        // initialize meter provider
-        OpenTelemetry.registerMeterProvider(meterProvider: MeterProviderBuilder()
-            .with(processor: ElasticMetricProcessor())
-            .with(resource: resources )
-            .with(exporter: OtlpMetricExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL)))
-            .build())
-    
-         // initialize trace provider
-        OpenTelemetry.registerTracerProvider(tracerProvider: TracerProviderBuilder()
-            .add(spanProcessor: ElasticSpanProcessor(spanExporter: OtlpTraceExporter(channel: channel, config: otlpConfiguration, logger: Logger(label:Self.LOG_LABEL))))
-            .with(resource: resources)
-            .with(clock: NTPClock())
-            .build())
+  static func initialize(_ configuration: AgentConfigManager) -> EventLoopGroup {
+    let otlpConfiguration = OtlpConfiguration(
+      timeout: OtlpConfiguration.DefaultTimeoutInterval,
+      headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
+    let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
 
-        OpenTelemetry.registerLoggerProvider(loggerProvider: LoggerProviderBuilder()
-            .with(clock: NTPClock())
-            .with(resource: resources)
-            .with(processors: [ElasticLogRecordProcessor(logRecordExporter: OtlpLogExporter(channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)))])
-            .build())
-        
-        return group
-    }
-    
-    
-    
-   
+    let resources = AgentResource.get().merging(other: AgentEnvResource.get())
+
+    // initialize meter provider
+    OpenTelemetry.registerMeterProvider(
+      meterProvider: MeterProviderBuilder()
+        .with(processor: ElasticMetricProcessor(configuration.agent.metricFilters))
+        .with(resource: resources)
+        .with(
+          exporter: OtlpMetricExporter(
+            channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL))
+        )
+        .build())
+
+    // initialize trace provider
+    OpenTelemetry.registerTracerProvider(
+      tracerProvider: TracerProviderBuilder()
+        .add(
+          spanProcessor: ElasticSpanProcessor(
+            spanExporter: OtlpTraceExporter(
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)),
+            configuration.agent.spanFilters)
+        )
+        .with(resource: resources)
+        .with(clock: NTPClock())
+        .build())
+
+    OpenTelemetry.registerLoggerProvider(
+      loggerProvider: LoggerProviderBuilder()
+        .with(clock: NTPClock())
+        .with(resource: resources)
+        .with(processors: [
+          ElasticLogRecordProcessor(
+            logRecordExporter: OtlpLogExporter(
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.LOG_LABEL)),
+            configuration.agent.logFilters)
+        ])
+        .build())
+
+    return group
+  }
+
 }

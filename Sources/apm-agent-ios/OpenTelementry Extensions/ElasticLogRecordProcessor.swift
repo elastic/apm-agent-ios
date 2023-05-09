@@ -16,52 +16,57 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
+public struct ElasticLogRecordProcessor: LogRecordProcessor {
+  var processor: BatchLogRecordProcessor
+  var filters = [SignalFilter<ReadableLogRecord>]()
+  internal init(
+    logRecordExporter: LogRecordExporter,
+    _ filters: [SignalFilter<ReadableLogRecord>] = [SignalFilter<ReadableLogRecord>](),
+    scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048,
+    maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord]) -> Void)? = nil
+  ) {
+    self.filters = filters
+    processor = BatchLogRecordProcessor(
+      logRecordExporter: logRecordExporter, scheduleDelay: scheduleDelay,
+      exportTimeout: exportTimeout, maxQueueSize: maxQueueSize,
+      maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)
+  }
 
+  public func onEmit(logRecord: OpenTelemetrySdk.ReadableLogRecord) {
+    guard CentralConfig().data.recording else {
+      return
+    }
 
-public struct ElasticLogRecordProcessor : LogRecordProcessor {
-    var processor : BatchLogRecordProcessor
-    var filters = [SignalFilter<ReadableLogRecord>]()
-    internal init(logRecordExporter: LogRecordExporter, filters : [SignalFilter<ReadableLogRecord>] = [SignalFilter<ReadableLogRecord>](), scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord])->Void)? = nil) {
-        self.filters = filters
-        processor = BatchLogRecordProcessor(logRecordExporter: logRecordExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout, maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)
+    var attributes = logRecord.attributes
+    attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(
+      SessionManager.instance.session())
+
+    let appendedLogRecord = ReadableLogRecord(
+      resource: logRecord.resource,
+      instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
+      timestamp: logRecord.timestamp,
+      observedTimestamp: logRecord.observedTimestamp,
+      spanContext: logRecord.spanContext,
+      severity: logRecord.severity,
+      body: logRecord.body,
+      attributes: attributes)
+
+    for filter in filters {
+      if !filter.shouldInclude(appendedLogRecord) {
+        return
+      }
     }
-    
-    public func onEmit(logRecord: OpenTelemetrySdk.ReadableLogRecord) {
-        guard CentralConfig().data.recording else {
-            return
-        }
-                
-        var attributes = logRecord.attributes
-        attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(SessionManager.instance.session())
-        
-        let appendedLogRecord = ReadableLogRecord(resource: logRecord.resource,
-                                          instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
-                                          timestamp: logRecord.timestamp,
-                                          observedTimestamp: logRecord.observedTimestamp,
-                                          spanContext: logRecord.spanContext,
-                                          severity: logRecord.severity,
-                                          body: logRecord.body,
-                                          attributes: attributes)
-        
-        
-        for filter in filters {
-            if !filter.shouldInclude(appendedLogRecord) {
-                return
-            }
-        }
-            
-        processor.onEmit(logRecord: appendedLogRecord)
-                        
-  
-    }
-    
-    public func forceFlush() -> OpenTelemetrySdk.ExportResult {
-        processor.forceFlush()
-    }
-    
-    public func shutdown() -> OpenTelemetrySdk.ExportResult {
-        processor.shutdown()
-    }
-    
-    
+
+    processor.onEmit(logRecord: appendedLogRecord)
+
+  }
+
+  public func forceFlush() -> OpenTelemetrySdk.ExportResult {
+    processor.forceFlush()
+  }
+
+  public func shutdown() -> OpenTelemetrySdk.ExportResult {
+    processor.shutdown()
+  }
+
 }
