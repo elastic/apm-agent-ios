@@ -13,107 +13,133 @@
 //   limitations under the License.
 
 import Foundation
+import NetworkStatus
 import OpenTelemetryApi
 import OpenTelemetrySdk
-import NetworkStatus
 import os.log
 
-public struct ElasticSpanProcessor : SpanProcessor {
-    var processor : SpanProcessor
-    var exporter : SpanExporter
-    public let isStartRequired: Bool
-    public let isEndRequired: Bool
-    
-    static var netstatInjector: NetworkStatusInjector? = { () -> NetworkStatusInjector? in
-        do {
-            let netstats = try NetworkStatus()
-            return NetworkStatusInjector(netstat: netstats)
-        } catch {
-            if #available(iOS 14, macOS 11, tvOS 14, *) {
-                os_log(.error, "failed to initialize network connection status: %@", error.localizedDescription)
-            } else {
-                NSLog("failed to initialize network connection status: %@", error.localizedDescription)
-            }
-            return nil
-        }
-    }()
+public struct ElasticSpanProcessor: SpanProcessor {
+  var processor: SpanProcessor
+  var exporter: SpanExporter
+  var filters = [SignalFilter<ReadableSpan>]()
+  public let isStartRequired: Bool
+  public let isEndRequired: Bool
 
-    
-    public init(spanExporter: SpanExporter, scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
-                maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512, willExportCallback: ((inout [SpanData]) -> Void)? = nil) {
-        processor = BatchSpanProcessor(spanExporter: spanExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout, maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize, willExportCallback: willExportCallback)
-        isStartRequired = processor.isStartRequired
-        isEndRequired = processor.isEndRequired
-        exporter = spanExporter
+  static var netstatInjector: NetworkStatusInjector? = { () -> NetworkStatusInjector? in
+    do {
+      let netstats = try NetworkStatus()
+      return NetworkStatusInjector(netstat: netstats)
+    } catch {
+      if #available(iOS 14, macOS 11, tvOS 14, *) {
+        os_log(
+          .error, "failed to initialize network connection status: %@", error.localizedDescription)
+      } else {
+        NSLog("failed to initialize network connection status: %@", error.localizedDescription)
+      }
+      return nil
     }
-    
-    public func onStart(parentContext: OpenTelemetryApi.SpanContext?, span: OpenTelemetrySdk.ReadableSpan) {
-        span.setAttribute(key: ElasticAttributes.sessionId.rawValue, value: AttributeValue.string(SessionManager.instance.session()))
-        if let networkStatusInjector = Self.netstatInjector {
-            networkStatusInjector.inject(span: span)
-        }
-        span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
-        processor.onStart(parentContext: parentContext, span: span)
-    }
-    
-    public mutating func onEnd(span: OpenTelemetrySdk.ReadableSpan) {
-        if span.isHttpSpan()  {
-            var spanData = span.toSpanData()
-            if spanData.parentSpanId == nil, let transactionSpan = span as? RecordEventsReadableSpan {
-                
-                var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
-                newAttributes.updateValue(value: AttributeValue.string("mobile"), forKey: "type")
-                newAttributes.updateValue(value: AttributeValue.string(SessionManager.instance.session()), forKey:  ElasticAttributes.sessionId.rawValue)
-                let parentSpanContext = SpanContext.create(traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(), traceState: TraceState())
+  }()
 
-                let parentSpan = RecordEventsReadableSpan.startSpan(context: parentSpanContext,
-                                                                    name: spanData.name,
-                                                                    instrumentationScopeInfo: span.instrumentationScopeInfo,
-                                                                    kind: span.kind,
-                                                                    parentContext: nil,
-                                                                    hasRemoteParent: false,
-                                                                    spanLimits: transactionSpan.spanLimits,
-                                                                    spanProcessor: NoopSpanProcessor(),
-                                                                    clock:transactionSpan.clock,
-                                                                    resource: transactionSpan.resource,
-                                                                    attributes: newAttributes,
-                                                                    links: transactionSpan.links,
-                                                                    totalRecordedLinks: transactionSpan.totalRecordedLinks,
-                                                                    startTime: transactionSpan.startTime)
-                
-                parentSpan.end(time: transactionSpan.endTime!)
-                
-                spanData.settingParentSpanId(parentSpanContext.spanId)
-                
-                exporter.export(spans: [spanData,parentSpan.toSpanData()])
+  public init(
+    spanExporter: SpanExporter,
+    _ filters: [SignalFilter<ReadableSpan>] = [SignalFilter<ReadableSpan>](),
+    scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
+    maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512,
+    willExportCallback: ((inout [SpanData]) -> Void)? = nil
+  ) {
+    processor = BatchSpanProcessor(
+      spanExporter: spanExporter, scheduleDelay: scheduleDelay, exportTimeout: exportTimeout,
+      maxQueueSize: maxQueueSize, maxExportBatchSize: maxExportBatchSize,
+      willExportCallback: willExportCallback)
+    isStartRequired = processor.isStartRequired
+    isEndRequired = processor.isEndRequired
+    exporter = spanExporter
+    self.filters = filters
+  }
 
-                return
-            }
-        }
-        processor.onEnd(span: span)
+  public func onStart(
+    parentContext: OpenTelemetryApi.SpanContext?, span: OpenTelemetrySdk.ReadableSpan
+  ) {
+    span.setAttribute(
+      key: ElasticAttributes.sessionId.rawValue,
+      value: AttributeValue.string(SessionManager.instance.session()))
+    if let networkStatusInjector = Self.netstatInjector {
+      networkStatusInjector.inject(span: span)
     }
-    
-    public mutating func shutdown() {
-        processor.shutdown()
+    span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
+    processor.onStart(parentContext: parentContext, span: span)
+  }
+
+  public mutating func onEnd(span: OpenTelemetrySdk.ReadableSpan) {
+
+    for filter in filters {
+      if !filter.shouldInclude(span) {
+        return
+      }
     }
-    
-    public func forceFlush(timeout: TimeInterval?) {
-        processor.forceFlush(timeout: timeout)
+
+    if span.isHttpSpan() {
+      var spanData = span.toSpanData()
+      if spanData.parentSpanId == nil, let transactionSpan = span as? RecordEventsReadableSpan {
+
+        var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
+        newAttributes.updateValue(value: AttributeValue.string("mobile"), forKey: "type")
+        newAttributes.updateValue(
+          value: AttributeValue.string(SessionManager.instance.session()),
+          forKey: ElasticAttributes.sessionId.rawValue)
+        let parentSpanContext = SpanContext.create(
+          traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(),
+          traceState: TraceState())
+
+        let parentSpan = RecordEventsReadableSpan.startSpan(
+          context: parentSpanContext,
+          name: spanData.name,
+          instrumentationScopeInfo: span.instrumentationScopeInfo,
+          kind: span.kind,
+          parentContext: nil,
+          hasRemoteParent: false,
+          spanLimits: transactionSpan.spanLimits,
+          spanProcessor: NoopSpanProcessor(),
+          clock: transactionSpan.clock,
+          resource: transactionSpan.resource,
+          attributes: newAttributes,
+          links: transactionSpan.links,
+          totalRecordedLinks: transactionSpan.totalRecordedLinks,
+          startTime: transactionSpan.startTime)
+
+        parentSpan.end(time: transactionSpan.endTime!)
+
+        spanData.settingParentSpanId(parentSpanContext.spanId)
+
+        exporter.export(spans: [spanData, parentSpan.toSpanData()])
+
+        return
+      }
     }
-    
+    processor.onEnd(span: span)
+  }
+
+  public mutating func shutdown() {
+    processor.shutdown()
+  }
+
+  public func forceFlush(timeout: TimeInterval?) {
+    processor.forceFlush(timeout: timeout)
+  }
+
 }
 
 internal struct NoopSpanProcessor: SpanProcessor {
-    init() {}
+  init() {}
 
-    let isStartRequired = false
-    let isEndRequired = false
+  let isStartRequired = false
+  let isEndRequired = false
 
-    func onStart(parentContext: SpanContext?, span: ReadableSpan) {}
+  func onStart(parentContext: SpanContext?, span: ReadableSpan) {}
 
-    func onEnd(span: ReadableSpan) {}
+  func onEnd(span: ReadableSpan) {}
 
-    func shutdown() {}
+  func shutdown() {}
 
-    func forceFlush(timeout: TimeInterval? = nil) {}
+  func forceFlush(timeout: TimeInterval? = nil) {}
 }

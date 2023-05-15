@@ -20,8 +20,10 @@ public class ElasticMetricProcessor : MetricProcessor {
     
     private let lock : NSLock
     var metrics: [Metric]
+    var filters = [SignalFilter<Metric>]()
     
-    internal init() {
+    internal init(_ filters: [SignalFilter<Metric>] = [SignalFilter<Metric>]()) {
+        self.filters = filters
         metrics = [Metric]()
         lock = NSLock()
     }
@@ -55,6 +57,12 @@ public class ElasticMetricProcessor : MetricProcessor {
 
         guard CentralConfig().data.recording else {
             return
+        }
+        
+        for filter in filters {
+            if !filter.shouldInclude(metric) {
+                return
+            }
         }
         
         metrics.append(metric)
