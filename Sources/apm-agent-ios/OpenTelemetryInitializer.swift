@@ -17,11 +17,25 @@ import GRPC
 import Logging
 import NIO
 import OpenTelemetryApi
-import OpenTelemetryProtocolExporter
+import OpenTelemetryProtocolExporterCommon
+import OpenTelemetryProtocolExporterGrpc
 import OpenTelemetrySdk
+import PersistenceExporter
 
 class OpenTelemetryInitializer {
   static let logLabel = "Elastic-OTLP-Exporter"
+
+  static func createPersistenceFolder() -> URL? {
+    do {
+      let cachesDir = try FileManager.default.url(
+        for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+      let persistentDir = cachesDir.appendingPathComponent("elastic")
+      try FileManager.default.createDirectory(at: persistentDir, withIntermediateDirectories: true)
+      return persistentDir
+    } catch {
+      return nil
+    }
+  }
 
   static func initialize(_ configuration: AgentConfigManager) -> EventLoopGroup {
     let otlpConfiguration = OtlpConfiguration(
@@ -31,16 +45,53 @@ class OpenTelemetryInitializer {
     let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
 
     let resources = AgentResource.get().merging(other: AgentEnvResource.get())
+    let metricExporter = {
+      let defaultExporter = OtlpMetricExporter(
+        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
+      do {
+        if let path = createPersistenceFolder() {
+          return try PersistenceMetricExporterDecorator(
+            metricExporter: defaultExporter, storageURL: path) as MetricExporter
+        }
+      } catch {}
+      return defaultExporter as MetricExporter
+    }()
+
+    let traceExporter = {
+      let defaultExporter = OtlpTraceExporter(
+        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
+      do {
+        if let path = createPersistenceFolder() {
+          return try PersistenceSpanExporterDecorator(
+            spanExporter: OtlpTraceExporter(
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
+            storageURL: path) as SpanExporter
+        }
+      } catch {}
+      return defaultExporter as SpanExporter
+
+    }()
+    let logExporter = {
+      let defaultExporter = OtlpLogExporter(
+        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
+      do {
+        if let path = createPersistenceFolder() {
+          return try PersistenceLogExporterDecorator(
+            logRecordExporter: OtlpLogExporter(
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
+            storageURL: path) as LogRecordExporter
+        }
+      } catch {}
+      return defaultExporter as LogRecordExporter
+    }()
 
     // initialize meter provider
+
     OpenTelemetry.registerMeterProvider(
       meterProvider: MeterProviderBuilder()
         .with(processor: ElasticMetricProcessor(configuration.agent.metricFilters))
         .with(resource: resources)
-        .with(
-          exporter: OtlpMetricExporter(
-            channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
-        )
+        .with(exporter: metricExporter)
         .build())
 
     // initialize trace provider
@@ -48,8 +99,7 @@ class OpenTelemetryInitializer {
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: OtlpTraceExporter(
-              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
+            spanExporter: traceExporter,
             configuration.agent.spanFilters)
         )
         .with(resource: resources)
@@ -62,8 +112,7 @@ class OpenTelemetryInitializer {
         .with(resource: resources)
         .with(processors: [
           ElasticLogRecordProcessor(
-            logRecordExporter: OtlpLogExporter(
-              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
+            logRecordExporter: logExporter,
             configuration.agent.logFilters)
         ])
         .build())
