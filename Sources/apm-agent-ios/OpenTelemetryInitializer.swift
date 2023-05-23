@@ -25,6 +25,9 @@ import PersistenceExporter
 class OpenTelemetryInitializer {
   static let logLabel = "Elastic-OTLP-Exporter"
 
+  let group: EventLoopGroup
+  let sessionSampler: SessionSampler
+
   static func createPersistenceFolder() -> URL? {
     do {
       let cachesDir = try FileManager.default.url(
@@ -37,7 +40,35 @@ class OpenTelemetryInitializer {
     }
   }
 
-  static func initialize(_ configuration: AgentConfigManager) -> EventLoopGroup {
+  init(group: EventLoopGroup, sessionSampler: SessionSampler) {
+    self.group = group
+    self.sessionSampler = sessionSampler
+  }
+
+  func initialize(_ configuration: AgentConfigManager) {
+
+    var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
+      SignalFilter<ReadableSpan>({ [self] _ in
+        !self.sessionSampler.shouldSample
+      })
+    ]
+
+    var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
+      SignalFilter<ReadableLogRecord>({ [self] _ in
+        !self.sessionSampler.shouldSample
+      })
+    ]
+
+    var metricSampleFilter: [SignalFilter<Metric>] = [
+      SignalFilter<Metric>({ [self] _ in
+        !self.sessionSampler.shouldSample
+      })
+    ]
+
+    traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
+    logSampleFliter.append(contentsOf: configuration.agent.logFilters)
+    metricSampleFilter.append(contentsOf: configuration.agent.metricFilters)
+
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
       headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
@@ -49,7 +80,7 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpMetricExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder() {
           return try PersistenceMetricExporterDecorator(
             metricExporter: defaultExporter, storageURL: path) as MetricExporter
         }
@@ -61,7 +92,7 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpTraceExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder() {
           return try PersistenceSpanExporterDecorator(
             spanExporter: OtlpTraceExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
@@ -75,7 +106,7 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpLogExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder() {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: OtlpLogExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
@@ -89,7 +120,7 @@ class OpenTelemetryInitializer {
 
     OpenTelemetry.registerMeterProvider(
       meterProvider: MeterProviderBuilder()
-        .with(processor: ElasticMetricProcessor(configuration.agent.metricFilters))
+        .with(processor: ElasticMetricProcessor(metricSampleFilter))
         .with(resource: resources)
         .with(exporter: metricExporter)
         .build())
@@ -99,8 +130,7 @@ class OpenTelemetryInitializer {
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter,
-            configuration.agent.spanFilters)
+            spanExporter: traceExporter, traceSampleFilter)
         )
         .with(resource: resources)
         .with(clock: NTPClock())
@@ -113,11 +143,9 @@ class OpenTelemetryInitializer {
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: logExporter,
-            configuration.agent.logFilters)
+            logSampleFliter)
         ])
         .build())
-
-    return group
   }
 
 }

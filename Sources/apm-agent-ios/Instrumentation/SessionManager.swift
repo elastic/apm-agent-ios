@@ -14,54 +14,66 @@
 
 import Foundation
 
+extension Notification.Name {
+  public static let elasticSessionManagerDidRefreshSession = Notification.Name.init(
+    "elasticSessionManagerDidRefreshSession")
+}
+
 public class SessionManager {
-    static let sessionIdKey = "elastic.session.id"
-    static let sessionTimerKey = "elastic.session.timer"
-    static let sessionTimeout: TimeInterval = 30 * 60
-    public static var instance = SessionManager()
-    private var currentId: UUID {
-        get {
-            UUID(uuidString: UserDefaults.standard.object(forKey: Self.sessionIdKey) as? String ?? "") ?? UUID()
-        }
-        set(uuid) {
-            UserDefaults.standard.setValue(uuid.uuidString, forKey: Self.sessionIdKey)
-        }
-    }
 
-    private var lastUpdated: Date {
-        get {
-            Date(timeIntervalSince1970: UserDefaults.standard.object(forKey: Self.sessionTimerKey) as? TimeInterval ?? Date.distantPast.timeIntervalSince1970)
-        }
-        set(date) {
-            UserDefaults.standard.setValue(date.timeIntervalSince1970, forKey: Self.sessionTimerKey)
-        }
+  static let sessionIdKey = "elastic.session.id"
+  static let sessionTimerKey = "elastic.session.timer"
+  static let sessionTimeout: TimeInterval = 30 * 60
+  public static var instance = SessionManager()
+  private var currentId: UUID {
+    get {
+      UUID(uuidString: UserDefaults.standard.object(forKey: Self.sessionIdKey) as? String ?? "")
+        ?? UUID()
     }
+    set(uuid) {
+      UserDefaults.standard.setValue(uuid.uuidString, forKey: Self.sessionIdKey)
+    }
+  }
 
-    private init() {
-        if !isValid() {
-            refreshSession()
-        }
+  private var lastUpdated: Date {
+    get {
+      Date(
+        timeIntervalSince1970: UserDefaults.standard.object(forKey: Self.sessionTimerKey)
+          as? TimeInterval ?? Date.distantPast.timeIntervalSince1970)
     }
+    set(date) {
+      UserDefaults.standard.setValue(date.timeIntervalSince1970, forKey: Self.sessionTimerKey)
+    }
+  }
 
-    public func session() -> String {
-        if isValid() {
-            updateTimeout()
-        } else {
-            refreshSession()
-        }
-        return currentId.uuidString
+  private init() {
+    if !isValid() {
+      refreshSession()
     }
+  }
 
-    public func updateTimeout() {
-        lastUpdated = Date()
+  public func session() -> String {
+    if isValid() {
+      updateTimeout()
+    } else {
+      refreshSession()
     }
+    return currentId.uuidString
+  }
 
-    func refreshSession() {
-        currentId = UUID()
-        lastUpdated = Date()
-    }
+  public func updateTimeout() {
+    lastUpdated = Date()
+  }
 
-    func isValid() -> Bool {
-        lastUpdated.timeIntervalSinceNow.magnitude < Self.sessionTimeout
-    }
+  func refreshSession() {
+    currentId = UUID()
+    lastUpdated = Date()
+    NotificationCenter.default.post(
+      name: .ElasticSessionManagerDidRefreshSession, object: self,
+      userInfo: ["id": currentId, "lastUpdated": lastUpdated])
+  }
+
+  func isValid() -> Bool {
+    lastUpdated.timeIntervalSinceNow.magnitude < Self.sessionTimeout
+  }
 }

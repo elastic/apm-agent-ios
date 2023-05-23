@@ -14,26 +14,33 @@
 
 import Foundation
 
+public struct CentralConfigData: Codable {
 
-public struct CentralConfigData : Codable {
-    
-    public var recording : Bool = true
-    
-    enum CodingKeys : String, CodingKey {
-        case recording
+  public static let defaultSampleRate: Double = 1.0
+
+  public var recording: Bool = true
+  public var sampleRate: Double = Self.defaultSampleRate
+
+  enum CodingKeys: String, CodingKey {
+    case recording
+    case sampleRate
+  }
+
+  public init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+
+    do {
+      recording = (try values.decode(String.self, forKey: .recording) as NSString).boolValue
+    } catch {
+      recording = true
     }
-     
-    public init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        
-        do {
-            recording = (try values.decode(String.self, forKey: .recording) as NSString).boolValue
-        } catch DecodingError.valueNotFound(_, _)  {
-            recording = true
-        } catch DecodingError.keyNotFound(_, _) {
-            recording = true
-        }
+
+    do {
+      sampleRate = try values.decode(Double.self, forKey: .sampleRate)
+    } catch {
+      sampleRate = Self.defaultSampleRate
     }
-    
-    init() {}
+  }
+
+  init() {}
 }
