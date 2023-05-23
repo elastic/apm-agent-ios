@@ -48,6 +48,7 @@ public class Agent {
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
   ) {
+    _ = SessionManager.instance.session()  // initialize session
     agentConfigManager = AgentConfigManager(
       resource: AgentResource.get().merging(other: AgentEnvResource.get()), config: configuration,
       instrumentationConfig: instrumentationConfiguration)

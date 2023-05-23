@@ -132,6 +132,7 @@ class OpenTelemetryInitializer {
           spanProcessor: ElasticSpanProcessor(
             spanExporter: traceExporter, traceSampleFilter)
         )
+        .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
         .with(clock: NTPClock())
         .build())

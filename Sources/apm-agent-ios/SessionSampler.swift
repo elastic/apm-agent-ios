@@ -13,8 +13,29 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetryApi
+import OpenTelemetrySdk
 
-class SessionSampler: NSObject {
+class SessionSampler: NSObject, Sampler {
+
+  private struct SimpleDecision: Decision {
+    let decision: Bool
+
+    /// Creates sampling decision without attributes.
+    /// - Parameter decision: sampling decision
+    init(decision: Bool) {
+      self.decision = decision
+    }
+
+    public var isSampled: Bool {
+      return decision
+    }
+
+    public var attributes: [String: AttributeValue] {
+      return [String: AttributeValue]()
+    }
+  }
+
   private let accessQueue = DispatchQueue(
     label: "SessionSampler.accessor", qos: .default, attributes: .concurrent)
 
@@ -37,12 +58,17 @@ class SessionSampler: NSObject {
     }
   }
 
+  private override init() {
+    self.sampleRateResolver = { return CentralConfig().data.sampleRate }
+    super.init()
+  }
+
   init(_ sampleRateResolver: @escaping () -> Double = { return CentralConfig().data.sampleRate }) {
     self.sampleRateResolver = sampleRateResolver
 
     super.init()
     NotificationCenter.default.addObserver(
-      self, selector: #selector(handleSessionChange), name: .ElasticSessionManagerDidRefreshSession,
+      self, selector: #selector(handleSessionChange), name: .elasticSessionManagerDidRefreshSession,
       object: nil)
   }
 
@@ -54,5 +80,17 @@ class SessionSampler: NSObject {
   func handleSessionChange(_ notification: NSNotification) {
     let sampleRate = sampleRateResolver()
     shouldSample = Double.random(in: 0...1) <= sampleRate
+  }
+
+  func shouldSample(
+    parentContext: SpanContext?,
+    traceId: TraceId,
+    name: String,
+    kind: SpanKind,
+    attributes: [String: AttributeValue],
+    parentLinks: [SpanData.Link]
+  ) -> Decision {
+    return SimpleDecision(decision: shouldSample)
+
   }
 }

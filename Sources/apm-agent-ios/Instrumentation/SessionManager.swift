@@ -69,7 +69,7 @@ public class SessionManager {
     currentId = UUID()
     lastUpdated = Date()
     NotificationCenter.default.post(
-      name: .ElasticSessionManagerDidRefreshSession, object: self,
+      name: .elasticSessionManagerDidRefreshSession, object: self,
       userInfo: ["id": currentId, "lastUpdated": lastUpdated])
   }
 
