@@ -56,11 +56,11 @@ let package = Package(
       path: "Sources/apm-agent-ios"
     ),
     .testTarget(
-      name: "apm-agent-iosTests",
+      name: "iOSAgentTests",
       dependencies: ["iOSAgent"],
       path: "Sources/Tests/apm-agent-iosTests"),
     .testTarget(
-      name: "memory-sampler-tests",
+      name: "MemorySamplerTests",
       dependencies: ["MemorySampler"],
       path: "Sources/Tests/memory-sampler-tests"),
   ]
