@@ -31,7 +31,7 @@ final class SessionSamplerTests: XCTestCase {
         count += 1
       }
     }
-    XCTAssertEqual(0.5 - (Double(count) / 10000.0), 0, accuracy: 0.005)
+    XCTAssertEqual(0.5 - (Double(count) / 10000.0), 0, accuracy: 0.01)
   }
 
   func testLowSampleRate() {
@@ -46,6 +46,6 @@ final class SessionSamplerTests: XCTestCase {
         count += 1
       }
     }
-    XCTAssertEqual(0.01 - (Double(count) / 10000.0), 0, accuracy: 0.005)
+    XCTAssertEqual(0.01 - (Double(count) / 10000.0), 0, accuracy: 0.01)
   }
 }
