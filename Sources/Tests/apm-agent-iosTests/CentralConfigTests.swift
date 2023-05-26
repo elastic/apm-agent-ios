@@ -13,92 +13,99 @@
 //   limitations under the License.
 
 import XCTest
+
 @testable import iOSAgent
 
-
-class CentralConfigTests : XCTestCase {
-    let nullJson = """
+class CentralConfigTests: XCTestCase {
+  let nullJson = """
     {}
     """
-    let withRecording = """
+  let withRecording = """
     {
-        "recording": "true"
+        "recording": "true",
+        "sampleRate": 1.0
     }
     """
-    let withoutRecording = """
+  let withoutRecording = """
     {
-        "recording": "false"
+        "recording": "false",
+        "sampleRate": 0.5
     }
     """
-    
-    let withNewFields = """
+
+  let withNewFields = """
     {
         "recording" : "false",
-        "new" : "new"
+        "new" : "new",
+      "sampleRate" : 0.0
     }
     """
-    
-    let newWithNoRecording = """
+
+  let newWithNoRecording = """
     {
         "new" : "new"
     }
     """
 
-    override class func setUp() {
-        UserDefaults.standard.removeObject(forKey:CentralConfig.CentralConfigKey)
-    }
-    override func tearDown() {
-        UserDefaults.standard.removeObject(forKey:CentralConfig.CentralConfigKey)
-    }
-    
-    func testAgentConfigManager() {
+  override class func setUp() {
+    UserDefaults.standard.removeObject(forKey: CentralConfig.CentralConfigKey)
+  }
+  override func tearDown() {
+    UserDefaults.standard.removeObject(forKey: CentralConfig.CentralConfigKey)
+  }
 
-        let c = CentralConfig()
-        
-        XCTAssertTrue(c.data.recording)
-        
-        c.config = nullJson
-        
-        XCTAssertTrue(c.data.recording)
-        
-        c.config = withoutRecording
-        
-        XCTAssertFalse(c.data.recording)
-        
-        c.config = nullJson
-        
-        XCTAssertTrue(c.data.recording)
-        
-        c.config = withNewFields
-        
-        XCTAssertFalse(c.data.recording)
-        
-        c.config = newWithNoRecording
-        
-        // should fall back to true
-        XCTAssertTrue(c.data.recording)
-    }
-    
-    func testMultiObjects() {
-        let one = CentralConfig()
-        let two = CentralConfig()
-        
-        XCTAssertTrue(one.data.recording)
-        XCTAssertTrue(two.data.recording)
+  func testAgentConfigManager() {
 
-        one.config = withoutRecording
-        
-        XCTAssertFalse(one.data.recording)
-        XCTAssertFalse(two.data.recording)
-        
-        let three = CentralConfig()
-        
-        XCTAssertFalse(three.data.recording)
-    }
-    
-    func testMaxAgeParse() {
-        let cacheControl = "max-age=30, must-revalidate"
-        let result = CentralConfigFetcher.parseMaxAge(cacheControl: cacheControl)
-        XCTAssertEqual(result, 30.0)
-    }
+    let c = CentralConfig()
+
+    XCTAssertTrue(c.data.recording)
+
+    c.config = nullJson
+
+    XCTAssertTrue(c.data.recording)
+    XCTAssertEqual(c.data.sampleRate, 1.0)
+
+    c.config = withoutRecording
+
+    XCTAssertFalse(c.data.recording)
+    XCTAssertEqual(c.data.sampleRate, 0.5)
+
+    c.config = nullJson
+
+    XCTAssertTrue(c.data.recording)
+    XCTAssertEqual(c.data.sampleRate, 1.0)
+
+    c.config = withNewFields
+
+    XCTAssertFalse(c.data.recording)
+    XCTAssertEqual(c.data.sampleRate, 0.0)
+
+    c.config = newWithNoRecording
+
+    // should fall back to true
+    XCTAssertTrue(c.data.recording)
+  }
+
+  func testMultiObjects() {
+    let one = CentralConfig()
+    let two = CentralConfig()
+
+    XCTAssertTrue(one.data.recording)
+    XCTAssertTrue(two.data.recording)
+
+    one.config = withoutRecording
+
+    XCTAssertFalse(one.data.recording)
+    XCTAssertFalse(two.data.recording)
+
+    let three = CentralConfig()
+
+    XCTAssertFalse(three.data.recording)
+  }
+
+  func testMaxAgeParse() {
+    let cacheControl = "max-age=30, must-revalidate"
+    let result = CentralConfigFetcher.parseMaxAge(cacheControl: cacheControl)
+    XCTAssertEqual(result, 30.0)
+  }
 }
