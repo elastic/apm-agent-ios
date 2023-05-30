@@ -59,11 +59,11 @@ class SessionSampler: NSObject, Sampler {
   }
 
   private override init() {
-    self.sampleRateResolver = { return CentralConfig().data.sampleRate }
+    self.sampleRateResolver = { return 1.0 }
     super.init()
   }
 
-  init(_ sampleRateResolver: @escaping () -> Double = { return CentralConfig().data.sampleRate }) {
+  init(_ sampleRateResolver: @escaping () -> Double) {
     self.sampleRateResolver = sampleRateResolver
 
     super.init()

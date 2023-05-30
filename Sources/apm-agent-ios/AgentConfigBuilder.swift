@@ -22,6 +22,8 @@ public class AgentConfigBuilder {
   static let bearer = "Bearer"
   static let api = "ApiKey"
 
+  var sampleRate = 1.0
+
   var spanFilters = [SignalFilter<ReadableSpan>]()
   var logFilters = [SignalFilter<ReadableLogRecord>]()
   var metricFilters = [SignalFilter<Metric>]()
@@ -48,6 +50,11 @@ public class AgentConfigBuilder {
     return self
   }
 
+  public func withSessionSampleRate(_ rate: Double) -> Self {
+    sampleRate = min(max(rate, 0.0), 1.0)
+    return self
+  }
+
   public func addSpanFilter(_ shouldInclude: @escaping (ReadableSpan) -> Bool) -> Self {
     spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
     return self
@@ -65,7 +72,7 @@ public class AgentConfigBuilder {
   public func build() -> AgentConfiguration {
 
     var config = AgentConfiguration()
-
+    config.sampleRate = sampleRate
     config.logFilters = logFilters
     config.spanFilters = spanFilters
     config.metricFilters = metricFilters
