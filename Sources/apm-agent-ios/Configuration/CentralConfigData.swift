@@ -16,10 +16,8 @@ import Foundation
 
 public struct CentralConfigData: Codable {
 
-  public static let defaultSampleRate: Double = 1.0
-
   public var recording: Bool = true
-  public var sampleRate: Double = Self.defaultSampleRate
+  public var sampleRate: Double? = nil
 
   enum CodingKeys: String, CodingKey {
     case recording
@@ -37,9 +35,7 @@ public struct CentralConfigData: Codable {
 
     do {
       sampleRate = try values.decode(Double.self, forKey: .sampleRate)
-    } catch {
-      sampleRate = Self.defaultSampleRate
-    }
+    } catch {}
   }
 
   init() {}

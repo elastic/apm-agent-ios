@@ -43,7 +43,7 @@ public class Agent {
 
   let openTelemetry: OpenTelemetryInitializer
 
-  let sessionSampler = SessionSampler()
+  let sessionSampler: SessionSampler
 
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
@@ -52,6 +52,13 @@ public class Agent {
     agentConfigManager = AgentConfigManager(
       resource: AgentResource.get().merging(other: AgentEnvResource.get()), config: configuration,
       instrumentationConfig: instrumentationConfiguration)
+
+    sessionSampler = SessionSampler({
+      if let rate = CentralConfig().data.sampleRate {
+        return rate
+      }
+      return configuration.sampleRate
+    })
 
     instrumentation = InstrumentationWrapper(config: agentConfigManager)
 

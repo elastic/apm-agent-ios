@@ -72,7 +72,6 @@ class OpenTelemetryInitializer {
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
       headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
-    let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
 
     let resources = AgentResource.get().merging(other: AgentEnvResource.get())

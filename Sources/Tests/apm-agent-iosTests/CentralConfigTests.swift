@@ -63,7 +63,7 @@ class CentralConfigTests: XCTestCase {
     c.config = nullJson
 
     XCTAssertTrue(c.data.recording)
-    XCTAssertEqual(c.data.sampleRate, 1.0)
+    XCTAssertEqual(c.data.sampleRate, nil)
 
     c.config = withoutRecording
 
@@ -73,7 +73,7 @@ class CentralConfigTests: XCTestCase {
     c.config = nullJson
 
     XCTAssertTrue(c.data.recording)
-    XCTAssertEqual(c.data.sampleRate, 1.0)
+    XCTAssertEqual(c.data.sampleRate, nil)
 
     c.config = withNewFields
 
