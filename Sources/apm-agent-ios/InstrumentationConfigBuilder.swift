@@ -13,73 +13,84 @@
 //   limitations under the License.
 
 import Foundation
-
+import PersistenceExporter
 
 public class InstrumentationConfigBuilder {
-    var enableCrashReporting : Bool?
-    var enableURLSessionInstrumentation: Bool?
-    var enableViewControllerInstrumentation: Bool?
-    var enableAppMetricInstrumentation: Bool?
-    var enableSystemMetrics: Bool?
-    var enableLifecycleEvents : Bool?
+  var enableCrashReporting: Bool?
+  var enableURLSessionInstrumentation: Bool?
+  var enableViewControllerInstrumentation: Bool?
+  var enableAppMetricInstrumentation: Bool?
+  var enableSystemMetrics: Bool?
+  var enableLifecycleEvents: Bool?
+  var persistentStorageConfig: PersistencePerformancePreset? = nil
 
-    public init() {}
-    
-    public func withCrashReporting(_ enable: Bool) -> Self {
-        self.enableCrashReporting = enable
-        return self
+  public init() {}
+
+  public func withCrashReporting(_ enable: Bool) -> Self {
+    self.enableCrashReporting = enable
+    return self
+  }
+
+  public func withURLSessionInstrumentation(_ enable: Bool) -> Self {
+    self.enableURLSessionInstrumentation = enable
+    return self
+  }
+
+  public func withViewControllerInstrumentation(_ enable: Bool) -> Self {
+    self.enableViewControllerInstrumentation = enable
+    return self
+  }
+  public func withAppMetricInstrumentation(_ enable: Bool) -> Self {
+    self.enableAppMetricInstrumentation = enable
+    return self
+  }
+
+  public func withSystemMetrics(_ enable: Bool) -> Self {
+    self.enableSystemMetrics = enable
+    return self
+  }
+
+  public func withLifecycleEvents(_ enable: Bool) -> Self {
+    self.enableLifecycleEvents = enable
+    return self
+  }
+
+  public func withPersistentStorageConfiguriation(_ config: PersistencePerformancePreset) -> Self {
+    self.persistentStorageConfig = config
+    return self
+  }
+
+  public func build() -> InstrumentationConfiguration {
+    var config = InstrumentationConfiguration()
+
+    if let enableCrashReporting = self.enableCrashReporting {
+      config.enableCrashReporting = enableCrashReporting
     }
 
-    public func withURLSessionInstrumentation(_ enable: Bool) -> Self {
-        self.enableURLSessionInstrumentation = enable
-        return self
+    if let enableURLSessionInstrumentation = self.enableURLSessionInstrumentation {
+      config.enableURLSessionInstrumentation = enableURLSessionInstrumentation
     }
 
-    public func withViewControllerInstrumentation(_ enable: Bool) -> Self {
-        self.enableViewControllerInstrumentation = enable
-        return self
-    }
-    public func withAppMetricInstrumentation(_ enable: Bool) -> Self {
-        self.enableAppMetricInstrumentation = enable
-        return self
+    if let enableViewControllerInstrumentation = self.enableViewControllerInstrumentation {
+      config.enableViewControllerInstrumentation = enableViewControllerInstrumentation
     }
 
-    public func withSystemMetrics(_ enable: Bool) -> Self {
-        self.enableSystemMetrics = enable
-        return self
-    }
-    
-    public func withLifecycleEvents(_ enable: Bool) -> Self {
-        self.enableLifecycleEvents = enable
-        return self
+    if let enableAppMetricInstrumentation = self.enableAppMetricInstrumentation {
+      config.enableAppMetricInstrumentation = enableAppMetricInstrumentation
     }
 
-    public func build() -> InstrumentationConfiguration {
-        var config = InstrumentationConfiguration()
-        
-        if let enableCrashReporting = self.enableCrashReporting  {
-            config.enableCrashReporting = enableCrashReporting
-        }
-
-        if let enableURLSessionInstrumentation = self.enableURLSessionInstrumentation {
-            config.enableURLSessionInstrumentation = enableURLSessionInstrumentation
-        }
-
-        if let enableViewControllerInstrumentation = self.enableViewControllerInstrumentation {
-            config.enableViewControllerInstrumentation = enableViewControllerInstrumentation
-        }
-
-        if let enableAppMetricInstrumentation = self.enableAppMetricInstrumentation {
-            config.enableAppMetricInstrumentation = enableAppMetricInstrumentation
-        }
-
-        if let enableSystemMetrics = self.enableSystemMetrics {
-            config.enableSystemMetrics = enableSystemMetrics
-        }
-
-        if let enableLifecycleEvents = self.enableLifecycleEvents {
-            config.enableLifecycleEvents = enableLifecycleEvents
-        }
-        return config
+    if let enableSystemMetrics = self.enableSystemMetrics {
+      config.enableSystemMetrics = enableSystemMetrics
     }
+
+    if let enableLifecycleEvents = self.enableLifecycleEvents {
+      config.enableLifecycleEvents = enableLifecycleEvents
+    }
+
+    if let persistentStorageConfig = self.persistentStorageConfig {
+      config.storageConfiguration = persistentStorageConfig
+    }
+
+    return config
+  }
 }

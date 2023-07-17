@@ -81,7 +81,8 @@ class OpenTelemetryInitializer {
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceMetricExporterDecorator(
-            metricExporter: defaultExporter, storageURL: path) as MetricExporter
+            metricExporter: defaultExporter, storageURL: path, exportCondition: { true },
+            performancePreset: configuration.instrumentation.storageConfiguration) as MetricExporter
         }
       } catch {}
       return defaultExporter as MetricExporter
@@ -95,7 +96,8 @@ class OpenTelemetryInitializer {
           return try PersistenceSpanExporterDecorator(
             spanExporter: OtlpTraceExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
-            storageURL: path) as SpanExporter
+            storageURL: path, exportCondition: { true },
+            performancePreset: configuration.instrumentation.storageConfiguration) as SpanExporter
         }
       } catch {}
       return defaultExporter as SpanExporter
@@ -109,7 +111,9 @@ class OpenTelemetryInitializer {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: OtlpLogExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
-            storageURL: path) as LogRecordExporter
+            storageURL: path, exportCondition: { true },
+            performancePreset: configuration.instrumentation.storageConfiguration)
+            as LogRecordExporter
         }
       } catch {}
       return defaultExporter as LogRecordExporter

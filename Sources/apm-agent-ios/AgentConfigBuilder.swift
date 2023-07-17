@@ -14,6 +14,7 @@
 
 import Foundation
 import OpenTelemetrySdk
+import PersistenceExporter
 
 public class AgentConfigBuilder {
   var enableAgent: Bool?
@@ -34,7 +35,6 @@ public class AgentConfigBuilder {
     enableAgent = false
     return self
   }
-
   public func withServerUrl(_ url: URL) -> Self {
     self.url = url
     return self
@@ -91,6 +91,7 @@ public class AgentConfigBuilder {
         config.auth = auth
       }
     }
+
     if let enableAgent = enableAgent {
       config.enableAgent = enableAgent
     }
