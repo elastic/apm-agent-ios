@@ -55,7 +55,7 @@ public class InstrumentationConfigBuilder {
     return self
   }
 
-  public func withPersistentStorageConfiguriation(_ config: PersistencePerformancePreset) -> Self {
+  public func withPersistentStorageConfiguration(_ config: PersistencePerformancePreset) -> Self {
     self.persistentStorageConfig = config
     return self
   }

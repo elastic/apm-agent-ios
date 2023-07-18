@@ -14,11 +14,10 @@ let config = AgentConfigBuilder()
 Agent.start(with:config)
 ----
 
-The `AgentConfigBuilder` can be configured with the following functions
-
 [discrete]
 [[configuration-options]]
 === Configuration options
+The `AgentConfigBuilder` can be configured with the following functions:
 
 [discrete]
 [[withServerUrl]]
@@ -74,11 +73,89 @@ Adds an anonymous function that will be executed on each metric in the span proc
 
 [discrete]
 [[addLogFilter]]
-==== `addLogFilter
+==== `addLogFilter`
 * *Type:* @escaping (ReadableLogRecord) -> Bool
 * *Default:* nil
 
 Adds an anonymous function that will be executed on each log in the span processor to decide if that log should be sent to the back end.
+
+[discrete]
+[[instrumentationConfiguration]]
+== Instrumentation configuration
+The `Agent.start` provides an additional optional parameter for configuring instrumentation.
+In the below example, an instrumentation configuration is passed to `Agent.start` with default values.
+This is equivalent to calling `Agent.start` with no instrumentation configuration passed.
+
+[source,swift]
+----
+let config = ...
+
+let instrumentationConfig = InstrumentationConfigBuilder().build()
+
+Agent.start(with:config, instrumentationConfig)
+----
+
+[discrete]
+[[instrumentationConfigOptions]]
+=== Instrumentation config options
+`InstrumentationConfigBuilder` can be configured with the following functions.
+
+[discrete]
+[[withCrashReporting]]
+==== `withCrashReporting(_ enable: Bool) -> Self`
+
+* *Type:* Bool
+* *Default:* `true`
+
+This option can be used to enable/disable the crash reporting functionality of the agent.
+
+[discrete]
+[[withURLSessionInstrumentation]]
+==== `withURLSessionInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* `true`
+
+This option can be used to enable/disable the network tracing instrumentation.
+
+[discrete]
+[[withViewControllerInstrumentation]]
+==== `withViewControllerInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* `true`
+
+This option can be used to enable/disable the view controller tracing instrumentation.
+
+[discrete]
+[[withAppMetricInstrumentation]]
+==== `withAppMetricInstrumentation(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* `true`
+
+This option can be used to enable/disable https://developer.apple.com/documentation/metrickit[MetricKit] instrumentation.
+
+[discrete]
+[[withSystemMetrics]]
+==== `withSystemMetrics(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* `true`
+
+This option can be used to enable/disable systems metrics instrumentation (CPU & memory usage).
+
+[discrete]
+[[withLifecycleEvents]]
+==== `withLifecycleEvents(_ enable: Bool) -> Self`
+* *Type:* Bool
+* *Default:* `true`
+
+This option can be used to enable/disable lifecycle events.
+
+[discrete]
+[[withPersistentStorageConfiguration]]
+==== `withPersistentStorageConfiguration(_ config: PersistencePerformancePreset) -> Self`
+* *Type:* `PersistencePerformancePreset`
+* *Default:* `.lowRuntimeImpact`
+
+This option can be used to configure the behavior of the https://github.com/open-telemetry/opentelemetry-swift/tree/main/Sources/Exporters/Persistence[persistent stores] for traces, metrics, and logs.
 
 [discrete]
 [[resourceAttributeInjection]]
