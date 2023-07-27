@@ -49,19 +49,19 @@ class OpenTelemetryInitializer {
 
     var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
       SignalFilter<ReadableSpan>({ [self] _ in
-        !self.sessionSampler.shouldSample
+        self.sessionSampler.shouldSample
       })
     ]
 
     var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
       SignalFilter<ReadableLogRecord>({ [self] _ in
-        !self.sessionSampler.shouldSample
+        self.sessionSampler.shouldSample
       })
     ]
 
     var metricSampleFilter: [SignalFilter<Metric>] = [
       SignalFilter<Metric>({ [self] _ in
-        !self.sessionSampler.shouldSample
+        self.sessionSampler.shouldSample
       })
     ]
 
