@@ -14,11 +14,6 @@ The agent will automatically capture and upload crashes to the apm server. These
 URLSession instrumentation is provided by the Open Telemetry Swift sdk, and will automatically generate traces for all network requests generated with URLSessions. More details can be found in the https://github.com/open-telemetry/opentelemetry-swift/tree/main/Sources/Instrumentation/URLSession[URL Session instrumentation Open Telemetry documentation]
 
 [discrete]
-[[system-metrics]]
-=== System metrics
-
-
-[discrete]
 [[view-instrumentation]]
 === View instrumentation
 
