@@ -17,6 +17,8 @@ include::./setup.asciidoc[]
 
 include::./configuration.asciidoc[]
 
+include::./instrumentation.asciidoc[]
+
 // include::./api.asciidoc[]
 
 // include::./metrics.asciidoc[]
