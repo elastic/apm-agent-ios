@@ -76,7 +76,11 @@ struct CrashManager {
   public func initializeCrashReporter() {
     // It is strongly recommended that local symbolication only be enabled for non-release builds.
     // Use [] for release versions.
-    let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
+#if os(tvOS)
+      let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [])
+#else
+      let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
+#endif
     guard let crashReporter = PLCrashReporter(configuration: config) else {
       print("Could not create an instance of PLCrashReporter")
       return
