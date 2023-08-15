@@ -53,7 +53,7 @@ struct CrashManager {
     loggerProvider = LoggerProviderBuilder()
       .with(resource: lastResource)
       .with(processors: [
-        SimpleLogRecordProcessor(
+        BatchLogRecordProcessor(
           logRecordExporter: OtlpLogExporter(
             channel: OpenTelemetryHelper.getChannel(with: agentConfiguration, group: group),
             config: otlpConfiguration,
