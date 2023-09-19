@@ -79,10 +79,10 @@ public class Agent {
   }
 
   private func initialize() {
+    instrumentation.initalize()
     if agentConfigManager.instrumentation.enableCrashReporting {
       crashManager?.initializeCrashReporter()
     }
-    instrumentation.initalize()
   }
 
   deinit {
