@@ -61,12 +61,12 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
 
   }
 
-  public func forceFlush() -> OpenTelemetrySdk.ExportResult {
-    processor.forceFlush()
+  public func forceFlush(explicitTimeout: TimeInterval? = nil) -> OpenTelemetrySdk.ExportResult {
+    processor.forceFlush(explicitTimeout: explicitTimeout)
   }
 
-  public func shutdown() -> OpenTelemetrySdk.ExportResult {
-    processor.shutdown()
+  public func shutdown(explicitTimeout: TimeInterval? = nil) -> OpenTelemetrySdk.ExportResult {
+    processor.shutdown(explicitTimeout: explicitTimeout)
   }
 
 }

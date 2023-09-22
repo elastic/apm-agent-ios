@@ -18,13 +18,15 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 
 public class StdoutExporter: SpanExporter {
+
+
     let isDebug: Bool
 
     public init(isDebug: Bool = false) {
         self.isDebug = isDebug
     }
 
-    public func export(spans: [SpanData]) -> SpanExporterResultCode {
+    public func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
         let jsonEncoder = JSONEncoder()
         for span in spans {
             if isDebug {
@@ -54,11 +56,11 @@ public class StdoutExporter: SpanExporter {
         return .success
     }
 
-    public func flush() -> SpanExporterResultCode {
+    public func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
         return .success
     }
 
-    public func shutdown() {}
+    public func shutdown(explicitTimeout: TimeInterval? = nil) {}
 }
 
 private struct SpanExporterData: Encodable {
