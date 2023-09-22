@@ -103,7 +103,7 @@ class WaitingSpanExporter: SpanExporter {
         return ret
     }
 
-    func export(spans: [SpanData]) -> SpanExporterResultCode {
+    func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
         cond.lock()
         spanDataList.append(contentsOf: spans)
         cond.unlock()
@@ -111,11 +111,11 @@ class WaitingSpanExporter: SpanExporter {
         return .success
     }
 
-    func flush() -> SpanExporterResultCode {
+    func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
         return .success
     }
 
-    func shutdown() {
+    func shutdown(explicitTimeout: TimeInterval? = nil) {
         shutdownCalled = true
     }
 }
