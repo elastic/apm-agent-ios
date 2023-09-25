@@ -111,7 +111,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
         spanData.settingParentSpanId(parentSpanContext.spanId)
 
-        exporter.export(spans: [spanData, parentSpan.toSpanData()])
+       _ = exporter.export(spans: [spanData, parentSpan.toSpanData()])
 
         return
       }
@@ -119,8 +119,8 @@ public struct ElasticSpanProcessor: SpanProcessor {
     processor.onEnd(span: span)
   }
 
-  public mutating func shutdown() {
-    processor.shutdown()
+  public mutating func shutdown(explicitTimeout: TimeInterval? = nil) {
+    processor.shutdown(explicitTimeout: explicitTimeout)
   }
 
   public func forceFlush(timeout: TimeInterval?) {
@@ -139,7 +139,7 @@ internal struct NoopSpanProcessor: SpanProcessor {
 
   func onEnd(span: ReadableSpan) {}
 
-  func shutdown() {}
+  func shutdown(explicitTimeout : TimeInterval? = nil) {}
 
   func forceFlush(timeout: TimeInterval? = nil) {}
 }

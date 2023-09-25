@@ -6,9 +6,9 @@ import PackageDescription
 let package = Package(
   name: "apm-agent-ios",
   platforms: [
-    .iOS(.v11),
+    .iOS(.v13),
     .macOS(.v10_13),
-    .tvOS(.v11),
+    .tvOS(.v13),
     .watchOS(.v4),
   ],
   products: [
@@ -20,7 +20,7 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift", branch: "1.5.1"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.7.0"),
     .package(url: "https://github.com/elastic/TrueTime.swift.git", exact: "1.0.0"),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.0.0")),

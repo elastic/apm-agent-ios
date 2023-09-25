@@ -55,17 +55,14 @@ class WaitingLogRecordExporter: LogRecordExporter {
         self.numberToWaitFor = numberToWaitFor
     }
 
-    func export(logRecords: [OpenTelemetrySdk.ReadableLogRecord]) -> OpenTelemetrySdk.ExportResult {
+    func export(logRecords: [OpenTelemetrySdk.ReadableLogRecord], explicitTimeout: TimeInterval? = nil) -> OpenTelemetrySdk.ExportResult {
         cond.lock()
         logRecordList.append(contentsOf: logRecords)
         cond.unlock()
         cond.broadcast()
         return .success
     }
-    
-    func forceFlush() -> OpenTelemetrySdk.ExportResult {
-        .success
-    }
+  
     
     func waitForExport() -> [ReadableLogRecord]? {
         var ret: [ReadableLogRecord]
@@ -81,11 +78,11 @@ class WaitingLogRecordExporter: LogRecordExporter {
         return ret
     }
 
-    func flush() -> SpanExporterResultCode {
+    func forceFlush(explicitTimeout: TimeInterval? = nil) -> ExportResult {
         return .success
     }
 
-    func shutdown() {
+    func shutdown(explicitTimeout: TimeInterval? = nil) {
         shutdownCalled = true
     }
 }
