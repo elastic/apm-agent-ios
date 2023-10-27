@@ -77,7 +77,7 @@ class InstrumentationWrapper {
     private func initializeNetworkInstrumentation() {
         #if os(iOS)
             do {
-                let netstats = try NetworkStatus()
+                let netstats = NetworkStatus()
                 netstatInjector = NetworkStatusInjector(netstat: netstats)
             } catch {
                 print("failed to initialize network connection status \(error)")
@@ -100,7 +100,18 @@ class InstrumentationWrapper {
                                                                     }
                                                                 #endif
                                                             },
-                                                            receivedResponse: nil,
+                                                            receivedResponse: { response, _, span in
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode <= 400 && httpResponse.statusCode <= 599 {
+                    span.addEvent(name : SemanticAttributes.exception.rawValue,
+                                  attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string("HTTP Error"),
+                                               SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
+                                               
+                                              ])
+                    }
+                }
+            
+                                                            },
                                                             receivedError: { error, _, _, span in
                                                                 span.addEvent(name: SemanticAttributes.exception.rawValue,
                                                                               attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string(String(describing: type(of: error))),
