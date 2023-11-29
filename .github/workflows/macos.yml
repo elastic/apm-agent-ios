@@ -18,7 +18,7 @@ jobs:
       with:
         xcode-version: '14.0'
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Run build
       run: .ci/scripts/build.sh
