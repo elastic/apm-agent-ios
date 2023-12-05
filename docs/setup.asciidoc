@@ -55,20 +55,27 @@ Once the Agent has been added as a dependency, it must be initialized.
 
 If you're using `SwiftUI` to build your app add the following to your `App.swift`:
 
-[source,swift,linenums,swift,highlight=2;7..12]
+[source,swift,linenums,swift,highlight=2;4..15;19]
 ----
 import SwiftUI
 import iOSAgent
 
+class AppDelegate : NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        var config = AgentConfigBuilder()
+            .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
+            .withSecretToken("<SecretToken>") <2>
+            .build()
+        
+        Agent.start(with: config)
+        return true
+    }
+}
+
 @main
 struct MyApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     init() {
-        var config = AgentConfigBuilder()
-                       .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
-                       .withSecretToken("<SecretToken>") <2>
-                       .build()
-                        
-        Agent.start(with: config)
     }
     var body: some Scene {
         WindowGroup {
@@ -83,7 +90,7 @@ struct MyApp: App {
 If you're not using `SwiftUI` you can alternatively add the same thing to your AppDelegate file:
 
 `AppDelegate.swift`
-[source,swift,linenums,highlight=2;9..14]
+[source,swift,linenums,highlight=2;7..11]
 ----
 import UIKit
 import iOSAgent
@@ -93,7 +100,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 var config = AgentConfigBuilder()
                        .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
                        .withSecretToken("<SecretToken>") <2>
-
+                       .build()
         Agent.start(with: config)
         return true
     }
