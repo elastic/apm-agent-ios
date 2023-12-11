@@ -72,10 +72,8 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
   public mutating func onEnd(span: OpenTelemetrySdk.ReadableSpan) {
 
-    for filter in filters {
-      if !filter.shouldInclude(span) {
-        return
-      }
+    for filter in filters where !filter.shouldInclude(span) {
+      return
     }
 
     if span.isHttpSpan() {

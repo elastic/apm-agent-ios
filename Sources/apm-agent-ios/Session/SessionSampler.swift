@@ -81,7 +81,7 @@ class SessionSampler: NSObject, Sampler {
     let sampleRate = sampleRateResolver()
     shouldSample = Double.random(in: 0...1) <= sampleRate
   }
-
+  // swiftlint:disable:next function_parameter_count
   func shouldSample(
     parentContext: SpanContext?,
     traceId: TraceId,

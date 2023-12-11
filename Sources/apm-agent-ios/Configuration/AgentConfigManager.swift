@@ -17,10 +17,10 @@ import OpenTelemetrySdk
 import Logging
 
 enum CentralConfigResponse: Int {
-    case ok = 200
-    case not_modified = 304
+    case okay = 200
+    case notModified = 304
     case forbidden = 403
-    case not_found = 40
+    case notFound = 40
     case unavailable = 503
 }
 
@@ -36,7 +36,10 @@ class AgentConfigManager {
 
     var fetcher: CentralConfigFetcher!
 
-    init(resource: Resource, config: AgentConfiguration, instrumentationConfig: InstrumentationConfiguration, logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
+    init(resource: Resource,
+         config: AgentConfiguration,
+         instrumentationConfig: InstrumentationConfiguration,
+         logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
         SwiftLogNoOpLogHandler()
     }) {
         self.resource = resource
@@ -46,23 +49,22 @@ class AgentConfigManager {
         switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
         case let .string(value):
             serviceEnvironment = value
-            break
         default:
             serviceEnvironment = ""
-            break
         }
 
         switch resource.attributes[ResourceAttributes.serviceName.rawValue] {
         case let .string(value):
             serviceName = value
-            break
         default:
             serviceName = ""
         }
 
         self.central = CentralConfig()
 
-        fetcher = CentralConfigFetcher(serviceName: serviceName, environment: serviceEnvironment, agentConfig: config, { data in
+        fetcher = CentralConfigFetcher(serviceName: serviceName,
+                                       environment: serviceEnvironment,
+                                       agentConfig: config, { data in
             self.central.config = String(data: data, encoding: .utf8)
         })
 

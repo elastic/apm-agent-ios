@@ -51,11 +51,9 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
       body: logRecord.body,
       attributes: attributes)
 
-    for filter in filters {
-      if !filter.shouldInclude(appendedLogRecord) {
+      for filter in filters where !filter.shouldInclude(appendedLogRecord) {
         return
       }
-    }
 
     processor.onEmit(logRecord: appendedLogRecord)
 

@@ -20,88 +20,98 @@ import UIKit
 import os
 
 class TraceLogger {
-    private static var objectKey: UInt8 = 0
-    private static var timerKey: UInt8 = 0
-    private var activeSpan: Span?
-    private var loadCount: Int = 0
-    private let spanLock = NSRecursiveLock()
-    private let logger = OSLog(subsystem: "co.elastic.viewControllerInstrumentation", category: "Instrumentation")
+  private static var objectKey: UInt8 = 0
+  private static var timerKey: UInt8 = 0
+  private var activeSpan: Span?
+  private var loadCount: Int = 0
+  private let spanLock = NSRecursiveLock()
+  private let logger = OSLog(subsystem: "co.elastic.viewControllerInstrumentation", category: "Instrumentation")
 
-    func startTrace(tracer: TracerSdk, associatedObject: AnyObject, name: String, preferredName: String?) -> Span? {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
-        }
-        loadCount+=1
-        var activeSpan = getActiveSpan()
+  func startTrace(tracer: Tracer, associatedObject: AnyObject, name: String, preferredName: String?) -> Span? {
+    spanLock.lock()
+    defer {
+      spanLock.unlock()
+    }
+    loadCount+=1
+    var activeSpan = getActiveSpan()
 
-        if activeSpan == nil {
-            let builder = tracer.spanBuilder(spanName: "\(name)")
-                .setActive(true)
-                .setNoParent()
-                .setSpanKind(spanKind: .client)
+    if activeSpan == nil {
+      let builder = tracer.spanBuilder(spanName: "\(name)")
+        .setActive(true)
+        .setNoParent()
+        .setSpanKind(spanKind: .client)
 
-            let span = builder.startSpan()
-            os_log("Started trace: %@ - %@ - %@", log: logger, type: .debug, name, span.context.traceId.description, span.context.spanId.description)
+      let span = builder.startSpan()
+      os_log("Started trace: %@ - %@ - %@",
+             log: logger,
+             type: .debug,
+             name,
+             span.context.traceId.description,
+             span.context.spanId.description)
 
-            setActiveSpan(span)
-            activeSpan = span
-        }
-
-        if let span = activeSpan {
-            OpenTelemetry.instance.contextProvider.setActiveSpan(span)
-
-        }
-
-        if let preferredName = preferredName, activeSpan?.name != preferredName {
-                activeSpan?.name = preferredName
-
-        }
-        return activeSpan
+      setActiveSpan(span)
+      activeSpan = span
     }
 
-    func stopTrace(associatedObject: AnyObject, preferredName: String?) {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
-        }
+    if let span = activeSpan {
+      OpenTelemetry.instance.contextProvider.setActiveSpan(span)
 
-        if let activeSpan = getActiveSpan() {
-            if let preferredName = preferredName, activeSpan.name != preferredName {
-                activeSpan.name = preferredName
-            }
-            if !VCNameOverrideStore.instance().name.isEmpty {
-                activeSpan.name = VCNameOverrideStore.instance().name
-                VCNameOverrideStore.instance().name = ""
-            }
-            OpenTelemetry.instance.contextProvider.removeContextForSpan(activeSpan)
-        }
-
-        loadCount -= 1
-
-        if  let associatedSpan = getActiveSpan(), loadCount == 0 {
-            os_log("Stopping trace: %@ - %@ - %@", log: logger, type: .debug, associatedSpan.name, associatedSpan.context.traceId.description, associatedSpan.context.spanId.description)
-
-            associatedSpan.status = .ok
-            associatedSpan.end()
-            setActiveSpan(nil)
-        }
     }
 
-    func setActiveSpan(_ span: Span?) {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
-        }
-        activeSpan = span
+    if let preferredName = preferredName, activeSpan?.name != preferredName {
+      activeSpan?.name = preferredName
+
     }
-    func getActiveSpan() -> Span? {
-        spanLock.lock()
-        defer {
-            spanLock.unlock()
-        }
-        return activeSpan
+    return activeSpan
+  }
+
+  func stopTrace(associatedObject: AnyObject, preferredName: String?) {
+    spanLock.lock()
+    defer {
+      spanLock.unlock()
     }
+
+    if let activeSpan = getActiveSpan() {
+      if let preferredName = preferredName, activeSpan.name != preferredName {
+        activeSpan.name = preferredName
+      }
+      if !VCNameOverrideStore.shared().name.isEmpty {
+        activeSpan.name = VCNameOverrideStore.shared().name
+        VCNameOverrideStore.shared().name = ""
+      }
+      OpenTelemetry.instance.contextProvider.removeContextForSpan(activeSpan)
+    }
+
+    loadCount -= 1
+
+    if  let associatedSpan = getActiveSpan(), loadCount == 0 {
+      os_log("Stopping trace: %@ - %@ - %@",
+             log: logger,
+             type: .debug,
+             associatedSpan.name,
+             associatedSpan.context.traceId.description,
+             associatedSpan.context.spanId.description)
+
+      associatedSpan.status = .ok
+      associatedSpan.end()
+      setActiveSpan(nil)
+    }
+  }
+
+  func setActiveSpan(_ span: Span?) {
+    spanLock.lock()
+    defer {
+      spanLock.unlock()
+    }
+    activeSpan = span
+  }
+  func getActiveSpan() -> Span? {
+    spanLock.lock()
+    defer {
+      spanLock.unlock()
+    }
+    return activeSpan
+  }
 
 }
 #endif // #if os(iOS)

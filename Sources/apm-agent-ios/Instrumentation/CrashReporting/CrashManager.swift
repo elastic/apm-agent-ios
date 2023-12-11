@@ -97,7 +97,7 @@ struct CrashManager {
     if crashReporter.hasPendingCrashReport() {
       do {
         let data = try crashReporter.loadPendingCrashReportDataAndReturnError()
-          let lp = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
+          let logger = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
           .setInstrumentationVersion(Self.crashManagerVersion)
           .setEventDomain(SemanticAttributes.EventDomainValues.device.description)
           .build()
@@ -121,7 +121,7 @@ struct CrashManager {
               "\(code) at \(report.signalInfo.address)")
           }
 
-            lp.eventBuilder(name: Self.crashEventName)
+            logger.eventBuilder(name: Self.crashEventName)
             .setSeverity(.fatal)
             .setObservedTimestamp(report.systemInfo.timestamp)
             .setAttributes(attributes)

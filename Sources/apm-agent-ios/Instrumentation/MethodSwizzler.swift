@@ -15,7 +15,7 @@
 import Foundation
 
 enum SwizzleError: Error {
-    case TargetNotFound(class: String, method: String)
+    case targetNotFound(class: String, method: String)
 }
 
 internal class MethodSwizzler<T, U>: Instrumentor {
@@ -29,7 +29,7 @@ internal class MethodSwizzler<T, U>: Instrumentor {
         self.selector = selector
         self.klass = klass
          guard let method = class_getInstanceMethod(klass, selector) else {
-            throw SwizzleError.TargetNotFound(class: NSStringFromClass(klass), method: NSStringFromSelector(selector))
+            throw SwizzleError.targetNotFound(class: NSStringFromClass(klass), method: NSStringFromSelector(selector))
         }
         target = method
     }
@@ -45,7 +45,7 @@ internal class MethodSwizzler<T, U>: Instrumentor {
     }
 
     @discardableResult
-    private func sync<T>(block: () -> T) -> T {
+    private func sync<V>(block: () -> V) -> V {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
         return block()

@@ -100,21 +100,28 @@ class InstrumentationWrapper {
         },
                                                             receivedResponse: { response, _, span in
             if let httpResponse = response as? HTTPURLResponse {
+
                 if httpResponse.statusCode >= 400 && httpResponse.statusCode <= 599 {
+                  // swiftlint:disable line_length
+
                     span.addEvent(name: SemanticAttributes.exception.rawValue,
                                   attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string("\(httpResponse.statusCode)"),
                                                SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
                                                SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))
                                               ])
+                  // swiftlint:enable line_length
+
                 }
             }
 
         },
                                                             receivedError: { error, _, _, span in
+          // swiftlint:disable line_length
             span.addEvent(name: SemanticAttributes.exception.rawValue,
                           attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string(String(describing: type(of: error))),
                                        SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
                                        SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(error.localizedDescription)])
+          // swiftlint:enable line_length
         })
 
         urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)

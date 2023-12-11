@@ -84,6 +84,7 @@ public class Agent {
   }
 
   deinit {
+    // swiftlint:disable:next force_try
     try! group.syncShutdownGracefully()
 
   }

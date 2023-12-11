@@ -45,6 +45,7 @@ class OpenTelemetryInitializer {
     self.sessionSampler = sessionSampler
   }
 
+  // swiftlint:disable:next function_body_length
   func initialize(_ configuration: AgentConfigManager) {
 
     var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
