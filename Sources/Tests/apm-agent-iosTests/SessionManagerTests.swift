@@ -36,4 +36,14 @@ final class SessionManagerTests: XCTestCase {
 
         XCTAssertTrue(SessionManager.instance.isValid())
     }
+    
+    func testNoUpdateSessionParameter() {
+        _ = SessionManager.instance
+        let uuid = UUID()
+        UserDefaults.standard.setValue(uuid.uuidString, forKey: SessionManager.sessionIdKey)
+        UserDefaults.standard.setValue(Date.distantPast, forKey: SessionManager.sessionTimerKey)
+        
+        XCTAssertTrue(SessionManager.instance.session(false) == uuid.uuidString)
+        XCTAssertFalse(SessionManager.instance.session() == uuid.uuidString)
+    }
 }

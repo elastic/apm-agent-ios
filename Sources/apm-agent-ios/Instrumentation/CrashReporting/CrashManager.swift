@@ -24,9 +24,11 @@ import OpenTelemetrySdk
 import os.log
 
 struct CrashManager {
-  static let crashManagerVersion = "0.0.1"
+    static let crashEventName : String = "crash"
+  static let crashManagerVersion = "0.0.2"
   static let logLabel = "Elastic-OTLP-Exporter"
   static let lastResourceDefaultsKey: String = "elastic.last.resource"
+  static let instrumentationName = "PLCrashReporter"
   let lastResource: Resource
   let group: EventLoopGroup
   let loggerProvider: LoggerProvider
@@ -73,7 +75,7 @@ struct CrashManager {
     }
   }
 
-  public func initializeCrashReporter() {
+    public func initializeCrashReporter(lastSession: String) {
     // It is strongly recommended that local symbolication only be enabled for non-release builds.
     // Use [] for release versions.
     let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
@@ -95,9 +97,9 @@ struct CrashManager {
     if crashReporter.hasPendingCrashReport() {
       do {
         let data = try crashReporter.loadPendingCrashReportDataAndReturnError()
-        let lp = loggerProvider.loggerBuilder(instrumentationScopeName: "PLCrashReporter")
+          let lp = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
           .setInstrumentationVersion(Self.crashManagerVersion)
-          .setEventDomain("device")
+          .setEventDomain(SemanticAttributes.EventDomainValues.device.description)
           .build()
 
         // Retrieving crash reporter data.
@@ -111,15 +113,16 @@ struct CrashManager {
           // notes : branching code needed for signal vs mach vs nsexception for event generation
           //
           var attributes = [
-            "exception.type": AttributeValue.string(report.signalInfo.name),
-            "exception.stacktrace": AttributeValue.string(text),
+            SemanticAttributes.exceptionType.rawValue: AttributeValue.string(report.signalInfo.name),
+            SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text),
+            ElasticAttributes.sessionId.rawValue: AttributeValue.string(lastSession),
           ]
           if let code = report.signalInfo.code {
-            attributes["exception.message"] = AttributeValue.string(
+              attributes[SemanticAttributes.exceptionMessage.rawValue] = AttributeValue.string(
               "\(code) at \(report.signalInfo.address)")
           }
 
-          lp.eventBuilder(name: "crash")
+            lp.eventBuilder(name: Self.crashEventName)
             .setSeverity(.fatal)
             .setObservedTimestamp(report.systemInfo.timestamp)
             .setAttributes(attributes)

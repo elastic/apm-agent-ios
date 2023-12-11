@@ -52,14 +52,16 @@ public class SessionManager {
     }
   }
 
-  public func session() -> String {
-    if isValid() {
-      updateTimeout()
-    } else {
-      refreshSession()
+    public func session(_ update: Bool = true) -> String {
+        if update {
+            if isValid() {
+                updateTimeout()
+            } else {
+                refreshSession()
+            }
+        }
+        return currentId.uuidString
     }
-    return currentId.uuidString
-  }
 
   public func updateTimeout() {
     lastUpdated = Date()

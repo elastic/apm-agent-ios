@@ -20,7 +20,6 @@ public class Agent {
     TrueTimeClient.sharedInstance.start()
     instance = Agent(
       configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
-    instance?.initialize()
   }
 
   public static func start() {
@@ -44,10 +43,12 @@ public class Agent {
   let openTelemetry: OpenTelemetryInitializer
 
   let sessionSampler: SessionSampler
+    
 
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
   ) {
+    let lastSessionForCrashReport = SessionManager.instance.session(false)
     _ = SessionManager.instance.session()  // initialize session
     agentConfigManager = AgentConfigManager(
       resource: AgentResource.get().merging(other: AgentEnvResource.get()), config: configuration,
@@ -76,12 +77,10 @@ public class Agent {
       crashManager = nil
     }
     os_log("Initializing Elastic APM Agent.")
-  }
-
-  private func initialize() {
+      
     instrumentation.initalize()
     if agentConfigManager.instrumentation.enableCrashReporting {
-      crashManager?.initializeCrashReporter()
+      crashManager?.initializeCrashReporter(lastSession: lastSessionForCrashReport)
     }
   }
 
