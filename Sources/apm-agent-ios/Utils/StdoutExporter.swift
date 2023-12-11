@@ -19,7 +19,6 @@ import OpenTelemetrySdk
 
 public class StdoutExporter: SpanExporter {
 
-
     let isDebug: Bool
 
     public init(isDebug: Bool = false) {

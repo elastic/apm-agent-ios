@@ -16,41 +16,40 @@ import Foundation
 import Logging
 
 class CentralConfigFetcher {
-    
+
     static let ETAG_KEY = "elastic.central.config.etag"
     static let MAXAGE_KEY = "elastic.central.config.maxAge"
-    static let DEFAULT_MAXAGE : TimeInterval = 60.0
+    static let DEFAULT_MAXAGE: TimeInterval = 60.0
     let fetchQueue = DispatchQueue(label: "co.elastic.centralConfigFetch")
-    let fetchTimer : DispatchSourceTimer
-    let logger : Logger
+    let fetchTimer: DispatchSourceTimer
+    let logger: Logger
 
-    let serviceEnvironment : String
-    let serviceName : String
-    let config : AgentConfiguration
-    var task : URLSessionDataTask? = nil
-    let callback : (Data) -> Void
-    
-    var etag : String? {
+    let serviceEnvironment: String
+    let serviceName: String
+    let config: AgentConfiguration
+    var task: URLSessionDataTask?
+    let callback: (Data) -> Void
+
+    var etag: String? {
         get {
             UserDefaults.standard.object(forKey: Self.ETAG_KEY) as? String
         }
         set(etag) {
-            UserDefaults.standard.setValue(etag, forKey:   Self.ETAG_KEY)
+            UserDefaults.standard.setValue(etag, forKey: Self.ETAG_KEY)
         }
     }
 
-    var maxAge : TimeInterval? {
+    var maxAge: TimeInterval? {
         get {
             UserDefaults.standard.object(forKey: Self.MAXAGE_KEY) as? TimeInterval
         }
-        
+
         set(maxAge) {
             fetchTimer.schedule(deadline: .now() + (maxAge ?? Self.DEFAULT_MAXAGE), repeating: maxAge ?? Self.DEFAULT_MAXAGE )
             UserDefaults.standard.setValue(maxAge, forKey: Self.MAXAGE_KEY)
         }
     }
-    
-    
+
     init(serviceName: String, environment: String, agentConfig: AgentConfiguration, _ callback: @escaping (Data) -> Void, _ logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
         SwiftLogNoOpLogHandler()
     }) {
@@ -71,11 +70,11 @@ class CentralConfigFetcher {
         fetchTimer.schedule(deadline: .now(), repeating: self.maxAge ?? Self.DEFAULT_MAXAGE )
         fetchTimer.activate()
     }
-    
+
     func scheduleFetchTimer(maxAge: TimeInterval) {
-        
+
     }
-    
+
     deinit {
         fetchTimer.suspend()
         if !fetchTimer.isCancelled {
@@ -83,61 +82,59 @@ class CentralConfigFetcher {
             fetchTimer.resume()
         }
     }
-    
-    static func parseMaxAge(cacheControl : String) -> TimeInterval {
+
+    static func parseMaxAge(cacheControl: String) -> TimeInterval {
         let search = #"max-age\s*=(?<maxage>\d+)"#
-        var regex : NSRegularExpression
+        var regex: NSRegularExpression
         do {
-            regex = try NSRegularExpression(pattern: search, options:.caseInsensitive)
+            regex = try NSRegularExpression(pattern: search, options: .caseInsensitive)
         } catch {
             return Self.DEFAULT_MAXAGE
         }
-        
+
         let matches = regex.matches(in: cacheControl, range: NSRange(location: 0, length: cacheControl.count))
-        
+
         guard let match = matches.first else { return Self.DEFAULT_MAXAGE }
-        
+
         let range = match.range(withName: "maxage")
-        
+
         return TimeInterval((cacheControl as NSString).substring(with: range)) ?? Self.DEFAULT_MAXAGE
 
     }
 
-    
     func fetch() {
         if let task = self.task {
             task.cancel()
         }
-        
-        
+
         var components = config.urlComponents()
-        
+
         components.path = "/config/v1/agents"
-        
-        components.queryItems = [URLQueryItem(name: "service.name", value:  serviceName), URLQueryItem(name: "service.environment", value: serviceEnvironment)]
-        
+
+        components.queryItems = [URLQueryItem(name: "service.name", value: serviceName), URLQueryItem(name: "service.environment", value: serviceEnvironment)]
+
         if let url = components.url {
             var request = URLRequest(url: url)
-            
+
             request.setValue(self.etag, forHTTPHeaderField: "ETag")
-            
+
             if let auth = config.auth {
                 request.setValue(auth, forHTTPHeaderField: "Authorization")
             }
-            
-            task = URLSession.shared.dataTask(with: request  ,completionHandler: { data, response, error in
+
+            task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
                 if let error = error {
                     self.logger.error("\(error.localizedDescription)")
                     return
                 }
-    
+
                 if let response = response as? HTTPURLResponse {
 
                     if CentralConfigResponse(rawValue: response.statusCode) == .ok {
                         if let data = data {
-                            
+
                             self.callback(data)
-                            
+
                             self.etag = response.allHeaderFields["ETag"] as? String
                             if let cacheControl = response.allHeaderFields["Cache-Control"] as? String {
                                 self.maxAge = Self.parseMaxAge(cacheControl: cacheControl)
@@ -161,10 +158,10 @@ class CentralConfigFetcher {
                         }
                     }
                 }
-                
+
             })
             task?.resume()
         }
-        
+
     }
 }

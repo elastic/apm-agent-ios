@@ -43,7 +43,6 @@ public class Agent {
   let openTelemetry: OpenTelemetryInitializer
 
   let sessionSampler: SessionSampler
-    
 
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
@@ -77,7 +76,7 @@ public class Agent {
       crashManager = nil
     }
     os_log("Initializing Elastic APM Agent.")
-      
+
     instrumentation.initalize()
     if agentConfigManager.instrumentation.enableCrashReporting {
       crashManager?.initializeCrashReporter(lastSession: lastSessionForCrashReport)

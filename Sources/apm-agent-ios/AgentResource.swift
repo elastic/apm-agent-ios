@@ -24,22 +24,22 @@ import ResourceExtension
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-public class AgentResource  {
+public class AgentResource {
     public static func get() -> Resource {
         let defaultResource = DefaultResources().get()
         var overridingAttributes = [
-            ResourceAttributes.telemetrySdkName.rawValue :  AttributeValue.string("iOS"),
+            ResourceAttributes.telemetrySdkName.rawValue: AttributeValue.string("iOS")
         ]
-        
+
         let osDataSource = OperatingSystemDataSource()
         overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] = AttributeValue.string("semver:\(Agent.ELASTIC_SWIFT_AGENT_VERSION)")
         overridingAttributes[ResourceAttributes.processRuntimeName.rawValue] = AttributeValue.string(osDataSource.name)
         overridingAttributes[ResourceAttributes.processRuntimeVersion.rawValue] = AttributeValue.string(osDataSource.version)
-        if let deviceId = AgentResource.identifier()  {
+        if let deviceId = AgentResource.identifier() {
             overridingAttributes[ElasticAttributes.deviceIdentifier.rawValue] = AttributeValue.string(deviceId)
         }
         let appDataSource = ApplicationDataSource()
-        
+
         if let build = appDataSource.build {
             if let version = appDataSource.version {
                 overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(version)
@@ -51,12 +51,12 @@ public class AgentResource  {
             overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(version)
 
         }
-        
+
         overridingAttributes[ResourceAttributes.deploymentEnvironment.rawValue] = AttributeValue.string("default")
-            
-        return defaultResource.merging(other: Resource.init(attributes:overridingAttributes))
+
+        return defaultResource.merging(other: Resource.init(attributes: overridingAttributes))
     }
-    
+
     static private func identifier() -> String? {
         #if os(watchOS)
             if #available(watchOS 6.3, *) {
@@ -71,6 +71,5 @@ public class AgentResource  {
 
         #endif
     }
-    
-    
+
 }

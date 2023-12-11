@@ -24,6 +24,7 @@ let package = Package(
     .package(url: "https://github.com/elastic/TrueTime.swift.git", exact: "1.0.0"),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.0.0")),
+    .package(url:"https://github.com/realm/SwiftLint", .upToNextMajor(from: "0.54.0")),
   ],
   targets: [
     .target(
@@ -53,7 +54,8 @@ let package = Package(
         "MemorySampler",
         "CPUSampler",
       ],
-      path: "Sources/apm-agent-ios"
+      path: "Sources/apm-agent-ios",
+      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
     .testTarget(
       name: "iOSAgentTests",

@@ -17,10 +17,10 @@ import OpenTelemetrySdk
 
 public class CentralConfig {
     static let CentralConfigKey = "elastic.central.configuration"
-        
+
     public init () {}
-    
-    public var data : CentralConfigData {
+
+    public var data: CentralConfigData {
         get {
             if let config = self.config {
                 do {
@@ -31,15 +31,15 @@ public class CentralConfig {
             }
             return CentralConfigData()
         }
-        set(data)  {
+        set(data) {
             do {
                 config = String(data: try JSONEncoder().encode(data), encoding: .utf8)
             } catch {}
 
         }
     }
-    
-    internal var config : String? {
+
+    internal var config: String? {
         get {
             UserDefaults.standard.object(forKey: Self.CentralConfigKey) as? String
         }

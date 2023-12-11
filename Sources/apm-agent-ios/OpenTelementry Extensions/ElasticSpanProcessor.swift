@@ -139,7 +139,7 @@ internal struct NoopSpanProcessor: SpanProcessor {
 
   func onEnd(span: ReadableSpan) {}
 
-  func shutdown(explicitTimeout : TimeInterval? = nil) {}
+  func shutdown(explicitTimeout: TimeInterval? = nil) {}
 
   func forceFlush(timeout: TimeInterval? = nil) {}
 }

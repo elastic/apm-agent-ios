@@ -24,7 +24,7 @@ public class OpenTelemetryHelper {
         static let userAgent = "User-Agent"
         static let authorization = "Authorization"
     }
-    
+
     public static func generateExporterHeaders(_ auth: String?) -> [(String, String)]? {
         var headers = [(String, String)]()
         if let auth = auth {
@@ -47,10 +47,9 @@ public class OpenTelemetryHelper {
         }
         return userAgent
     }
-    
-    
+
     public static func getChannel(with config: AgentConfiguration, group: EventLoopGroup) -> ClientConnection {
-      
+
         if config.collectorTLS {
              return ClientConnection.usingPlatformAppropriateTLS(for: group)
                  .connect(host: config.collectorHost, port: config.collectorPort)
@@ -58,6 +57,6 @@ public class OpenTelemetryHelper {
               return ClientConnection.insecure(group: group)
                  .connect(host: config.collectorHost, port: config.collectorPort)
          }
-         
+
     }
 }

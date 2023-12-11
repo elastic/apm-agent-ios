@@ -8,7 +8,7 @@ public struct AgentConfiguration {
   public var collectorHost = "127.0.0.1"
   public var collectorPort = 8200
   public var collectorTLS = false
-  var auth: String? = nil
+  var auth: String?
   var sampleRate: Double = 1.0
 
   var spanFilters = [SignalFilter<ReadableSpan>]()

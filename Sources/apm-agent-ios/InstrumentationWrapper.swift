@@ -19,24 +19,22 @@ import CPUSampler
 import NetworkStatus
 import OpenTelemetryApi
 
-
 class InstrumentationWrapper {
-    
-    var appMetrics : Any?
-    
+
+    var appMetrics: Any?
+
 #if os(iOS)
     var vcInstrumentation: ViewControllerInstrumentation?
     var netstatInjector: NetworkStatusInjector?
-    var applicationLifecycleInstrumentation : ApplicationLifecycleInstrumentation?
+    var applicationLifecycleInstrumentation: ApplicationLifecycleInstrumentation?
 #endif
-    
-    
+
     var urlSessionInstrumentation: URLSessionInstrumentation?
-    let config : AgentConfigManager
-    
+    let config: AgentConfigManager
+
     init(config: AgentConfigManager) {
         self.config = config
-        
+
 #if os(iOS)
         if config.instrumentation.enableLifecycleEvents {
             applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
@@ -50,7 +48,7 @@ class InstrumentationWrapper {
         }
 #endif // os(iOS)
     }
-    
+
     func initalize() {
 #if os(iOS)
         if #available(iOS 13.0, *) {
@@ -73,7 +71,7 @@ class InstrumentationWrapper {
         vcInstrumentation?.swizzle()
 #endif // os(iOS)
     }
-    
+
     private func initializeNetworkInstrumentation() {
 #if os(iOS)
         do {
@@ -83,8 +81,8 @@ class InstrumentationWrapper {
             print("failed to initialize network connection status \(error)")
         }
 #endif
-        
-        let config = URLSessionInstrumentationConfiguration(shouldRecordPayload:nil,
+
+        let config = URLSessionInstrumentationConfiguration(shouldRecordPayload: nil,
                                                             shouldInstrument: nil,
                                                             nameSpan: { request in
             if let host = request.url?.host, let method = request.httpMethod {
@@ -103,14 +101,14 @@ class InstrumentationWrapper {
                                                             receivedResponse: { response, _, span in
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode >= 400 && httpResponse.statusCode <= 599 {
-                    span.addEvent(name : SemanticAttributes.exception.rawValue,
+                    span.addEvent(name: SemanticAttributes.exception.rawValue,
                                   attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string("\(httpResponse.statusCode)"),
                                                SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
-                                               SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)),
+                                               SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))
                                               ])
                 }
             }
-            
+
         },
                                                             receivedError: { error, _, _, span in
             span.addEvent(name: SemanticAttributes.exception.rawValue,
@@ -118,7 +116,7 @@ class InstrumentationWrapper {
                                        SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
                                        SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(error.localizedDescription)])
         })
-        
+
         urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
     }
 }

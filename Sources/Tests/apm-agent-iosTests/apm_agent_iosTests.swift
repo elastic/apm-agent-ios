@@ -11,6 +11,6 @@ final class apm_agent_iosTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testExample", testExample),
+        ("testExample", testExample)
     ]
 }

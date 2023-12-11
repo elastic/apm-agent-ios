@@ -16,7 +16,7 @@ import Foundation
 import OpenTelemetrySdk
 import Logging
 
-enum CentralConfigResponse : Int {
+enum CentralConfigResponse: Int {
     case ok = 200
     case not_modified = 304
     case forbidden = 403
@@ -25,19 +25,16 @@ enum CentralConfigResponse : Int {
 }
 
 class AgentConfigManager {
-    public let agent : AgentConfiguration
-    public let central : CentralConfig
-    public let instrumentation : InstrumentationConfiguration
-    
-    let serviceEnvironment : String
-    let serviceName : String
-    let logger : Logger
+    public let agent: AgentConfiguration
+    public let central: CentralConfig
+    public let instrumentation: InstrumentationConfiguration
+
+    let serviceEnvironment: String
+    let serviceName: String
+    let logger: Logger
     let resource: Resource
 
-    var fetcher : CentralConfigFetcher!
-    
-    
-    
+    var fetcher: CentralConfigFetcher!
 
     init(resource: Resource, config: AgentConfiguration, instrumentationConfig: InstrumentationConfiguration, logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
         SwiftLogNoOpLogHandler()
@@ -47,29 +44,27 @@ class AgentConfigManager {
         self.instrumentation = instrumentationConfig
         self.logger = logger
         switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
-        case let .string(value) :
+        case let .string(value):
             serviceEnvironment = value
             break
         default:
             serviceEnvironment = ""
-            break;
+            break
         }
-        
+
         switch resource.attributes[ResourceAttributes.serviceName.rawValue] {
         case let .string(value):
             serviceName = value
-            break;
+            break
         default:
             serviceName = ""
         }
-        
+
         self.central = CentralConfig()
-        
+
         fetcher = CentralConfigFetcher(serviceName: serviceName, environment: serviceEnvironment, agentConfig: config, { data in
             self.central.config = String(data: data, encoding: .utf8)
         })
-          
-        
+
     }
 }
-

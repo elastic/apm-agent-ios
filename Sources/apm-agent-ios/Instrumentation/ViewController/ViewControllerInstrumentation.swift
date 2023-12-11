@@ -21,7 +21,6 @@
     import UIKit
     import os
 
-
 @available(iOS 13.0, *)
 public extension View {
     func reportName(_ name: String) -> Self {
@@ -33,7 +32,7 @@ public extension View {
 internal class VCNameOverrideStore {
     let nameLock = NIOLock()
     private var _name = ""
-    public var name : String {
+    public var name: String {
         set {
             nameLock.withLockVoid {
                 self._name = newValue
@@ -46,12 +45,12 @@ internal class VCNameOverrideStore {
             }
             return newValue
         }
-        
+
     }
     static var _instance = VCNameOverrideStore()
     private init() {
     }
-    
+
     static func instance() -> VCNameOverrideStore {
         return _instance
     }
@@ -59,7 +58,7 @@ internal class VCNameOverrideStore {
 
     internal class ViewControllerInstrumentation {
         static let logger = OSLog(subsystem: "co.elastic.viewControllerInstrumentation", category: "Instrumentation")
-        var activeSpan : Span? = nil
+        var activeSpan: Span?
         static let traceLogger = TraceLogger()
         let viewDidLoad: ViewDidLoad
         let viewWillAppear: ViewWillAppear
@@ -85,10 +84,9 @@ internal class VCNameOverrideStore {
             OpenTelemetry.instance.tracerProvider.get(instrumentationName: "UIViewController", instrumentationVersion: "0.0.3") as! TracerSdk
         }
 
-        
-        static func getViewControllerName(_ vc : UIViewController) -> String? {
+        static func getViewControllerName(_ vc: UIViewController) -> String? {
             var title = vc.navigationItem.title
-                
+
             if let accessibiltyLabel = vc.accessibilityLabel, !accessibiltyLabel.isEmpty {
                 title = "\(accessibiltyLabel) - view appearing"
             } else if let navTitle = title {
@@ -96,26 +94,22 @@ internal class VCNameOverrideStore {
             }
             return title
         }
-        
-      
-        
+
         class ViewDidLoad: MethodSwizzler<
         @convention(c) (UIViewController, Selector) -> Void, // IMPSignature
             @convention(block) (UIViewController) -> Void // BlockSignature
-            >
-            {
+            > {
                 static func build() throws -> ViewDidLoad {
                     try ViewDidLoad(selector: #selector(UIViewController.viewDidLoad), klass: UIViewController.self)
                 }
 
                     func swizzle() {
-                        swap { previousImplementation -> BlockSignature in
-                            { viewController -> Void in
-                                
+                        swap { previousImplementation -> BlockSignature in { viewController -> Void in
+
                                 let name = "\(type(of: viewController)) - view loading"
-                
+
                                     _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(), associatedObject: viewController, name: name, preferredName: ViewControllerInstrumentation.getViewControllerName(viewController))
-                                
+
                                 previousImplementation(viewController, self.selector)
                                 ViewControllerInstrumentation.traceLogger.stopTrace(associatedObject: viewController, preferredName: name)
 
@@ -127,24 +121,22 @@ internal class VCNameOverrideStore {
         class ViewWillAppear: MethodSwizzler<
         @convention(c) (UIViewController, Selector, Bool) -> Void,
             @convention(block) (UIViewController, Bool) -> Void
-            >
-            {
+            > {
                 static func build() throws -> ViewWillAppear {
                     try ViewWillAppear(selector: #selector(UIViewController.viewWillAppear), klass: UIViewController.self)
                 }
 
                 func swizzle() {
-                    swap { previousImplementation -> BlockSignature in
-                        { viewController, animated -> Void in
-                                                                                
+                    swap { previousImplementation -> BlockSignature in { viewController, animated -> Void in
+
                             let name = "\(type(of: viewController)) - view appearing"
 
                             _ = ViewControllerInstrumentation.traceLogger.startTrace(tracer: ViewControllerInstrumentation.getTracer(),
                                                                                      associatedObject: viewController,
                                                                                      name: name,
-                                                                                     preferredName:  ViewControllerInstrumentation.getViewControllerName(viewController))
+                                                                                     preferredName: ViewControllerInstrumentation.getViewControllerName(viewController))
                             previousImplementation(viewController, self.selector, animated)
-                            
+
                         }
                     }
                 }
@@ -153,14 +145,12 @@ internal class VCNameOverrideStore {
         class ViewDidAppear: MethodSwizzler<
         @convention(c) (UIViewController, Selector, Bool) -> Void, // IMPSignature
             @convention(block) (UIViewController, Bool) -> Void // BlockSignature
-            >
-            {
+            > {
                 static func build() throws -> ViewDidAppear {
                     try ViewDidAppear(selector: #selector(UIViewController.viewDidAppear), klass: UIViewController.self)
                 }
                 func swizzle() {
-                    swap { previousImplementation -> BlockSignature in
-                        { viewController, animated -> Void in
+                    swap { previousImplementation -> BlockSignature in { viewController, animated -> Void in
                             previousImplementation(viewController, self.selector, animated)
                             ViewControllerInstrumentation.traceLogger.stopTrace(associatedObject: viewController, preferredName: getViewControllerName(viewController))
                         }
@@ -169,8 +159,4 @@ internal class VCNameOverrideStore {
             }
     }
 
-
 #endif // #if os(iOS)
-
-
-

@@ -16,12 +16,12 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-public class ElasticMetricProcessor : MetricProcessor {
-    
-    private let lock : NSLock
+public class ElasticMetricProcessor: MetricProcessor {
+
+    private let lock: NSLock
     var metrics: [Metric]
     var filters = [SignalFilter<Metric>]()
-    
+
     internal init(_ filters: [SignalFilter<Metric>] = [SignalFilter<Metric>]()) {
         self.filters = filters
         metrics = [Metric]()
@@ -38,11 +38,11 @@ public class ElasticMetricProcessor : MetricProcessor {
             self.metrics = [Metric]()
             lock.unlock()
         }
-        
+
         guard CentralConfig().data.recording else {
             return [Metric]()
         }
-        
+
         return metrics
     }
 
@@ -58,13 +58,13 @@ public class ElasticMetricProcessor : MetricProcessor {
         guard CentralConfig().data.recording else {
             return
         }
-        
+
         for filter in filters {
             if !filter.shouldInclude(metric) {
                 return
             }
         }
-        
+
         metrics.append(metric)
     }
 }

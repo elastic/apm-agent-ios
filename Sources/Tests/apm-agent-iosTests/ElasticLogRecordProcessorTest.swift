@@ -17,15 +17,15 @@ import OpenTelemetrySdk
 @testable import iOSAgent
 import XCTest
 
-class ElasticLogRecordProcessorTest : XCTestCase {
+class ElasticLogRecordProcessorTest: XCTestCase {
 
     func testSessionId() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
-        
+
         let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
         let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
         let observedDate = Date()
-    
+
         let eventBuilder = logger.eventBuilder(name: "myEvent")
         eventBuilder.setBody("hello, world")
         .setSeverity(.fatal)
@@ -40,7 +40,6 @@ class ElasticLogRecordProcessorTest : XCTestCase {
         XCTAssertEqual(exported?[0].body, "hello, world")
         XCTAssertEqual(exported?[0].severity, .fatal)
         XCTAssertEqual(exported?[0].observedTimestamp, observedDate)
-
 
     }
 }
@@ -62,8 +61,7 @@ class WaitingLogRecordExporter: LogRecordExporter {
         cond.broadcast()
         return .success
     }
-  
-    
+
     func waitForExport() -> [ReadableLogRecord]? {
         var ret: [ReadableLogRecord]
         cond.lock()
@@ -86,5 +84,3 @@ class WaitingLogRecordExporter: LogRecordExporter {
         shutdownCalled = true
     }
 }
-
-

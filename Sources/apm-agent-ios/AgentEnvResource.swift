@@ -27,15 +27,15 @@ public struct AgentEnvResource {
 
     public static func get(_ env: [String: String] = ProcessInfo.processInfo.environment) -> Resource {
         let env_attr = parseResourceAttributes(rawEnvAttributes: env[otelResourceAttributesEnv] ?? "")
-        
+
         var bundle_attr = parseResourceAttributes(rawEnvAttributes: Bundle.main.infoDictionary?[otelResourceAttributesEnv] as? String ?? "")
         bundle_attr.merge(env_attr) { _, v in
             v
         }
-        return Resource(attributes:bundle_attr)
+        return Resource(attributes: bundle_attr)
 
     }
-    
+
     private init() {}
 
     /// Creates a label map from the OC_RESOURCE_LABELS environment variable.

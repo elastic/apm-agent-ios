@@ -24,7 +24,7 @@ import OpenTelemetrySdk
 import os.log
 
 struct CrashManager {
-    static let crashEventName : String = "crash"
+    static let crashEventName: String = "crash"
   static let crashManagerVersion = "0.0.2"
   static let logLabel = "Elastic-OTLP-Exporter"
   static let lastResourceDefaultsKey: String = "elastic.last.resource"
@@ -107,15 +107,14 @@ struct CrashManager {
 
         // We could send the report from here, but we'll just print out some debugging info instead.
         if let text = PLCrashReportTextFormatter.stringValue(
-          for: report, with: PLCrashReportTextFormatiOS)
-        {
+          for: report, with: PLCrashReportTextFormatiOS) {
           print(text)
           // notes : branching code needed for signal vs mach vs nsexception for event generation
           //
           var attributes = [
             SemanticAttributes.exceptionType.rawValue: AttributeValue.string(report.signalInfo.name),
             SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text),
-            ElasticAttributes.sessionId.rawValue: AttributeValue.string(lastSession),
+            ElasticAttributes.sessionId.rawValue: AttributeValue.string(lastSession)
           ]
           if let code = report.signalInfo.code {
               attributes[SemanticAttributes.exceptionMessage.rawValue] = AttributeValue.string(

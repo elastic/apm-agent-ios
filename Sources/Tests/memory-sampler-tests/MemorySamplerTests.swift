@@ -16,9 +16,8 @@ import Foundation
 import XCTest
 @testable import MemorySampler
 
-
 final class InstrumentorTests: XCTestCase {
     func testMemorySampler() {
-        
+
     }
 }

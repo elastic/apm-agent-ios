@@ -14,22 +14,17 @@
 
 import Foundation
 
-
-enum SwizzleError : Error {
+enum SwizzleError: Error {
     case TargetNotFound(class: String, method: String)
 }
 
-internal class MethodSwizzler<T, U> : Instrumentor {
+internal class MethodSwizzler<T, U>: Instrumentor {
     typealias IMPSignature = T
     typealias BlockSignature = U
     let selector: Selector
     let klass: AnyClass
-    let target : Method
-   
+    let target: Method
 
-    
-    
-      
     required internal init(selector: Selector, klass: AnyClass) throws {
         self.selector = selector
         self.klass = klass
@@ -38,23 +33,22 @@ internal class MethodSwizzler<T, U> : Instrumentor {
         }
         target = method
     }
-    
+
     func swap(with conversion: (IMPSignature) -> BlockSignature) {
         sync {
             let implementation = method_getImplementation(target)
             let currentObjCImp = unsafeBitCast(implementation, to: IMPSignature.self)
-            let newBlock : BlockSignature = conversion(currentObjCImp)
-            let newIMP : IMP = imp_implementationWithBlock(newBlock)
+            let newBlock: BlockSignature = conversion(currentObjCImp)
+            let newIMP: IMP = imp_implementationWithBlock(newBlock)
             method_setImplementation(target, newIMP)
         }
     }
-        
+
     @discardableResult
     private func sync<T>(block: () -> T) -> T {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
         return block()
     }
-    
-}
 
+}
