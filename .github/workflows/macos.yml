@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '15.0'
+        xcode-version: latest
 
     - uses: actions/checkout@v4
 
