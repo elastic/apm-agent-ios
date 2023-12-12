@@ -24,7 +24,7 @@ jobs:
       run: .ci/scripts/build.sh
 
     - name: Run test
-      run: xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test
+      run: xcodebuild -scheme apm-agent-ios-Package -skipPackagePluginValidation -skipMacroValidation -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test
 
     - name: Run package snapshots
       run: .ci/scripts/package.sh
