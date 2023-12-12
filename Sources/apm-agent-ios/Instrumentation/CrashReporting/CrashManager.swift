@@ -24,7 +24,7 @@ import OpenTelemetrySdk
 import os.log
 
 struct CrashManager {
-    static let crashEventName: String = "crash"
+  static let crashEventName: String = "crash"
   static let crashManagerVersion = "0.0.2"
   static let logLabel = "Elastic-OTLP-Exporter"
   static let lastResourceDefaultsKey: String = "elastic.last.resource"
@@ -97,7 +97,7 @@ struct CrashManager {
     if crashReporter.hasPendingCrashReport() {
       do {
         let data = try crashReporter.loadPendingCrashReportDataAndReturnError()
-          let logger = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
+        let logger = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
           .setInstrumentationVersion(Self.crashManagerVersion)
           .setEventDomain(SemanticAttributes.EventDomainValues.device.description)
           .build()
@@ -121,7 +121,7 @@ struct CrashManager {
               "\(code) at \(report.signalInfo.address)")
           }
 
-            logger.eventBuilder(name: Self.crashEventName)
+          logger.eventBuilder(name: Self.crashEventName)
             .setSeverity(.fatal)
             .setObservedTimestamp(report.systemInfo.timestamp)
             .setAttributes(attributes)

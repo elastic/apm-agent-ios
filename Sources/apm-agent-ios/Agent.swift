@@ -43,6 +43,7 @@ public class Agent {
   let openTelemetry: OpenTelemetryInitializer
 
   let sessionSampler: SessionSampler
+    
 
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
