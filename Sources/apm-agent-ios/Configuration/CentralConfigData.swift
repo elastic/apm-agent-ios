@@ -17,7 +17,7 @@ import Foundation
 public struct CentralConfigData: Codable {
 
   public var recording: Bool = true
-  public var sampleRate: Double? = nil
+  public var sampleRate: Double?
 
   enum CodingKeys: String, CodingKey {
     case recording

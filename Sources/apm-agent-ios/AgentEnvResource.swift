@@ -23,19 +23,18 @@ public struct AgentEnvResource {
 
     ///  This resource information is loaded from the OC_RESOURCE_LABELS
     ///  environment variable.
-//    public static let resource = Resource(attributes: parseResourceAttributes(rawEnvAttributes: ProcessInfo.processInfo.environment[otelResourceAttributesEnv]))
-
     public static func get(_ env: [String: String] = ProcessInfo.processInfo.environment) -> Resource {
-        let env_attr = parseResourceAttributes(rawEnvAttributes: env[otelResourceAttributesEnv] ?? "")
-        
-        var bundle_attr = parseResourceAttributes(rawEnvAttributes: Bundle.main.infoDictionary?[otelResourceAttributesEnv] as? String ?? "")
-        bundle_attr.merge(env_attr) { _, v in
-            v
+        let envAttr = parseResourceAttributes(rawEnvAttributes: env[otelResourceAttributesEnv] ?? "")
+
+        var bundleAttr = parseResourceAttributes(
+            rawEnvAttributes: Bundle.main.infoDictionary?[otelResourceAttributesEnv] as? String ?? "")
+        bundleAttr.merge(envAttr) { _, value in
+            value
         }
-        return Resource(attributes:bundle_attr)
+        return Resource(attributes: bundleAttr)
 
     }
-    
+
     private init() {}
 
     /// Creates a label map from the OC_RESOURCE_LABELS environment variable.

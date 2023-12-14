@@ -77,7 +77,7 @@ public class Agent {
       crashManager = nil
     }
     os_log("Initializing Elastic APM Agent.")
-      
+
     instrumentation.initalize()
     if agentConfigManager.instrumentation.enableCrashReporting {
       crashManager?.initializeCrashReporter(lastSession: lastSessionForCrashReport)
@@ -85,6 +85,7 @@ public class Agent {
   }
 
   deinit {
+    // swiftlint:disable:next force_try
     try! group.syncShutdownGracefully()
 
   }

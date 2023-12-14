@@ -15,9 +15,9 @@
 import Foundation
 import UIKit
 import OpenTelemetryApi
-public class ApplicationLifecycleInstrumentation : NSObject  {
-    private static let eventName : String = "lifecycle"
-    private enum state : String {
+public class ApplicationLifecycleInstrumentation: NSObject {
+    private static let eventName: String = "lifecycle"
+    private enum State: String {
         case active
         case inactive
         case background
@@ -27,52 +27,71 @@ public class ApplicationLifecycleInstrumentation : NSObject  {
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-    
+
     static func getLogger() -> Logger {
-        OpenTelemetry.instance.loggerProvider.loggerBuilder(instrumentationScopeName: "ApplicationLifecycle").setEventDomain("device")
+        OpenTelemetry
+            .instance
+            .loggerProvider
+            .loggerBuilder(instrumentationScopeName: "ApplicationLifecycle")
+            .setEventDomain("device")
             .build()
     }
-    
+
     public override init() {
         super.init()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(active(_:)), name: UIApplication.didBecomeActiveNotification , object: nil)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(inactive(_:)), name: UIApplication.willResignActiveNotification , object: nil)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(background(_:)), name: UIApplication.didEnterBackgroundNotification , object: nil)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(foreground(_:)), name: UIApplication.willEnterForegroundNotification , object: nil)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(terminate(_:)), name: UIApplication.willTerminateNotification , object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(active(_:)),
+                                               name: UIApplication.didBecomeActiveNotification,
+                                               object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(inactive(_:)),
+                                               name: UIApplication.willResignActiveNotification,
+                                               object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(background(_:)),
+                                               name: UIApplication.didEnterBackgroundNotification,
+                                               object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(foreground(_:)),
+                                               name: UIApplication.willEnterForegroundNotification,
+                                               object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(terminate(_:)),
+                                               name: UIApplication.willTerminateNotification,
+                                               object: nil)
     }
-    
+
     @objc func active(_ notification: Notification) {
         Self.getLogger().eventBuilder(name: Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(state.active.rawValue)])
+            .setAttributes(["lifecycle.state": AttributeValue.string(State.active.rawValue)])
             .emit()
     }
-    
-    @objc func inactive(_ notification: Notification){
+
+    @objc func inactive(_ notification: Notification) {
         Self.getLogger().eventBuilder(name: Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(state.inactive.rawValue)])
+            .setAttributes(["lifecycle.state": AttributeValue.string(State.inactive.rawValue)])
             .emit()
     }
-    
+
     @objc func background(_ notification: Notification) {
         Self.getLogger().eventBuilder(name: Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(state.background.rawValue)])
+            .setAttributes(["lifecycle.state": AttributeValue.string(State.background.rawValue)])
             .emit()
     }
-    
+
     @objc func foreground(_ notification: Notification) {
         Self.getLogger().eventBuilder(name: Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(state.foreground.rawValue)])
+            .setAttributes(["lifecycle.state": AttributeValue.string(State.foreground.rawValue)])
             .emit()
     }
-    
+
     @objc func terminate(_ notification: Notification) {
         Self.getLogger().eventBuilder(name: Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(state.terminate.rawValue)])
+            .setAttributes(["lifecycle.state": AttributeValue.string(State.terminate.rawValue)])
             .emit()}
 }

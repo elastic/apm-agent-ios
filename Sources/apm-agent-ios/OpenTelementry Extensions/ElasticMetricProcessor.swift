@@ -16,55 +16,52 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-public class ElasticMetricProcessor : MetricProcessor {
-    
-    private let lock : NSLock
-    var metrics: [Metric]
-    var filters = [SignalFilter<Metric>]()
-    
-    internal init(_ filters: [SignalFilter<Metric>] = [SignalFilter<Metric>]()) {
-        self.filters = filters
-        metrics = [Metric]()
-        lock = NSLock()
+public class ElasticMetricProcessor: MetricProcessor {
+
+  private let lock: NSLock
+  var metrics: [Metric]
+  var filters = [SignalFilter<Metric>]()
+
+  internal init(_ filters: [SignalFilter<Metric>] = [SignalFilter<Metric>]()) {
+    self.filters = filters
+    metrics = [Metric]()
+    lock = NSLock()
+  }
+
+  /// Finish the current collection cycle and return the metrics it holds.
+  /// This is called at the end of one collection cycle by the Controller.
+  /// MetricProcessor can use this to clear its Metrics (in case of stateless).
+  /// - Returns: The list of metrics from this cycle, which are to be exported.
+  public func finishCollectionCycle() -> [Metric] {
+    lock.lock()
+    defer {
+      self.metrics = [Metric]()
+      lock.unlock()
     }
 
-    /// Finish the current collection cycle and return the metrics it holds.
-    /// This is called at the end of one collection cycle by the Controller.
-    /// MetricProcessor can use this to clear its Metrics (in case of stateless).
-    /// - Returns: The list of metrics from this cycle, which are to be exported.
-    public func finishCollectionCycle() -> [Metric] {
-        lock.lock()
-        defer {
-            self.metrics = [Metric]()
-            lock.unlock()
-        }
-        
-        guard CentralConfig().data.recording else {
-            return [Metric]()
-        }
-        
-        return metrics
+    guard CentralConfig().data.recording else {
+      return [Metric]()
+    }
+    return metrics
+  }
+
+  /// Process the metric. This method is called once every collection interval.
+  /// - Parameters:
+  ///   - metric: the metric record.
+  public func process(metric: Metric) {
+    lock.lock()
+    defer {
+      lock.unlock()
     }
 
-    /// Process the metric. This method is called once every collection interval.
-    /// - Parameters:
-    ///   - metric: the metric record.
-    public func process(metric: Metric) {
-        lock.lock()
-        defer {
-            lock.unlock()
-        }
-
-        guard CentralConfig().data.recording else {
-            return
-        }
-        
-        for filter in filters {
-            if !filter.shouldInclude(metric) {
-                return
-            }
-        }
-        
-        metrics.append(metric)
+    guard CentralConfig().data.recording else {
+      return
     }
+
+    for filter in filters where !filter.shouldInclude(metric) {
+      return
+    }
+
+    metrics.append(metric)
+  }
 }

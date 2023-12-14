@@ -22,7 +22,7 @@ public class InstrumentationConfigBuilder {
   var enableAppMetricInstrumentation: Bool?
   var enableSystemMetrics: Bool?
   var enableLifecycleEvents: Bool?
-  var persistentStorageConfig: PersistencePerformancePreset? = nil
+  var persistentStorageConfig: PersistencePerformancePreset?
 
   public init() {}
 

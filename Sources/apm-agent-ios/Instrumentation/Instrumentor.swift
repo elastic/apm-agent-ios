@@ -14,11 +14,10 @@
 
 import Foundation
 
+protocol Instrumentor {
+    var selector: Selector { get }
+    var klass: AnyClass { get }
 
-protocol Instrumentor  {
-    var selector : Selector { get }
-    var klass : AnyClass { get }
-    
-    init(selector: Selector, klass : AnyClass) throws;
-        
+    init(selector: Selector, klass: AnyClass) throws
+
 }

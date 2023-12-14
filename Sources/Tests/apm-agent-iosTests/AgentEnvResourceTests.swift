@@ -17,17 +17,17 @@ import Foundation
 import XCTest
 @testable import iOSAgent
 
-class AgentEnvResourceTests : XCTestCase {
+class AgentEnvResourceTests: XCTestCase {
     func testAgentEnvResource() {
         XCTAssertTrue(AgentEnvResource.get().attributes.isEmpty)
-        
-        XCTAssertEqual(AgentEnvResource.get([AgentEnvResource.otelResourceAttributesEnv:"ENVAR=VALUE"]).attributes.count, 1)
-        XCTAssertEqual(AgentEnvResource.get([AgentEnvResource.otelResourceAttributesEnv:"ENVAR=VALUE"]).attributes["ENVAR"]?.description, "VALUE")
-        
-        let resource = AgentEnvResource.get([AgentEnvResource.otelResourceAttributesEnv:"ENVAR=VALUE,ENVAR1=VALUE1"])
-        
+
+        XCTAssertEqual(AgentEnvResource.get([AgentEnvResource.otelResourceAttributesEnv: "ENVAR=VALUE"]).attributes.count, 1)
+        XCTAssertEqual(AgentEnvResource.get([AgentEnvResource.otelResourceAttributesEnv: "ENVAR=VALUE"]).attributes["ENVAR"]?.description, "VALUE")
+
+        let resource = AgentEnvResource.get([AgentEnvResource.otelResourceAttributesEnv: "ENVAR=VALUE,ENVAR1=VALUE1"])
+
         XCTAssertEqual(resource.attributes["ENVAR1"]?.description, "VALUE1")
         XCTAssertEqual(resource.attributes["ENVAR"]?.description, "VALUE")
-        
+
     }
 }

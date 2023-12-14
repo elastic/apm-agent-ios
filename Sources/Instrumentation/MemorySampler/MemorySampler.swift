@@ -16,11 +16,10 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-
 public class MemorySampler {
-    let meter : Meter
-    var gauge : IntObserverMetric
-    
+    let meter: Meter
+    var gauge: IntObserverMetric
+
     public init() {
         meter = OpenTelemetry.instance.meterProvider.get(instrumentationName: "Memory Sampler", instrumentationVersion: "0.0.1")
         gauge = meter.createIntObservableGauge(name: "system.memory.usage") { gauge in
@@ -29,8 +28,7 @@ public class MemorySampler {
             }
         }
     }
-    
-     
+
     static func memoryFootprint() -> mach_vm_size_t? {
         // The `TASK_VM_INFO_COUNT` and `TASK_VM_INFO_REV1_COUNT` macros are too
         // complex for the Swift C importer, so we have to define them ourselves.
@@ -50,4 +48,3 @@ public class MemorySampler {
         return info.phys_footprint
     }
 }
-

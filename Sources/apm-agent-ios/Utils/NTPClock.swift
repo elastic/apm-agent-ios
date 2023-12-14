@@ -18,8 +18,7 @@ import OpenTelemetrySdk
 import TrueTime
 import os.log
 
-
-class NTPClock : Clock {
+class NTPClock: Clock {
     var now: Date {
         if let date = TrueTimeClient.sharedInstance.referenceTime?.now() {
             return date
