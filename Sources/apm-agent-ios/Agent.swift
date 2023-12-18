@@ -43,12 +43,14 @@ public class Agent {
   let openTelemetry: OpenTelemetryInitializer
 
   let sessionSampler: SessionSampler
-    
+
+  let crashConfig = CrashManagerConfiguration()
 
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
   ) {
-    let lastSessionForCrashReport = SessionManager.instance.session(false)
+    crashConfig.sessionId = SessionManager.instance.session(false)
+    crashConfig.networkStatus = NetworkStatusManager().lastStatus
     _ = SessionManager.instance.session()  // initialize session
     agentConfigManager = AgentConfigManager(
       resource: AgentResource.get().merging(other: AgentEnvResource.get()), config: configuration,
@@ -80,7 +82,7 @@ public class Agent {
 
     instrumentation.initalize()
     if agentConfigManager.instrumentation.enableCrashReporting {
-      crashManager?.initializeCrashReporter(lastSession: lastSessionForCrashReport)
+      crashManager?.initializeCrashReporter(configuration: crashConfig)
     }
   }
 

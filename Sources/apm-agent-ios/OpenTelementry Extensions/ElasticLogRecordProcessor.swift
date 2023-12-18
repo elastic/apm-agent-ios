@@ -40,6 +40,8 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
     var attributes = logRecord.attributes
     attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(
       SessionManager.instance.session())
+    attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue
+      .string(NetworkStatusManager().status())
 
     let appendedLogRecord = ReadableLogRecord(
       resource: logRecord.resource,

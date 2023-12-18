@@ -113,6 +113,9 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
         return
       }
+    } else {
+      span.setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
+                        value: AttributeValue.string(NetworkStatusManager().status()))
     }
     processor.onEnd(span: span)
   }
