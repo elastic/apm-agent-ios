@@ -75,7 +75,7 @@ struct CrashManager {
     }
   }
 
-    public func initializeCrashReporter(lastSession: String) {
+    public func initializeCrashReporter(configuration: CrashManagerConfiguration) {
     // It is strongly recommended that local symbolication only be enabled for non-release builds.
     // Use [] for release versions.
     let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
@@ -113,9 +113,17 @@ struct CrashManager {
           //
           var attributes = [
             SemanticAttributes.exceptionType.rawValue: AttributeValue.string(report.signalInfo.name),
-            SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text),
-            ElasticAttributes.sessionId.rawValue: AttributeValue.string(lastSession)
+            SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text)
           ]
+
+          if let lastSessionId = configuration.sessionId {
+            attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(lastSessionId)
+          }
+
+          if let lastNetworkStatus = configuration.networkStatus {
+            attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue.string(lastNetworkStatus)
+          }
+
           if let code = report.signalInfo.code {
               attributes[SemanticAttributes.exceptionMessage.rawValue] = AttributeValue.string(
               "\(code) at \(report.signalInfo.address)")
