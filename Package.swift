@@ -20,7 +20,7 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.8.0"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.9.0"),
     .package(url: "https://github.com/elastic/TrueTime.swift.git", exact: "1.0.0"),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.0.0")),
