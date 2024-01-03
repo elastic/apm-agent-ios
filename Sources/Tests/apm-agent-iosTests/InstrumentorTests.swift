@@ -13,7 +13,7 @@
 //   limitations under the License.
 
 import XCTest
-@testable import iOSAgent
+@testable import ElasticApm
 
 final class InstrumentorTests: XCTestCase {
     func test() {

@@ -13,7 +13,7 @@ let package = Package(
   ],
   products: [
     // Products define the executables and libraries a package produces, and make them visible to other package.
-    .library(name: "iOSAgent", type: .static, targets: ["iOSAgent"]),
+    .library(name: "ElasticApm", type: .static, targets: ["ElasticApm"]),
     .library(name: "MemorySampler", type: .static, targets: ["MemorySampler"]),
     .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
   ],
@@ -41,7 +41,7 @@ let package = Package(
       ],
       path: "Sources/Instrumentation/CPUSampler"),
     .target(
-      name: "iOSAgent",
+      name: "ElasticApm",
       dependencies: [
         .product(name: "OpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
         .product(name: "PersistenceExporter", package: "opentelemetry-swift"),
@@ -57,8 +57,8 @@ let package = Package(
 //      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
     .testTarget(
-      name: "iOSAgentTests",
-      dependencies: ["iOSAgent"],
+      name: "ElasticApmTests",
+      dependencies: ["ElasticApm"],
       path: "Sources/Tests/apm-agent-iosTests"),
     .testTarget(
       name: "MemorySamplerTests",

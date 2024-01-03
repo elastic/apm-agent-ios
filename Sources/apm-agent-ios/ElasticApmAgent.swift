@@ -6,7 +6,8 @@ import OpenTelemetrySdk
 import TrueTime
 import os.log
 
-public class Agent {
+public class ElasticApmAgent {
+ public static let name = "apm-agent-ios"
 
   public static func start(
     with configuration: AgentConfiguration,
@@ -18,19 +19,19 @@ public class Agent {
     }
 
     TrueTimeClient.sharedInstance.start()
-    instance = Agent(
+    instance = ElasticApmAgent(
       configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
   }
 
   public static func start() {
-    Agent.start(with: AgentConfiguration())
+    ElasticApmAgent.start(with: AgentConfiguration())
   }
 
-  public class func shared() -> Agent? {
+  public class func shared() -> ElasticApmAgent? {
     instance
   }
 
-  private static var instance: Agent?
+  private static var instance: ElasticApmAgent?
 
   let group: EventLoopGroup
 

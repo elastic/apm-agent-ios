@@ -1,4 +1,4 @@
-@testable import iOSAgent
+@testable import ElasticApm
 import XCTest
 
 final class apm_agent_iosTests: XCTestCase {
@@ -7,7 +7,7 @@ final class apm_agent_iosTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
 //        XCTAssertEqual(apm_agent_ios().text, "Hello, World!")
-        Agent.start()
+        ElasticApmAgent.start()
     }
 
     static var allTests = [

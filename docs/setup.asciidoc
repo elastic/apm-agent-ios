@@ -42,7 +42,7 @@ Package(
     .target(
         name: "MyApp",
         dependencies: [
-            .product(name: "iOSAgent", package: "apm-agent-ios")
+            .product(name: "ElasticApm", package: "apm-agent-ios")
         ]
     ),
 ])
@@ -58,7 +58,7 @@ If you're using `SwiftUI` to build your app add the following to your `App.swift
 [source,swift,linenums,swift,highlight=2;4..15;19]
 ----
 import SwiftUI
-import iOSAgent
+import ElasticApm
 
 class AppDelegate : NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
@@ -93,7 +93,7 @@ If you're not using `SwiftUI` you can alternatively add the same thing to your A
 [source,swift,linenums,highlight=2;7..11]
 ----
 import UIKit
-import iOSAgent
+import ElasticApm
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
