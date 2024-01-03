@@ -11,7 +11,7 @@ let config = AgentConfigBuilder()
                 .withSecretToken("<Token>")
                 .build()
 
-Agent.start(with:config)
+ElasticApmAgent.start(with:config)
 ----
 
 [discrete]
@@ -82,9 +82,9 @@ Adds an anonymous function that will be executed on each log in the span process
 [discrete]
 [[instrumentationConfiguration]]
 == Instrumentation configuration
-The `Agent.start` provides an additional optional parameter for configuring instrumentation.
+The `ElasticApmAgent.start` provides an additional optional parameter for configuring instrumentation.
 In the below example, an instrumentation configuration is passed to `Agent.start` with default values.
-This is equivalent to calling `Agent.start` with no instrumentation configuration passed.
+This is equivalent to calling `ElasticApmAgent.start` with no instrumentation configuration passed.
 
 [source,swift]
 ----
@@ -92,7 +92,7 @@ let config = ...
 
 let instrumentationConfig = InstrumentationConfigBuilder().build()
 
-Agent.start(with:config, instrumentationConfig)
+ElasticApmAgent.start(with:config, instrumentationConfig)
 ----
 
 [discrete]
