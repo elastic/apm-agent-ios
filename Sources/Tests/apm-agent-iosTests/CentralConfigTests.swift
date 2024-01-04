@@ -14,7 +14,7 @@
 
 import XCTest
 
-@testable import iOSAgent
+@testable import ElasticApm
 
 class CentralConfigTests: XCTestCase {
   let nullJson = """

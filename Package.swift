@@ -13,18 +13,17 @@ let package = Package(
   ],
   products: [
     // Products define the executables and libraries a package produces, and make them visible to other package.
-    .library(name: "iOSAgent", type: .static, targets: ["iOSAgent"]),
+    .library(name: "ElasticApm", type: .static, targets: ["ElasticApm"]),
     .library(name: "MemorySampler", type: .static, targets: ["MemorySampler"]),
     .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
   ],
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.8.0"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.9.1"),
     .package(url: "https://github.com/elastic/TrueTime.swift.git", exact: "1.0.0"),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.0.0")),
-//    .package(url:"https://github.com/realm/SwiftLint", .upToNextMajor(from: "0.54.0")),
   ],
   targets: [
     .target(
@@ -42,7 +41,7 @@ let package = Package(
       ],
       path: "Sources/Instrumentation/CPUSampler"),
     .target(
-      name: "iOSAgent",
+      name: "ElasticApm",
       dependencies: [
         .product(name: "OpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
         .product(name: "PersistenceExporter", package: "opentelemetry-swift"),
@@ -58,8 +57,8 @@ let package = Package(
 //      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
     .testTarget(
-      name: "iOSAgentTests",
-      dependencies: ["iOSAgent"],
+      name: "ElasticApmTests",
+      dependencies: ["ElasticApm"],
       path: "Sources/Tests/apm-agent-iosTests"),
     .testTarget(
       name: "MemorySamplerTests",

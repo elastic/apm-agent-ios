@@ -15,7 +15,7 @@
 import Foundation
 import XCTest
 
-@testable import iOSAgent
+@testable import ElasticApm
 
 final class SessionSamplerTests: XCTestCase {
 

@@ -36,7 +36,7 @@ public class OpenTelemetryHelper {
     }
 
     public static func generateExporterUserAgent() -> String {
-        var userAgent = "\(ElasticAgent.name.rawValue)/\(Agent.elasticSwiftAgentVersion)"
+        var userAgent = "\(ElasticApmAgent.name)/\(ElasticApmAgent.elasticSwiftAgentVersion)"
         let appInfo = ApplicationDataSource()
         if let appName = appInfo.name {
             var appIdent = appName

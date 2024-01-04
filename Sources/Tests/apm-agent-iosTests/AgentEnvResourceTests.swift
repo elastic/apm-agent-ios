@@ -15,7 +15,7 @@
 import Foundation
 
 import XCTest
-@testable import iOSAgent
+@testable import ElasticApm
 
 class AgentEnvResourceTests: XCTestCase {
     func testAgentEnvResource() {

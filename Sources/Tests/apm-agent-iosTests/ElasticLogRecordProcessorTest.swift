@@ -14,7 +14,7 @@
 
 import OpenTelemetryApi
 import OpenTelemetrySdk
-@testable import iOSAgent
+@testable import ElasticApm
 import XCTest
 
 class ElasticLogRecordProcessorTest: XCTestCase {
@@ -27,7 +27,7 @@ class ElasticLogRecordProcessorTest: XCTestCase {
         let observedDate = Date()
 
         let eventBuilder = logger.eventBuilder(name: "myEvent")
-        eventBuilder.setBody("hello, world")
+        eventBuilder.setBody(AttributeValue.string("hello, world"))
         .setSeverity(.fatal)
         .setObservedTimestamp(observedDate)
         .emit()
@@ -37,7 +37,7 @@ class ElasticLogRecordProcessorTest: XCTestCase {
         XCTAssertEqual(exported?[0].attributes["session.id"]?.description, SessionManager.instance.session())
         XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
         XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "myEvent")
-        XCTAssertEqual(exported?[0].body, "hello, world")
+        XCTAssertEqual(exported?[0].body, AttributeValue.string("hello, world"))
         XCTAssertEqual(exported?[0].severity, .fatal)
         XCTAssertEqual(exported?[0].observedTimestamp, observedDate)
 

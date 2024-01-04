@@ -23,6 +23,12 @@
 [[release-notes-next]]
 ==== Next
 
+[[release-notes-v1.0.0]]
+==== v1.0.0
+===== Features
+- Added network status to all signals [#202]
+- Added session.id to crash reports [#195]
+
 [[release-notes-v0.8.0]]
 ==== v0.8.0
 ===== Features

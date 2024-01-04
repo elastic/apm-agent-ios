@@ -14,10 +14,6 @@
 
 import Foundation
 
-public enum ElasticAgent: String {
-    case name = "apm-agent-ios"
-}
-
 public enum ElasticAttributes: String {
     /**
     Timestamp applied to all spans at time of export. To help with clock drift.

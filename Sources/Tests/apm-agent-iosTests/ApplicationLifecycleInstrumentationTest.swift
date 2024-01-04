@@ -15,7 +15,7 @@
 import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
-@testable import iOSAgent
+@testable import ElasticApm
 import XCTest
 
 class ApplicationLifecycleInstrumentationTest: XCTestCase {
