@@ -3,8 +3,6 @@
 # apm-agent-ios : APM Agent for iOS
 This is the official iOS package for [Elastic APM](https://www.elastic.co/solutions/apm)
 
-This package is considered beta. 
-
 ## Documentation
 
 Visit [elastic.co](https://www.elastic.co/guide/en/apm/agent/swift/current/index.html) for the iOS agent documentation.
