@@ -1,69 +1,69 @@
 ////
 [[release-notes-x.x.x]]
-==== x.x.x - YYYY/MM/DD
+=== x.x.x - YYYY/MM/DD
 
 [float]
-===== Breaking changes
+==== Breaking changes
 
 [float]
-===== Features
+==== Features
 * Cool new feature: {pull}2526[#2526]
 
 [float]
-===== Bug fixes
+==== Bug fixes
 ////
 
 [[release-notes-next]]
-==== Next
+=== Next
 
 [[release-notes-v1.0.0]]
-==== v1.0.0
-===== Features
+=== v1.0.0
+==== Features
 - Added network status to all signals [#202]
 - Added session.id to crash reports [#195]
 
 [[release-notes-v0.8.0]]
-==== v0.8.0
-===== Features
+=== v0.8.0
+==== Features
 - Added span error for all http errors. [#183]
 - opentelemetry-swift v1.8.0
 
 [[release-notes-v0.7.0]]
-==== v0.7.0 - 2023/08/22
-===== Features
+=== v0.7.0 - 2023/08/22
+==== Features
 - Updated project from technical preview to beta.
 - Added signal filtering [#167]
 - Added offline signal persistence [#168][#172]
 - Added rate sampling [#170]
-===== Fixes
+==== Fixes
 - Fixed race condition in crash uploader & networking instrumentation [#178]
 
 [[release-notes-v0.6.0]]
-==== v0.6.0 - 2023/05/03
-===== Features
+=== v0.6.0 - 2023/05/03
+==== Features
 - Moved `CFBundleVersion` into `service.build` when available and `CFBundleShortVersionString` is available.
 
-===== Fixes
+==== Fixes
 - Fixes incorrect naming format of several lifecycle events.
 
 [[release-notes-v0.5.0]]
-==== v0.5.0 - 2023/04/18
-===== Features
+=== v0.5.0 - 2023/04/18
+==== Features
 - Remote config functionality for `recording` added.
 - Added application lifecycle events.
 
-===== Fixes
+==== Fixes
 - Added transaction wrapper for orphaned network spans
 - Updated Open Telemetry environmental variables compatibility, allowing set from plists.
 
 [[release-notes-v0.4.1]]
-==== v0.4.1 - 2023/02/06
-===== Fixes
+=== v0.4.1 - 2023/02/06
+==== Fixes
 - Added a version to TrueTime.swift in package.swift
 
 [[release-notes-v0.4.0]]
-==== v0.4.0 - 2023/01/26
-===== Features
+=== v0.4.0 - 2023/01/26
+==== Features
 - Updated Opentelemetry-Swift to `v1.3.1`
 - Added TrueTime for managing agent-server clock-skew.
 - Added configuration options for Session timeout.
@@ -71,42 +71,42 @@
 - Added configuration that completely disables the agent.
 - Added PLCrashReporter.
 
-===== Improvements
+==== Improvements
 - Expanded `session.id` attributes to all relevant signals (Spans & Logs)
 - Expanded network status attributes to all spans (not just networking spans)
 
 
 [[release-notes-v0.3.0]]
-==== v0.3.0
+=== v0.3.0
 This version requires APM Server `v8.5.0` and Swift `v5.7`
 [float]
-===== Features
+==== Features
 - Updated Opentelemetry-swift to `v1.2.0`
 - Added agent configuration builder.
 - Added API-Key authorization option to Agent Configuration
 - added `swiftUI.View` extension `reportName(_ name: String) -> View` for optional naming override of auto-generated spans from View instrumentation.
 - Added MetricKit instrumentation.
 
-==== Improvements
+=== Improvements
 - Improved creation and naming of spans in View instrumentation.
 
-==== Deprecated
+=== Deprecated
 - Deprecated directly creating `AgentConfiguration` objects, in favor of `AgentConfigBuilder`.
 - Removed Tap logger instrumentation.
 
 [[release-notes-0.2.1]]
-==== v0.2.1
+=== v0.2.1
 [float]
-===== Features
+==== Features
 * Updated Opentelemetry-swift to `v1.1.2`
 * Added `SwiftUI.View` and `UIViewController` instrumentation.
 * Added `session.id` attributes to spans created by the `View` instrumentation.
 
 
 [[release-notes-0.1.0]]
-==== v0.1.0 - Technical Preview
+=== v0.1.0 - Technical Preview
 [float]
-===== Features
+==== Features
 * Network status attributes {pull}20[#20]
 ** Network instrumentation contains connection information providing insight into cell carriers and connection quality.
 
