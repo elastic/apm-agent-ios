@@ -3,6 +3,4 @@
 [[release-notes]]
 == Release notes
 
-* <<release-notes-preview>>
-
 include::../CHANGELOG.asciidoc[]
