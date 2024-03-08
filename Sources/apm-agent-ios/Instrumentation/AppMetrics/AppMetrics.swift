@@ -302,7 +302,43 @@ class AppMetrics: NSObject, MXMetricManagerSubscriber {
   @available(iOS 14.0, *)
   func didReceive(_ payloads: [MXDiagnosticPayload]) {
     // Process diagnostics.
+      for payload in payloads {
+          recordHangDiagnistic(payload: payload.hangDiagnostics)
+      }
   }
+
+    @available(iOS 14.0, *)
+    func recordHangDiagnistic(payload: [MXHangDiagnostic]?) {
+        guard let hangDiagnostic = payload else {
+            return
+        }
+
+        let seconds = Measurement(value: 2, unit: UnitDuration.seconds)
+
+        for metric in hangDiagnostic {
+            if metric.hangDuration > seconds {
+                metric.callStackTree.jsonRepresentation()
+                
+                processHangDiagnosticData()
+            }
+        }
+
+//        metric.hangDuration
+//        metric.callStackTree
+    }
+
+    func processHangDiagnosticData() {
+        //TODO
+//        let hangDiagnostic = HangDiagnosticManager(
+//            resource: AgentResource.get().merging(other: AgentEnvResource.get()),
+//            group: group,
+//            agentConfiguration: agentConfigManager.agent)
+//
+//        instrumentation.initalize()
+//        if agentConfigManager.instrumentation.enableCrashReporting {
+//            hangDiagnostic?.initializeCrashReporter(configuration: crashConfig)
+//        }
+    }
 
 }
 #endif
