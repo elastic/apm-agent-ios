@@ -25,159 +25,148 @@ import OpenTelemetrySdk
 import os.log
 
 struct CrashManager {
-  static let crashEventName: String = "crash"
-  static let crashManagerVersion = "0.0.2"
-  static let logLabel = "Elastic-OTLP-Exporter"
-  static let lastResourceDefaultsKey: String = "elastic.last.resource"
-  static let instrumentationName = "PLCrashReporter"
-  let lastResource: Resource
-  let group: EventLoopGroup
-  let loggerProvider: LoggerProvider
-  init(resource: Resource, group: EventLoopGroup, agentConfiguration: AgentConfiguration) {
-    self.group = group
-    // if something went wrong with the lastResource in the user defaults, fallback of the current resource data.
-    var tempResource = resource
+    static let crashEventName: String = "crash"
+    static let crashManagerVersion = "0.0.2"
+    static let logLabel = "Elastic-OTLP-Exporter"
+    static let lastResourceDefaultsKey: String = "elastic.last.resource"
+    static let instrumentationName = "PLCrashReporter"
+    let lastResource: Resource
+    let group: EventLoopGroup
+    let loggerProvider: LoggerProvider
 
-    let otlpConfiguration = OtlpConfiguration(
-      timeout: OtlpConfiguration.DefaultTimeoutInterval,
-      headers: OpenTelemetryHelper.generateExporterHeaders(agentConfiguration.auth))
+    init(resource: Resource, group: EventLoopGroup, agentConfiguration: AgentConfiguration) {
+        self.group = group
+        // if something went wrong with the lastResource in the user defaults, fallback of the current resource data.
+        var tempResource = resource
 
-    if let lastResourceJson = UserDefaults.standard.data(forKey: Self.lastResourceDefaultsKey) {
-      do {
-        let decoder = JSONDecoder()
-        tempResource = try decoder.decode(Resource.self, from: lastResourceJson)
-      } catch {
-        os_log(
-          "[Elastic][CrashManager] initialization: unable to load last Resource from user defaults."
-        )
-      }
-    }
-    lastResource = tempResource
-    loggerProvider = LoggerProviderBuilder()
-      .with(resource: lastResource)
-      .with(processors: [
-        BatchLogRecordProcessor(
-          logRecordExporter: OtlpLogExporter(
-            channel: OpenTelemetryHelper.getChannel(with: agentConfiguration, group: group),
-            config: otlpConfiguration,
-            logger: Logger(label: Self.logLabel),
-            envVarHeaders: OpenTelemetryHelper.generateExporterHeaders(agentConfiguration.auth)))
-      ])
-      .build()
-    do {
-      let encoder = JSONEncoder()
-      let data = try encoder.encode(resource)
-      UserDefaults.standard.set(data, forKey: Self.lastResourceDefaultsKey)
-    } catch {
-      os_log(
-        "[Elastic][CrashManager] initialization: unable to save current Resource from user defaults."
-      )
+        let otlpConfiguration = OtlpConfiguration(
+            timeout: OtlpConfiguration.DefaultTimeoutInterval,
+            headers: OpenTelemetryHelper.generateExporterHeaders(agentConfiguration.auth))
 
-    }
-  }
-
-  public func initializeCrashReporter(configuration: CrashManagerConfiguration) {
-    // It is strongly recommended that local symbolication only be enabled for non-release builds.
-    // Use [] for release versions.
-    let config = PLCrashReporterConfig(signalHandlerType: getSignalHandler(), symbolicationStrategy: [])
-    guard let crashReporter = PLCrashReporter(configuration: config) else {
-      print("Could not create an instance of PLCrashReporter")
-      return
-    }
-
-    // Enable the Crash Reporter.
-    do {
-      if !isDebuggerAttached() {
-        try crashReporter.enableAndReturnError()
-      }
-    } catch let error {
-      print("Warning: Could not enable crash reporter: \(error)")
-    }
-
-    // Try loading the crash report.
-    if crashReporter.hasPendingCrashReport() {
-      do {
-        let data = try crashReporter.loadPendingCrashReportDataAndReturnError()
-        let logger = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
-          .setInstrumentationVersion(Self.crashManagerVersion)
-          .setEventDomain(SemanticAttributes.EventDomainValues.device.description)
-          .build()
-
-        // Retrieving crash reporter data.
-        let report = try PLCrashReport(data: data)
-
-        // We could send the report from here, but we'll just print out some debugging info instead.
-        if let text = PLCrashReportTextFormatter.stringValue(
-          for: report, with: PLCrashReportTextFormatiOS) {
-          print(text)
-          // notes : branching code needed for signal vs mach vs nsexception for event generation
-          //
-          var attributes = [
-            SemanticAttributes.exceptionType.rawValue: AttributeValue.string(report.signalInfo.name),
-            SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text)
-          ]
-
-          if let lastSessionId = configuration.sessionId {
-            attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(lastSessionId)
-          }
-
-          if let lastNetworkStatus = configuration.networkStatus {
-            attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue.string(lastNetworkStatus)
-          }
-
-          if let code = report.signalInfo.code {
-              attributes[SemanticAttributes.exceptionMessage.rawValue] = AttributeValue.string(
-              "\(code) at \(report.signalInfo.address)")
-          }
-
-          logger.eventBuilder(name: Self.crashEventName)
-            .setSeverity(.fatal)
-            .setObservedTimestamp(report.systemInfo.timestamp)
-            .setAttributes(attributes)
-            .emit()
-
-        } else {
-          print("CrashReporter: can't convert report to text")
+        if let lastResourceJson = UserDefaults.standard.data(forKey: Self.lastResourceDefaultsKey) {
+            do {
+                let decoder = JSONDecoder()
+                tempResource = try decoder.decode(Resource.self, from: lastResourceJson)
+            } catch {
+                os_log(
+                    "[Elastic][CrashManager] initialization: unable to load last Resource from user defaults."
+                )
+            }
         }
-      } catch let error {
-        print("CrashReporter failed to load and parse with error: \(error)")
-      }
 
+        lastResource = tempResource
+        loggerProvider = LoggerProviderBuilder()
+            .with(resource: lastResource)
+            .with(processors: [
+                BatchLogRecordProcessor(logRecordExporter: OtlpLogExporter(
+                    channel: OpenTelemetryHelper.getChannel(with: agentConfiguration, group: group),
+                    config: otlpConfiguration,
+                    logger: Logger(label: Self.logLabel),
+                    envVarHeaders: OpenTelemetryHelper.generateExporterHeaders(agentConfiguration.auth)))
+            ])
+            .build()
+
+        do {
+            let data = try JSONEncoder().encode(resource)
+            UserDefaults.standard.set(data, forKey: Self.lastResourceDefaultsKey)
+        } catch {
+            os_log(
+                "[Elastic][CrashManager] initialization: unable to save current Resource from user defaults."
+            )
+        }
     }
 
-    // Purge the report.
-    crashReporter.purgePendingCrashReport()
-  }
+    public func initializeCrashReporter(configuration: CrashManagerConfiguration) {
+        // It is strongly recommended that local symbolication only be enabled for non-release builds.
+        // Use [] for release versions.
+        let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
+        guard let crashReporter = PLCrashReporter(configuration: config) else {
+            print("Could not create an instance of PLCrashReporter")
+            return
+        }
 
-  
-  private func getSignalHandler() -> PLCrashReporterSignalHandlerType {
-    #if os(tvOS)
-      return .BSD
-    #else
-      return .mach
-    #endif
-  }
-  
-  private func isDebuggerAttached() -> Bool {
-    var info = kinfo_proc()
-    let infoSize = UnsafeMutablePointer<Int>.allocate(capacity: 1)
-    infoSize[0] = MemoryLayout<kinfo_proc>.size
-    let name = UnsafeMutablePointer<Int32>.allocate(capacity: 4)
+        // Enable the Crash Reporter.
+        do {
+            if !isDebuggerAttached() {
+                try crashReporter.enableAndReturnError()
+            }
+        } catch let error {
+            print("Warning: Could not enable crash reporter: \(error)")
+        }
 
-    name[0] = CTL_KERN
-    name[1] = KERN_PROC
-    name[2] = KERN_PROC_PID
-    name[3] = getpid()
+        // Try loading the crash report.
+        if crashReporter.hasPendingCrashReport() {
+            do {
+                let data = try crashReporter.loadPendingCrashReportDataAndReturnError()
+                let logger = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
+                    .setInstrumentationVersion(Self.crashManagerVersion)
+                    .setEventDomain(SemanticAttributes.EventDomainValues.device.description)
+                    .build()
 
-    if sysctl(name, 4, &info, infoSize, nil, 0) == -1 {
-      print("sysctl() failed: \(String(describing: strerror(errno)))")
-      return false
+                // Retrieving crash reporter data.
+                let report = try PLCrashReport(data: data)
+
+                // We could send the report from here, but we'll just print out some debugging info instead.
+                if let text = PLCrashReportTextFormatter
+                    .stringValue(for: report, with: PLCrashReportTextFormatiOS) {
+                    print(text)
+                    // notes : branching code needed for signal vs mach vs nsexception for event generation
+                    //
+                    var attributes = [
+                        SemanticAttributes.exceptionType.rawValue: AttributeValue.string(report.signalInfo.name),
+                        SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text)
+                    ]
+
+                    if let lastSessionId = configuration.sessionId {
+                        attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(lastSessionId)
+                    }
+
+                    if let lastNetworkStatus = configuration.networkStatus {
+                        attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue.string(lastNetworkStatus)
+                    }
+
+                    if let code = report.signalInfo.code {
+                        attributes[SemanticAttributes.exceptionMessage.rawValue] = AttributeValue.string(
+                            "\(code) at \(report.signalInfo.address)")
+                    }
+
+                    logger.eventBuilder(name: Self.crashEventName)
+                        .setSeverity(.fatal)
+                        .setObservedTimestamp(report.systemInfo.timestamp)
+                        .setAttributes(attributes)
+                        .emit()
+                } else {
+                    print("CrashReporter: can't convert report to text")
+                }
+            } catch let error {
+                print("CrashReporter failed to load and parse with error: \(error)")
+            }
+        }
+
+        // Purge the report.
+        crashReporter.purgePendingCrashReport()
     }
 
-    if (info.kp_proc.p_flag & P_TRACED) != 0 {
-      return true
-    }
+    private func isDebuggerAttached() -> Bool {
+        var info = kinfo_proc()
+        let infoSize = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+        infoSize[0] = MemoryLayout<kinfo_proc>.size
+        let name = UnsafeMutablePointer<Int32>.allocate(capacity: 4)
 
-    return false
-  }
+        name[0] = CTL_KERN
+        name[1] = KERN_PROC
+        name[2] = KERN_PROC_PID
+        name[3] = getpid()
+
+        if sysctl(name, 4, &info, infoSize, nil, 0) == -1 {
+            print("sysctl() failed: \(String(describing: strerror(errno)))")
+            return false
+        }
+
+        if (info.kp_proc.p_flag & P_TRACED) != 0 {
+            return true
+        }
+
+        return false
+    }
 }
