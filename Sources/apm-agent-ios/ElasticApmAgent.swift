@@ -3,8 +3,8 @@ import Foundation
 import NIO
 import OpenTelemetryApi
 import OpenTelemetrySdk
-import TrueTime
 import os.log
+import Kronos
 
 public class ElasticApmAgent {
  public static let name = "apm-agent-ios"
@@ -18,7 +18,7 @@ public class ElasticApmAgent {
       return
     }
 
-    TrueTimeClient.sharedInstance.start()
+      Kronos.Clock.sync()
     instance = ElasticApmAgent(
       configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
   }
