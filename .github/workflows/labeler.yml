@@ -10,6 +10,7 @@ env:
 permissions:
   contents: read
   issues: write
+
 jobs:
   triage:
     runs-on: ubuntu-latest
