@@ -13,17 +13,18 @@
 //   limitations under the License.
 
 import Foundation
-import OpenTelemetryApi
 import OpenTelemetrySdk
-import TrueTime
+import Kronos
 import os.log
 
-class NTPClock: Clock {
+class NTPClock: OpenTelemetrySdk.Clock {
     var now: Date {
-        if let date = TrueTimeClient.sharedInstance.referenceTime?.now() {
+        if let date = Kronos.Clock.now {
+            os_log("Using Kronos Clock.now as fallback.")
             return date
         }
-        os_log("TrueTime referenceTime unavailable. using system clock as fallback.")
+
+        os_log("Kronos Clock.now unavailable. using system clock as fallback.")
         return Date()
     }
 }
