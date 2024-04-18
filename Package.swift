@@ -53,7 +53,10 @@ let package = Package(
         "MemorySampler",
         "CPUSampler",
       ],
-      path: "Sources/apm-agent-ios"
+      path: "Sources/apm-agent-ios",
+      resources: [
+        .process("Sources/PrivacyInfo.xcprivacy")
+      ]
 //      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
     .testTarget(
