@@ -12,7 +12,7 @@
 	<array>
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
-			<string>NSPrivacyCollectedDataTypeCrashData, NSPrivacyCollectedDataTypeOtherDiagnosticData, NSPrivacyCollectedDataTypePerformanceData</string>
+			<string>NSPrivacyCollectedDataTypeCrashData, NSPrivacyCollectedDataTypeOtherDiagnosticData, NSPrivacyCollectedDataTypePerformanceData, NSPrivacyCollectedDataTypeDeviceID</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<false/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>
