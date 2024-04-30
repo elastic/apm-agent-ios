@@ -18,7 +18,7 @@ let package = Package(
     .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.1.0"),
+    .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.2.2"),
     .package(
       url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.9.1"),
     .package(url: "https://github.com/MobileNativeFoundation/Kronos.git", .upToNextMajor(from: "4.2.2")),
@@ -53,7 +53,10 @@ let package = Package(
         "MemorySampler",
         "CPUSampler",
       ],
-      path: "Sources/apm-agent-ios"
+      path: "Sources/apm-agent-ios",
+      resources: [
+        .process("Resources/PrivacyInfo.xcprivacy")
+      ]
 //      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
     .testTarget(
