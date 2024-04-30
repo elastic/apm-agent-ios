@@ -65,9 +65,7 @@ let package = Package(
       ],
       path: "Sources/apm-agent-ios",
       resources: [
-        .process("PrivacyInfo.xcprivacy"),
-//        .copy("../PrivacyInfo2.xcprivacy")
-//        .process("PrivacyInfo.xcprivacy")
+        .process("Resources/PrivacyInfo.xcprivacy"),
       ]
 //      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
