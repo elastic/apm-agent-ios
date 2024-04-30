@@ -65,7 +65,7 @@ let package = Package(
       ],
       path: "Sources/apm-agent-ios",
       resources: [
-        .process("../PrivacyInfo.xcprivacy"),
+        .process("PrivacyInfo.xcprivacy"),
 //        .copy("../PrivacyInfo2.xcprivacy")
 //        .process("PrivacyInfo.xcprivacy")
       ]
