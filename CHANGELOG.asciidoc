@@ -16,6 +16,16 @@
 [[release-notes-next]]
 === Next
 
+[[release-notes-v1.0.2]]
+=== v1.0.2
+==== Features
+- Added Privacy Manifest file [#217]
+
+[[release-notes-v1.0.1]]
+=== v1.0.1
+==== Fixes
+- fixed memory leaks related to NTP usage [#212]
+
 [[release-notes-v1.0.0]]
 === v1.0.0
 ==== Features
