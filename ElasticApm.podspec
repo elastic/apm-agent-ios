@@ -11,15 +11,15 @@ Pod::Spec.new do |s|
   }
 
 # Source Info
-  s.iOS.deployment_target = '13.0'
-  s.source           = {
+  s.ios.deployment_target = '13.0'
+  s.source          =  {
     :git => 'https://github.com/elastic/apm-agent-ios.git',
     :tag => 'v'+s.version.to_s
   }
 
-  s.source_files = 'Sources/apm-agent-ios'
-  s.resource_bundle = {"apm-agent-ios" => "Resources/PrivacyInfo.xcprivacy"}
+  s.source_files    = 'Sources/apm-agent-ios/**/*.swift'
+  s.resource_bundle = {"apm-agent-ios" => "Sources/apm-agent-ios/Resources/PrivacyInfo.xcprivacy"}
 
-  s.requires_arc = true
-  s.swift_version = '5.7'
+#  s.requires_arc   = true
+  s.swift_version   = '5.7'
 end
