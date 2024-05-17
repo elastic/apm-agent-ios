@@ -23,12 +23,14 @@ class InstrumentationWrapper {
 
     var appMetrics: Any?
 
-#if os(iOS)
-    var vcInstrumentation: ViewControllerInstrumentation?
-    var netstatInjector: NetworkStatusInjector?
-    var applicationLifecycleInstrumentation: ApplicationLifecycleInstrumentation?
-#endif
-
+    #if os(iOS)
+      var vcInstrumentation: ViewControllerInstrumentation?
+      var applicationLifecycleInstrumentation: ApplicationLifecycleInstrumentation?
+    #endif
+    #if os(iOS) && !targetEnvironment(macCatalyst)
+      var netstatInjector: NetworkStatusInjector?
+    #endif
+  
     var urlSessionInstrumentation: URLSessionInstrumentation?
     let config: AgentConfigManager
 
@@ -50,7 +52,7 @@ class InstrumentationWrapper {
     }
 
     func initalize() {
-#if os(iOS)
+      #if os(iOS)
         if #available(iOS 13.0, *) {
             if config.instrumentation.enableSystemMetrics {
                 _ = MemorySampler()
@@ -63,40 +65,40 @@ class InstrumentationWrapper {
                 }
             }
         }
-#endif
-        if config.instrumentation.enableURLSessionInstrumentation {
-            initializeNetworkInstrumentation()
-        }
-#if os(iOS)
+      #endif
+      if config.instrumentation.enableURLSessionInstrumentation {
+          initializeNetworkInstrumentation()
+      }
+      #if os(iOS)
         vcInstrumentation?.swizzle()
-#endif // os(iOS)
+      #endif // os(iOS)
     }
 
     private func initializeNetworkInstrumentation() {
-#if os(iOS)
+      #if os(iOS) && !targetEnvironment(macCatalyst)
         do {
             let netstats =  try NetworkStatus()
             netstatInjector = NetworkStatusInjector(netstat: netstats)
         } catch {
             print("failed to initialize network connection status \(error)")
         }
-#endif
+      #endif
 
-        let config = URLSessionInstrumentationConfiguration(shouldRecordPayload: nil,
-                                                            shouldInstrument: nil,
-                                                            nameSpan: { request in
-            if let host = request.url?.host, let method = request.httpMethod {
-                return "\(method) \(host)"
-            }
-            return nil
-        },
-                                                            shouldInjectTracingHeaders: nil,
-                                                            createdRequest: { _, span in
-#if os(iOS)
-            if let injector = self.netstatInjector {
-                injector.inject(span: span)
-            }
-#endif
+      let config = URLSessionInstrumentationConfiguration(shouldRecordPayload: nil,
+                                                          shouldInstrument: nil,
+                                                          nameSpan: { request in
+          if let host = request.url?.host, let method = request.httpMethod {
+            return "\(method) \(host)"
+          }
+          return nil
+      },
+                                                          shouldInjectTracingHeaders: nil,
+                                                          createdRequest: { _, span in
+      #if os(iOS) && !targetEnvironment(macCatalyst)
+        if let injector = self.netstatInjector {
+          injector.inject(span: span)
+        }
+      #endif
         },
                                                             receivedResponse: { response, _, span in
             if let httpResponse = response as? HTTPURLResponse {

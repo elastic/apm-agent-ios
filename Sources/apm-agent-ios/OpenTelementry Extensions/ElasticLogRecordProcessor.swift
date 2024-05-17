@@ -40,8 +40,11 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
     var attributes = logRecord.attributes
     attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(
       SessionManager.instance.session())
-    attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue
-      .string(NetworkStatusManager().status())
+    #if os(iOS) && !targetEnvironment(macCatalyst)
+      attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue
+        .string(NetworkStatusManager().status())
+    #endif // os(iOS) && !targetEnvironment(macCatalyst)
+
 
     let appendedLogRecord = ReadableLogRecord(
       resource: logRecord.resource,

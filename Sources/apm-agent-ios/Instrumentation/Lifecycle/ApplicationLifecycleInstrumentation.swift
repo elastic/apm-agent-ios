@@ -12,6 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#if canImport(UIKit)
 import Foundation
 import UIKit
 import OpenTelemetryApi
@@ -95,3 +96,5 @@ public class ApplicationLifecycleInstrumentation: NSObject {
             .setAttributes(["lifecycle.state": AttributeValue.string(State.terminate.rawValue)])
             .emit()}
 }
+
+#endif
