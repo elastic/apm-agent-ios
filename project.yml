@@ -1,0 +1,68 @@
+name: apm-agent-ios
+options:
+  bundleIdPrefix: co.elastic
+  minimumXcodeGenVersion: 2.10.1
+packages:
+  opentelemetry-swift:
+    url: https://github.com/open-telemetry/opentelemetry-swift
+    exactVersion: 1.9.1
+  reachability:
+    url: https://github.com/ashleymills/Reachability.swift
+    from: 5.2.2
+  kronos:
+    url: https://github.com/MobileNativeFoundation/Kronos.git
+    from: 4.2.2
+  PLCrashReporter:
+    url: https://github.com/microsoft/plcrashreporter.git
+    from: 1.0.0
+targets:
+  MemorySampler:
+    type: library.static
+    supportedDestinations: [iOS]
+    deploymentTarget:
+      iOS: 13.0
+    sources: [Sources/Instrumentation/MemorySampler]
+    dependencies:
+      - package: opentelemetry-swift
+        products:
+          - OpenTelemetryApi
+          - OpenTelemetrySdk
+  CPUSampler:
+    type: library.static
+    supportedDestinations: [iOS]
+    deploymentTarget:
+      iOS: 13.0
+    sources: [Sources/instrumentation/CPUSampler]
+    dependencies:
+      - package: opentelemetry-swift
+        products:
+        - OpenTelemetryApi
+        - OpenTelemetrySdk
+  ElasticApm:
+    type: library.static
+    platform: iOS
+    supportedDestinations: [iOS]
+    deploymentTarget:
+      iOS: 13.0
+    sources: [Sources/apm-agent-ios]
+    dependencies:
+      - package: reachability
+        products:
+          - Reachability
+      - package: kronos
+        products:
+          - Kronos
+      - package: PLCrashReporter
+        product: CrashReporter
+      - package: opentelemetry-swift
+        products:
+          - OpenTelemetryApi
+          - OpenTelemetrySdk
+          - OpenTelemetryProtocolExporter
+          - PersistenceExporter
+          - URLSessionInstrumentation
+          - ResourceExtension
+      - target: MemorySampler
+        destinationFilters: [iOS]
+      - target: CPUSampler
+        destinationFilters: [iOS]
