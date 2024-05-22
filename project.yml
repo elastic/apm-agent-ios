@@ -5,7 +5,6 @@ options:
     iOS: "13.0"
     tvOS: "13.0"
     macOS: "10.15"
-    watchOS: "4"
 packages:
   opentelemetry-swift:
     url: https://github.com/open-telemetry/opentelemetry-swift
@@ -22,9 +21,11 @@ packages:
 targets:
   ElasticApm:
     type: framework
-    platform: [iOS, macOS, watchOS, tvOS]
+    platform: [iOS, macOS, tvOS]
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: "co.elastic.ElasticApm"
+      GENERATE_INFOPLIST_FILE: YES
+      CODE_SIGNING_ALLOWED: NO
     sources:
       - Sources/apm-agent-ios
       - path: Sources/apm-agent-ios/Resources/ElasticApm.h
