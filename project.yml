@@ -1,7 +1,11 @@
 name: apm-agent-ios
 options:
-  bundleIdPrefix: co.elastic
   minimumXcodeGenVersion: 2.10.1
+  deploymentTarget:
+    iOS: "13.0"
+    tvOS: "13.0"
+    macOS: "10.15"
+    watchOS: "4"
 packages:
   opentelemetry-swift:
     url: https://github.com/open-telemetry/opentelemetry-swift
@@ -16,35 +20,16 @@ packages:
     url: https://github.com/microsoft/plcrashreporter.git
     from: 1.0.0
 targets:
-  MemorySampler:
-    type: library.static
-    supportedDestinations: [iOS]
-    deploymentTarget:
-      iOS: 13.0
-    sources: [Sources/Instrumentation/MemorySampler]
-    dependencies:
-      - package: opentelemetry-swift
-        products:
-          - OpenTelemetryApi
-          - OpenTelemetrySdk
-  CPUSampler:
-    type: library.static
-    supportedDestinations: [iOS]
-    deploymentTarget:
-      iOS: 13.0
-    sources: [Sources/instrumentation/CPUSampler]
-    dependencies:
-      - package: opentelemetry-swift
-        products:
-        - OpenTelemetryApi
-        - OpenTelemetrySdk
   ElasticApm:
-    type: library.static
-    platform: iOS
-    supportedDestinations: [iOS]
-    deploymentTarget:
-      iOS: 13.0
-    sources: [Sources/apm-agent-ios]
+    type: framework
+    platform: [iOS, macOS, watchOS, tvOS]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: "co.elastic.ElasticApm"
+    sources:
+      - Sources/apm-agent-ios
+      - path: Sources/apm-agent-ios/Resources/ElasticApm.h
+        buildPhase: headers
+        headerVisibility: public
     dependencies:
       - package: reachability
         products:
@@ -62,7 +47,3 @@ targets:
           - PersistenceExporter
           - URLSessionInstrumentation
           - ResourceExtension
-      - target: MemorySampler
-        destinationFilters: [iOS]
-      - target: CPUSampler
-        destinationFilters: [iOS]

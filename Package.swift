@@ -14,8 +14,6 @@ let package = Package(
   products: [
     // Products define the executables and libraries a package produces, and make them visible to other package.
     .library(name: "ElasticApm", type: .static, targets: ["ElasticApm"]),
-    .library(name: "MemorySampler", type: .static, targets: ["MemorySampler"]),
-    .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
   ],
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.2.2"),
@@ -27,20 +25,6 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "MemorySampler",
-      dependencies: [
-        .product(name: "OpenTelemetryApi", package: "opentelemetry-swift"),
-        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift"),
-      ],
-      path: "Sources/Instrumentation/MemorySampler"),
-    .target(
-      name: "CPUSampler",
-      dependencies: [
-        .product(name: "OpenTelemetryApi", package: "opentelemetry-swift"),
-        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift"),
-      ],
-      path: "Sources/Instrumentation/CPUSampler"),
-    .target(
       name: "ElasticApm",
       dependencies: [
         .product(name: "OpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
@@ -50,8 +34,6 @@ let package = Package(
         .product(name: "Reachability", package: "Reachability.swift"),
         .product(name: "Kronos", package: "Kronos"),
         .product(name: "CrashReporter", package: "plcrashreporter"),
-        "MemorySampler",
-        "CPUSampler",
       ],
       path: "Sources/apm-agent-ios",
       resources: [
@@ -63,9 +45,5 @@ let package = Package(
       name: "ElasticApmTests",
       dependencies: ["ElasticApm"],
       path: "Sources/Tests/apm-agent-iosTests"),
-    .testTarget(
-      name: "MemorySamplerTests",
-      dependencies: ["MemorySampler"],
-      path: "Sources/Tests/memory-sampler-tests"),
   ]
 )
