@@ -22,4 +22,10 @@ Pod::Spec.new do |s|
 
 #  s.requires_arc   = true
   s.swift_version   = '5.7'
+
+# Dependencies
+  s.dependency = 'Kronos', '~>4.2.2'
+  s.dependency = 'plcrashreporter', '~>1.0.0'
+  s.dependency = 'Reachability', '~>5.2.0'
+
 end
