@@ -51,7 +51,10 @@ public class ElasticApmAgent {
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
   ) {
     crashConfig.sessionId = SessionManager.instance.session(false)
-    crashConfig.networkStatus = NetworkStatusManager().lastStatus
+    #if os(iOS) && !targetEnvironment(macCatalyst)
+      crashConfig.networkStatus = NetworkStatusManager().lastStatus
+    #endif // os(iOS) && !targetEnvironment(macCatalyst)
+
     _ = SessionManager.instance.session()  // initialize session
     agentConfigManager = AgentConfigManager(
       resource: AgentResource.get().merging(other: AgentEnvResource.get()), config: configuration,

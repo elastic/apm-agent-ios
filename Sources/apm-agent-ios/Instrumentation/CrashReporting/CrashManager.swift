@@ -21,6 +21,7 @@ import OpenTelemetryApi
 import OpenTelemetryProtocolExporterCommon
 import OpenTelemetryProtocolExporterGrpc
 import OpenTelemetrySdk
+
 import os.log
 
 struct CrashManager {
@@ -75,10 +76,10 @@ struct CrashManager {
     }
   }
 
-    public func initializeCrashReporter(configuration: CrashManagerConfiguration) {
+  public func initializeCrashReporter(configuration: CrashManagerConfiguration) {
     // It is strongly recommended that local symbolication only be enabled for non-release builds.
     // Use [] for release versions.
-    let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
+    let config = PLCrashReporterConfig(signalHandlerType: getSignalHandler(), symbolicationStrategy: [])
     guard let crashReporter = PLCrashReporter(configuration: config) else {
       print("Could not create an instance of PLCrashReporter")
       return
@@ -148,6 +149,15 @@ struct CrashManager {
     crashReporter.purgePendingCrashReport()
   }
 
+  
+  private func getSignalHandler() -> PLCrashReporterSignalHandlerType {
+    #if os(tvOS)
+      return .BSD
+    #else
+      return .mach
+    #endif
+  }
+  
   private func isDebuggerAttached() -> Bool {
     var info = kinfo_proc()
     let infoSize = UnsafeMutablePointer<Int>.allocate(capacity: 1)

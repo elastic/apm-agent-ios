@@ -12,6 +12,9 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+
+#if os(iOS) && !targetEnvironment(macCatalyst)
+
 import Foundation
 import NetworkStatus
 
@@ -52,3 +55,5 @@ class NetworkStatusManager {
     return status
   }
 }
+
+#endif // os(iOS) && !targetEnvironment(macCatalyst)

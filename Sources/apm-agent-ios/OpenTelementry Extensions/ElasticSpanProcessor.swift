@@ -25,6 +25,8 @@ public struct ElasticSpanProcessor: SpanProcessor {
   public let isStartRequired: Bool
   public let isEndRequired: Bool
 
+#if os(iOS) && !targetEnvironment(macCatalyst)
+
   static var netstatInjector: NetworkStatusInjector? = { () -> NetworkStatusInjector? in
     do {
       let netstats = try NetworkStatus()
@@ -39,6 +41,8 @@ public struct ElasticSpanProcessor: SpanProcessor {
       return nil
     }
   }()
+
+#endif // os(iOS) && !targetEnvironment(macCatalyst)
 
   public init(
     spanExporter: SpanExporter,
@@ -63,9 +67,13 @@ public struct ElasticSpanProcessor: SpanProcessor {
     span.setAttribute(
       key: ElasticAttributes.sessionId.rawValue,
       value: AttributeValue.string(SessionManager.instance.session()))
-    if let networkStatusInjector = Self.netstatInjector {
-      networkStatusInjector.inject(span: span)
-    }
+ 
+    #if os(iOS) && !targetEnvironment(macCatalyst)
+      if let networkStatusInjector = Self.netstatInjector {
+        networkStatusInjector.inject(span: span)
+      }
+    #endif // os(iOS) && !targetEnvironment(macCatalyst)
+
     span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
     processor.onStart(parentContext: parentContext, span: span)
   }
@@ -114,8 +122,11 @@ public struct ElasticSpanProcessor: SpanProcessor {
         return
       }
     } else {
-      span.setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
-                        value: AttributeValue.string(NetworkStatusManager().status()))
+      #if os(iOS) && !targetEnvironment(macCatalyst)
+
+        span.setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
+                          value: AttributeValue.string(NetworkStatusManager().status()))
+      #endif // os(iOS) && !targetEnvironment(macCatalyst)
     }
     processor.onEnd(span: span)
   }
