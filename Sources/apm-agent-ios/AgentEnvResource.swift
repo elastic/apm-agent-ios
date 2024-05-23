@@ -14,9 +14,9 @@
 
 import Foundation
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
-public struct AgentEnvResource {
+struct AgentEnvResource {
     public static let otelResourceAttributesEnv = "OTEL_RESOURCE_ATTRIBUTES"
     private static let labelListSplitter = Character(",")
     private static let labelKeyValueSplitter = Character("=")

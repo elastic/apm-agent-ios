@@ -15,7 +15,7 @@
 import Foundation
 import MetricKit
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
 #if os(iOS)
 

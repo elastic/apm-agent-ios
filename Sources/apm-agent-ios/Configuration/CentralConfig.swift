@@ -13,7 +13,7 @@
 //   limitations under the License.
 
 import Foundation
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
 public class CentralConfig {
     static let CentralConfigKey = "elastic.central.configuration"

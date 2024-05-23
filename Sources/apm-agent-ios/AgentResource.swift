@@ -20,11 +20,11 @@ import AppKit
 #else
 import UIKit
 #endif
-import ResourceExtension
+@_implementationOnly import ResourceExtension
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
-public class AgentResource {
+class AgentResource {
   public static func get() -> Resource {
     let defaultResource = DefaultResources().get()
     var overridingAttributes = [

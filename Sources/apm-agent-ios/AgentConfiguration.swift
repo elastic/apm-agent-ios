@@ -1,6 +1,6 @@
 import Foundation
-import OpenTelemetrySdk
-import PersistenceExporter
+@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import PersistenceExporter
 
 public struct AgentConfiguration {
   init() {}

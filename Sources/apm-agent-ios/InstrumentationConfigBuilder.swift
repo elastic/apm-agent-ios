@@ -13,7 +13,7 @@
 //   limitations under the License.
 
 import Foundation
-import PersistenceExporter
+@_implementationOnly import PersistenceExporter
 
 public class InstrumentationConfigBuilder {
   var enableCrashReporting: Bool?
@@ -55,7 +55,8 @@ public class InstrumentationConfigBuilder {
     return self
   }
 
-  public func withPersistentStorageConfiguration(_ config: PersistencePerformancePreset) -> Self {
+  //todo: make public
+  func withPersistentStorageConfiguration(_ config: PersistencePerformancePreset) -> Self {
     self.persistentStorageConfig = config
     return self
   }

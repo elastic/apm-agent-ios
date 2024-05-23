@@ -5,6 +5,9 @@ options:
     iOS: "13.0"
     tvOS: "13.0"
     macOS: "10.15"
+settings:
+  GENERATE_INFOPLIST_FILE: YES
+  BUILD_LIBRARY_FOR_DISTRIBUTION: YES
 packages:
   opentelemetry-swift:
     url: https://github.com/open-telemetry/opentelemetry-swift
@@ -23,14 +26,9 @@ targets:
     type: framework
     platform: [iOS, macOS, tvOS]
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: "co.elastic.ElasticApm"
-      GENERATE_INFOPLIST_FILE: YES
-      CODE_SIGNING_ALLOWED: NO
+      BUILD_LIBRARY_FOR_DISTRIBUTION: YES
     sources:
       - Sources/apm-agent-ios
-      - path: Sources/apm-agent-ios/Resources/ElasticApm.h
-        buildPhase: headers
-        headerVisibility: public
     dependencies:
       - package: reachability
         products:

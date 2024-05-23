@@ -13,7 +13,7 @@
 //   limitations under the License.
 
 import Foundation
-import PersistenceExporter
+@_implementationOnly import PersistenceExporter
 
 public struct InstrumentationConfiguration {
   public var enableCrashReporting = true
@@ -22,6 +22,6 @@ public struct InstrumentationConfiguration {
   public var enableAppMetricInstrumentation = true
   public var enableSystemMetrics = true
   public var enableLifecycleEvents = true
-  public var storageConfiguration: PersistencePerformancePreset = .default
+  var storageConfiguration: PersistencePerformancePreset = .default
   public init() {}
 }

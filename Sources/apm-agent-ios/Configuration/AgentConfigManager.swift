@@ -13,8 +13,8 @@
 //   limitations under the License.
 
 import Foundation
-import OpenTelemetrySdk
-import Logging
+@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import Logging
 
 enum CentralConfigResponse: Int {
     case okay = 200

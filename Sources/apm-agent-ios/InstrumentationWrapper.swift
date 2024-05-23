@@ -13,8 +13,8 @@
 //   limitations under the License.
 
 import Foundation
-import URLSessionInstrumentation
-import NetworkStatus
+@_implementationOnly import URLSessionInstrumentation
+@_implementationOnly import NetworkStatus
 import OpenTelemetryApi
 
 class InstrumentationWrapper {

@@ -14,9 +14,9 @@
 
 import Foundation
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
-public struct ElasticLogRecordProcessor: LogRecordProcessor {
+struct ElasticLogRecordProcessor: LogRecordProcessor {
   var processor: BatchLogRecordProcessor
   var filters = [SignalFilter<ReadableLogRecord>]()
   internal init(

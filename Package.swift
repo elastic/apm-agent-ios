@@ -7,7 +7,8 @@ let package = Package(
   name: "apm-agent-ios",
   platforms: [
     .iOS(.v13),
-    .tvOS(.v13)
+    .tvOS(.v13),
+    .macOS(.v10_15)
   ],
   products: [
     // Products define the executables and libraries a package produces, and make them visible to other package.
@@ -16,7 +17,7 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.2.2"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.9.1"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift", branch: "api-module-evolution"),
     .package(url: "https://github.com/MobileNativeFoundation/Kronos.git", .upToNextMajor(from: "4.2.2")),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.0.0")),
@@ -36,7 +37,9 @@ let package = Package(
       path: "Sources/apm-agent-ios",
       resources: [
         .process("Resources/PrivacyInfo.xcprivacy")
-      ]
+      ],
+      cSettings: [.define("BUILD_LIBRARY_FOR_DISTRIBUTION", to: "YES")],
+      swiftSettings: [.unsafeFlags(["-enable-library-evolution", "-emit-module-interface"])]
 //      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
     .testTarget(

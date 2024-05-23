@@ -13,8 +13,8 @@
 //   limitations under the License.
 
 import Foundation
-import OpenTelemetrySdk
-import Kronos
+@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import Kronos
 import os.log
 
 class NTPClock: OpenTelemetrySdk.Clock {

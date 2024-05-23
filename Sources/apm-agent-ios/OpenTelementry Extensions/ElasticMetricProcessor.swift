@@ -14,9 +14,9 @@
 
 import Foundation
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
-public class ElasticMetricProcessor: MetricProcessor {
+class ElasticMetricProcessor: MetricProcessor {
 
   private let lock: NSLock
   var metrics: [Metric]

@@ -13,7 +13,7 @@
 //   limitations under the License.
 
 import Foundation
-import Logging
+@_implementationOnly import Logging
 
 class CentralConfigFetcher {
 

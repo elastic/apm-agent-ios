@@ -13,12 +13,12 @@
 //   limitations under the License.
 
 import Foundation
-import NetworkStatus
+@_implementationOnly import NetworkStatus
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 import os.log
 
-public struct ElasticSpanProcessor: SpanProcessor {
+struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
   var exporter: SpanExporter
   var filters = [SignalFilter<ReadableSpan>]()

@@ -16,7 +16,7 @@
 #if os(iOS) && !targetEnvironment(macCatalyst)
 
 import Foundation
-import NetworkStatus
+@_implementationOnly import NetworkStatus
 
 class NetworkStatusManager {
   static private var networkStatusKey = "co.elastic.network.status"

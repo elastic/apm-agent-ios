@@ -1,10 +1,10 @@
-import CrashReporter
+@_implementationOnly import CrashReporter
 import Foundation
-import NIO
+@_implementationOnly import NIO
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 import os.log
-import Kronos
+@_implementationOnly import Kronos
 
 public class ElasticApmAgent {
  public static let name = "apm-agent-ios"

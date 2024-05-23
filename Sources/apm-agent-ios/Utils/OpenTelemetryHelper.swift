@@ -14,10 +14,10 @@
 
 import Foundation
 import OpenTelemetryApi
-import OpenTelemetrySdk
-import ResourceExtension
-import GRPC
-import NIO
+@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import ResourceExtension
+@_implementationOnly import GRPC
+@_implementationOnly import NIO
 
 public class OpenTelemetryHelper {
     struct Headers {
@@ -48,7 +48,7 @@ public class OpenTelemetryHelper {
         return userAgent
     }
 
-    public static func getChannel(with config: AgentConfiguration, group: EventLoopGroup) -> ClientConnection {
+    static func getChannel(with config: AgentConfiguration, group: EventLoopGroup) -> ClientConnection {
 
         if config.collectorTLS {
              return ClientConnection.usingPlatformAppropriateTLS(for: group)

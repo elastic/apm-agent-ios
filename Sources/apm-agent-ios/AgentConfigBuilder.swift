@@ -13,8 +13,8 @@
 //   limitations under the License.
 
 import Foundation
-import OpenTelemetrySdk
-import PersistenceExporter
+@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import PersistenceExporter
 
 public class AgentConfigBuilder {
   var enableAgent: Bool?
@@ -55,19 +55,19 @@ public class AgentConfigBuilder {
     return self
   }
 
-  public func addSpanFilter(_ shouldInclude: @escaping (ReadableSpan) -> Bool) -> Self {
-    spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
-    return self
-  }
-  public func addMetricFilter(_ shouldInclude: @escaping (Metric) -> Bool) -> Self {
-    metricFilters.append(SignalFilter<Metric>(shouldInclude))
-    return self
-  }
+//  public func addSpanFilter(_ shouldInclude: @escaping (ReadableSpan) -> Bool) -> Self {
+//    spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
+//    return self
+//  }
+//  public func addMetricFilter(_ shouldInclude: @escaping (Metric) -> Bool) -> Self {
+//    metricFilters.append(SignalFilter<Metric>(shouldInclude))
+//    return self
+//  }
 
-  public func addLogFilter(_ shouldInclude: @escaping (ReadableLogRecord) -> Bool) -> Self {
-    logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
-    return self
-  }
+//  public func addLogFilter(_ shouldInclude: @escaping (ReadableLogRecord) -> Bool) -> Self {
+//    logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
+//    return self
+//  }
 
   public func build() -> AgentConfiguration {
 

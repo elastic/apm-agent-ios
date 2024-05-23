@@ -12,15 +12,16 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-import CrashReporter
+@_implementationOnly import CrashReporter
 import Foundation
-import GRPC
-import Logging
-import NIO
+@_implementationOnly import GRPC
+@_implementationOnly import Logging
+
+@_implementationOnly import NIO
 import OpenTelemetryApi
-import OpenTelemetryProtocolExporterCommon
-import OpenTelemetryProtocolExporterGrpc
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetryProtocolExporterCommon
+@_implementationOnly import OpenTelemetryProtocolExporterGrpc
+@_implementationOnly import OpenTelemetrySdk
 
 import os.log
 

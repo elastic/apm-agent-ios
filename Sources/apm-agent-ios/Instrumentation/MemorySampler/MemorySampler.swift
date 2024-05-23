@@ -14,7 +14,7 @@
 
 import Foundation
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
 public class MemorySampler {
     let meter: Meter

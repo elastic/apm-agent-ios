@@ -14,9 +14,9 @@
 
 #if os(iOS)
 import Foundation
-import NIOConcurrencyHelpers
+@_implementationOnly import NIOConcurrencyHelpers
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 import SwiftUI
 import UIKit
 import os

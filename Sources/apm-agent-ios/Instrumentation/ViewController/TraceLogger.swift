@@ -14,7 +14,7 @@
 #if os(iOS)
 import Foundation
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 import SwiftUI
 import UIKit
 import os

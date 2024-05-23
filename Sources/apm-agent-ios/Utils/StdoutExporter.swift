@@ -15,9 +15,9 @@
 
 import Foundation
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
-public class StdoutExporter: SpanExporter {
+class StdoutExporter: SpanExporter {
 
     let isDebug: Bool
 

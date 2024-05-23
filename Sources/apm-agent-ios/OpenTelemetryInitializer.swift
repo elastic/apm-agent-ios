@@ -13,14 +13,14 @@
 //   limitations under the License.
 
 import Foundation
-import GRPC
-import Logging
-import NIO
+@_implementationOnly import GRPC
+@_implementationOnly import Logging
+@_implementationOnly import NIO
 import OpenTelemetryApi
-import OpenTelemetryProtocolExporterCommon
-import OpenTelemetryProtocolExporterGrpc
-import OpenTelemetrySdk
-import PersistenceExporter
+@_implementationOnly import OpenTelemetryProtocolExporterCommon
+@_implementationOnly import OpenTelemetryProtocolExporterGrpc
+@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import PersistenceExporter
 
 class OpenTelemetryInitializer {
   static let logLabel = "Elastic-OTLP-Exporter"
