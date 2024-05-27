@@ -27,5 +27,6 @@ Pod::Spec.new do |s|
   s.dependency = 'Kronos', '~>4.2.2'
   s.dependency = 'plcrashreporter', '~>1.0.0'
   s.dependency = 'Reachability', '~>5.2.0'
+  s.dependency = 'OpentelemetrySwift', '1.9.1'
 
 end
