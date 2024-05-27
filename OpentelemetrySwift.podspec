@@ -18,8 +18,7 @@ Pod::Spec.new do |s|
     :tag => 'v'+s.version.to_s
   }
 
-  s.source_files    = 'Sources/apm-agent-ios/**/*.swift'
-  s.resource_bundle = {"apm-agent-ios" => "Sources/apm-agent-ios/Resources/PrivacyInfo.xcprivacy"}
+  s.source_files    = 'Sources/**/*.swift'
 
 #  s.requires_arc   = true
   s.swift_version   = '5.7'
