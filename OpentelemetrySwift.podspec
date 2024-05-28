@@ -6,9 +6,8 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://opentelemetry.io'
   s.license          = { :type => 'Apache', :file => 'LICENSE' }
   s.author           = {
-     'Bryce Buchanan' => 'bryce.buchanan@elastic.co'
-     'Ignacio Bonafonte' => 'nachob@mac.com'
-     'Vinod Vydier' => 'vvydier@gmail.com'
+     'Bryce Buchanan' => 'bryce.buchanan@elastic.co',
+     'Pavel Aliferka' => 'pavel.aliferka@elastic.co'
   }
 
 # Source Info
