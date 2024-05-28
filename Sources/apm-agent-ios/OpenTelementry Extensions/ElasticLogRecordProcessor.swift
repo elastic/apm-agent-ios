@@ -18,10 +18,10 @@ import OpenTelemetryApi
 
 struct ElasticLogRecordProcessor: LogRecordProcessor {
   var processor: BatchLogRecordProcessor
-  var filters = [SignalFilter<ReadableLogRecord>]()
+  var filters = [SignalFilter<LogRecordData>]()
   internal init(
     logRecordExporter: LogRecordExporter,
-    _ filters: [SignalFilter<ReadableLogRecord>] = [SignalFilter<ReadableLogRecord>](),
+    _ filters: [SignalFilter<LogRecordData>] = [SignalFilter<LogRecordData>](),
     scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048,
     maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord]) -> Void)? = nil
   ) {
@@ -46,21 +46,27 @@ struct ElasticLogRecordProcessor: LogRecordProcessor {
     #endif // os(iOS) && !targetEnvironment(macCatalyst)
 
 
-    let appendedLogRecord = ReadableLogRecord(
-      resource: logRecord.resource,
-      instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
-      timestamp: logRecord.timestamp,
-      observedTimestamp: logRecord.observedTimestamp,
-      spanContext: logRecord.spanContext,
-      severity: logRecord.severity,
-      body: logRecord.body,
-      attributes: attributes)
-
-      for filter in filters where !filter.shouldInclude(appendedLogRecord) {
+    let appendedLogRecordData = LogRecordData(attributes: attributes,
+                                          body: logRecord.body,
+                                          instrumentationScopeName: logRecord.instrumentationScopeInfo.name,
+                                          instrumentationScopeVersion: logRecord.instrumentationScopeInfo.version,
+                                          timestamp: logRecord.timestamp,
+                                          observedTimestamp: logRecord.observedTimestamp,
+                                          spanContext: logRecord.spanContext,
+                                          severity: logRecord.severity)
+      
+      for filter in filters where !filter.shouldInclude(appendedLogRecordData) {
         return
       }
-
-    processor.onEmit(logRecord: appendedLogRecord)
+    
+    processor.onEmit(logRecord: ReadableLogRecord(resource: logRecord.resource, 
+                                                  instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
+                                                  timestamp: logRecord.timestamp,
+                                                  observedTimestamp: logRecord.observedTimestamp,
+                                                  spanContext: logRecord.spanContext,
+                                                  severity: logRecord.severity,
+                                                  body: logRecord.body,
+                                                  attributes: appendedLogRecordData.attributes))
 
   }
 

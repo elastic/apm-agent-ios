@@ -13,10 +13,10 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetryApi
 @_implementationOnly import GRPC
 @_implementationOnly import Logging
 @_implementationOnly import NIO
-import OpenTelemetryApi
 @_implementationOnly import OpenTelemetryProtocolExporterCommon
 @_implementationOnly import OpenTelemetryProtocolExporterGrpc
 @_implementationOnly import OpenTelemetrySdk
@@ -48,20 +48,20 @@ class OpenTelemetryInitializer {
   // swiftlint:disable:next function_body_length
   func initialize(_ configuration: AgentConfigManager) {
 
-    var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
-      SignalFilter<ReadableSpan>({ [self] _ in
+    var traceSampleFilter: [SignalFilter<Span>] = [
+      SignalFilter<Span>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]
 
-    var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
-      SignalFilter<ReadableLogRecord>({ [self] _ in
+    var logSampleFliter: [SignalFilter<LogRecordData>] = [
+      SignalFilter<LogRecordData>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]
 
-    var metricSampleFilter: [SignalFilter<Metric>] = [
-      SignalFilter<Metric>({ [self] _ in
+    var metricSampleFilter: [SignalFilter<MetricData>] = [
+      SignalFilter<MetricData>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]

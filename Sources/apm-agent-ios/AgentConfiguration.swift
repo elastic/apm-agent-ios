@@ -1,6 +1,5 @@
 import Foundation
-@_implementationOnly import OpenTelemetrySdk
-@_implementationOnly import PersistenceExporter
+import OpenTelemetryApi
 
 public struct AgentConfiguration {
   init() {}
@@ -11,9 +10,9 @@ public struct AgentConfiguration {
   var auth: String?
   var sampleRate: Double = 1.0
 
-  var spanFilters = [SignalFilter<ReadableSpan>]()
-  var logFilters = [SignalFilter<ReadableLogRecord>]()
-  var metricFilters = [SignalFilter<Metric>]()
+  var spanFilters = [SignalFilter<Span>]()
+  var logFilters = [SignalFilter<LogRecordData>]()
+  var metricFilters = [SignalFilter<MetricData>]()
 
   public func urlComponents() -> URLComponents {
 

@@ -21,7 +21,7 @@ import os.log
 struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
   var exporter: SpanExporter
-  var filters = [SignalFilter<ReadableSpan>]()
+  var filters = [SignalFilter<Span>]()
   public let isStartRequired: Bool
   public let isEndRequired: Bool
 
@@ -46,7 +46,7 @@ struct ElasticSpanProcessor: SpanProcessor {
 
   public init(
     spanExporter: SpanExporter,
-    _ filters: [SignalFilter<ReadableSpan>] = [SignalFilter<ReadableSpan>](),
+    _ filters: [SignalFilter<Span>] = [SignalFilter<Span>](),
     scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
     maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512,
     willExportCallback: ((inout [SpanData]) -> Void)? = nil

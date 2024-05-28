@@ -15,6 +15,12 @@
 import Foundation
 @_implementationOnly import PersistenceExporter
 
+
+public enum PersistentStorageConfigurationOption {
+  case lowImpact
+  case instantDelivery
+}
+
 public class InstrumentationConfigBuilder {
   var enableCrashReporting: Bool?
   var enableURLSessionInstrumentation: Bool?
@@ -55,9 +61,13 @@ public class InstrumentationConfigBuilder {
     return self
   }
 
-  //todo: make public
-  func withPersistentStorageConfiguration(_ config: PersistencePerformancePreset) -> Self {
-    self.persistentStorageConfig = config
+  public func withPersistentStorageConfiguration(_ option: PersistentStorageConfigurationOption = .lowImpact) -> Self {
+    switch option {
+    case .instantDelivery:
+      self.persistentStorageConfig = .instantDataDelivery
+    default:
+      self.persistentStorageConfig = .lowRuntimeImpact
+    }
     return self
   }
 
