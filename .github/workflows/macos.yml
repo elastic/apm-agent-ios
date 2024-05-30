@@ -13,6 +13,10 @@ permissions:
 jobs:
   macos:
     runs-on: macos-12
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
     steps:
     - uses: maxim-lobanov/setup-xcode@v1
       with:
@@ -34,3 +38,10 @@ jobs:
         path: |
           .ci/snapshoty.yml
           dist/**
+
+    - name: generate build provenance
+      # If no PR event or if a PR event that's caused by a non-fork and non dependabot actor
+      if: github.event_name != 'pull_request' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' )
+      uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
+      with:
+        subject-path: "${{ github.workspace }}/dist/**"
