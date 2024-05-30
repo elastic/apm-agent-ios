@@ -26,16 +26,6 @@ jobs:
       run: |
        xcodebuild -scheme apm-agent-ios -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' test
 
-    - name: xcodegen
-      uses: xavierLowmiller/xcodegen-action@1.1.3
-      with:
-        spec: project.yaml
-        quiet: true
-        version: '2.41.0'
-    - name: generate xcframeworks
-      run : |
-        ./ci/scripts/xcframework.sh
-
     - name: Run package snapshots
       run: .ci/scripts/package.sh
 

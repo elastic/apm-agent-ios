@@ -1,0 +1,29 @@
+name: xcframework builder
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - "main"
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - uses: actions/checkout@v4
+       - name: xcodegen
+      uses: xavierLowmiller/xcodegen-action@1.1.3
+      with:
+        spec: project.yml
+        quiet: true
+        version: '2.41.0'
+    - name: generate xcframeworks
+      run : |
+        ./ci/scripts/xcframework.sh
