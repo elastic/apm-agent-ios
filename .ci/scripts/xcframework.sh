@@ -5,14 +5,14 @@ trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 xcodebuild clean archive -scheme ElasticApm_iOS \
     -configuration Release \
-    -destination 'generic/platform=iOS' \
+    -destination 'platform=iOS' \
     -archivePath ./build/Release-iOS.xcarchive \
     -derivedDataPath ./build/derivedDataPath \
     SKIP_INSTALL=NO
     
 xcodebuild clean archive -scheme ElasticApm_iOS \
     -configuration Release \
-    -destination 'generic/platform=iOS Simulator' \
+    -destination 'platform=iOS Simulator' \
     -archivePath ./build/Release-iphonesimulator.xcarchive \
     -derivedDataPath ./build/derivedDataPath \
     SKIP_INSTALL=NO
@@ -25,7 +25,7 @@ xcodebuild -create-xcframework \
 
 xcodebuild clean archive -scheme ElasticApm_macOS \
     -configuration Release \
-    -destination 'generic/platform=macOS' \
+    -destination 'platform=macOS' \
     -archivePath ./build/Release-macOS.xcarchive \
     -derivedDataPath ./build/derivedDataPath \
     SKIP_INSTALL=NO
@@ -36,7 +36,7 @@ xcodebuild -create-xcframework \
 
 xcodebuild clean archive -scheme ElasticApm_tvOS \
     -configuration Release \
-    -destination 'generic/platform=tvOS' \
+    -destination 'platform=tvOS' \
     -archivePath ./build/Release-tvOS.xcarchive \
     -derivedDataPath ./build/derivedDataPath \
     SKIP_INSTALL=NO

@@ -1,15 +1,12 @@
 name: build
-
 on:
   workflow_dispatch:
   pull_request:
   push:
     branches:
       - "main"
-
 permissions:
   contents: read
-
 jobs:
   macos:
     runs-on: macos-latest
@@ -18,7 +15,6 @@ jobs:
       with:
         xcode-version: latest-stable
     - uses: actions/checkout@v4
-
     - name: Run build
       run: .ci/scripts/build.sh
 

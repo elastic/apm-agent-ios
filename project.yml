@@ -27,6 +27,7 @@ targets:
     platform: [iOS, macOS, tvOS]
     settings:
       BUILD_LIBRARY_FOR_DISTRIBUTION: YES
+      SWIFT_VERSION: 5
     sources:
       - Sources/apm-agent-ios
     dependencies:
