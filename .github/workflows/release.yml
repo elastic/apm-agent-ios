@@ -37,7 +37,7 @@ jobs:
       - name: Generate build provenance
         uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
         with:
-          subject-path: "${{ github.workspace }}/**/*"
+          subject-path: "${{ github.workspace }}/dist/*"
 
       - name: Create github release (only for tag release)
         if: startsWith(github.ref, 'refs/tags')
