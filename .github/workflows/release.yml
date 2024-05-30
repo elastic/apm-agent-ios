@@ -51,7 +51,6 @@ jobs:
           echo "INFO: Create '$GITHUB_REF_NAME' GitHub release (latest=$IS_LATEST)."
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
-            --notes-file "$RELEASE_NOTES_FILE" \
             --latest=$IS_LATEST \
             ./dist/*
         env:
