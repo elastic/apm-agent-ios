@@ -24,35 +24,35 @@ jobs:
                   spec: project.yml
                   quiet: false
                   version: '2.41.0'
-            - name: generate iOS xcframeworks
-              run: |
-                  xcodebuild clean archive -scheme ElasticApm_iOS \
-                      -configuration Release \
-                      -destination 'generic/platform=iOS' \
-                      -archivePath ./build/Release-iOS.xcarchive \
-                      -derivedDataPath ./build/derivedDataPath \
-                      SKIP_INSTALL=NO
-                  xcodebuild clean archive -scheme ElasticApm_iOS \
-                      -configuration Release \
-                      -destination 'generic/platform=iOS Simulator' \
-                      -archivePath ./build/Release-iphonesimulator.xcarchive \
-                      -derivedDataPath ./build/derivedDataPath \
-                      SKIP_INSTALL=NO
-                  xcodebuild -create-xcframework \
-                          -framework ${{ github.workspace }}/build/Release-iOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
-                          -framework ${{ github.workspace }}/build/Release-iphonesimulator.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
-                          -output ${{ github.workspace }}/package/ElasticApm_iOS.xcframework
-            - name: generate macOS xcframework
-              run: |
-                  xcodebuild clean archive -scheme ElasticApm_macOS \
-                      -configuration Release \
-                      -destination 'generic/platform=macOS' \
-                      -archivePath ./build/Release-macOS.xcarchive \
-                      -derivedDataPath ./build/derivedDataPath \
-                      SKIP_INSTALL=NO
-                  xcodebuild -create-xcframework \
-                          -framework $(pwd)/build/Release-macOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
-                          -output ./package/ElasticApm_macOS.xcframework
+#            - name: generate iOS xcframeworks
+#              run: |
+#                  xcodebuild clean archive -scheme ElasticApm_iOS \
+#                      -configuration Release \
+#                      -destination 'generic/platform=iOS' \
+#                      -archivePath ./build/Release-iOS.xcarchive \
+#                      -derivedDataPath ./build/derivedDataPath \
+#                      SKIP_INSTALL=NO
+#                  xcodebuild clean archive -scheme ElasticApm_iOS \
+#                      -configuration Release \
+#                      -destination 'generic/platform=iOS Simulator' \
+#                      -archivePath ./build/Release-iphonesimulator.xcarchive \
+#                      -derivedDataPath ./build/derivedDataPath \
+#                      SKIP_INSTALL=NO
+#                  xcodebuild -create-xcframework \
+#                          -framework ${{ github.workspace }}/build/Release-iOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
+#                          -framework ${{ github.workspace }}/build/Release-iphonesimulator.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
+#                          -output ${{ github.workspace }}/package/ElasticApm_iOS.xcframework
+#            - name: generate macOS xcframework
+#              run: |
+#                  xcodebuild clean archive -scheme ElasticApm_macOS \
+#                      -configuration Release \
+#                      -destination 'generic/platform=macOS' \
+#                      -archivePath ./build/Release-macOS.xcarchive \
+#                      -derivedDataPath ./build/derivedDataPath \
+#                      SKIP_INSTALL=NO
+#                  xcodebuild -create-xcframework \
+#                          -framework $(pwd)/build/Release-macOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
+#                          -output ./package/ElasticApm_macOS.xcframework
             - name: generate tvOS xcframework
               run: |
                 xcodebuild clean archive -scheme ElasticApm_tvOS \
@@ -71,19 +71,21 @@ jobs:
                 APP_VERSION="$(sed -n 's/public static let ELASTIC_SWIFT_AGENT_VERSION : String = \"\(.*\)\"/\1/p' ./Sources/apm-agent-ios/Version.swift | sed -e 's/^[[:space:]]*//')"
                 rm -rf "${BASE_PROJECT}/dist"
                 mkdir -p "${BASE_PROJECT}/dist"
+
                 cd "${BASE_PROJECT}"
-                tar -czf "$(pwd)/dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
-                tar -czf "$(pwd)/dist/ElasticApm_macOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_macOS.xcframework
-                tar -czf "$(pwd)/dist/ElasticApm_iOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_iOS.xcframework
+                echo $(pwd)
+                tar -czf "./dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
+#                tar -czf "./dist/ElasticApm_macOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_macOS.xcframework
+#                tar -czf "./dist/ElasticApm_iOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_iOS.xcframework
             - name: Generate tvOS Framework provenance
               uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
               with:
                 subject-path: "${{ github.workspace }}/dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz"
-            - name: Generate iOS Framework provenance
-              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
-              with:
-                subject-path: "${{ github.workspace }}/build/ElasticApm_iOS-${APP_VERSION}.tar.gz"
-            - name: Generate macOS Framework provenance
-              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
-              with:
-                subject-path: "${{ github.workspace }}/build/ElasticApm_macOS-${APP_VERSION}.tar.gz"
+#            - name: Generate iOS Framework provenance
+#              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
+#              with:
+#                subject-path: "${{ github.workspace }}/build/ElasticApm_iOS-${APP_VERSION}.tar.gz"
+#            - name: Generate macOS Framework provenance
+#              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
+#              with:
+#                subject-path: "${{ github.workspace }}/build/ElasticApm_macOS-${APP_VERSION}.tar.gz"
