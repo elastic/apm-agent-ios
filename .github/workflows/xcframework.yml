@@ -76,7 +76,7 @@ jobs:
             - name: Generate tvOS Framework provenance
               uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
               with:
-                subject-path: "${{ github.workspace }}/dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz"
+                subject-path: "${{ github.workspace }}/dist/ElasticApm_tvOS-*.tar.gz"
 #            - name: Generate iOS Framework provenance
 #              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
 #              with:
@@ -85,3 +85,9 @@ jobs:
 #              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
 #              with:
 #                subject-path: "${{ github.workspace }}/build/ElasticApm_macOS-${APP_VERSION}.tar.gz"
+            - uses: actions/upload-artifact@v4
+              with:
+                name: snapshoty
+                path: |
+                    .ci/snapshoty.yml
+                    dist/**
