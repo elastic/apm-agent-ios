@@ -11,7 +11,7 @@ readonly RELATIVE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 
 readonly BASE_PROJECT="$(dirname $(dirname "${RELATIVE_DIR}"))"
 
 # Extract application version
-APP_VERSION="$(sed -n 's/public static let ELASTIC_SWIFT_AGENT_VERSION : String = \"\(.*\)\"/\1/p' ./Sources/apm-agent-ios/Version.swift | sed -e 's/^[[:space:]]*//')"
+APP_VERSION="$(sed -n 's/public static let elasticSwiftAgentVersion : String = \"\(.*\)\"/\1/p' ./Sources/apm-agent-ios/Version.swift | sed -e 's/^[[:space:]]*//')"
 
 # Create a dist folder
 rm -rf "${BASE_PROJECT}/dist"

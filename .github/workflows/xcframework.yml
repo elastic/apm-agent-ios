@@ -65,29 +65,46 @@ jobs:
                         -framework $(pwd)/build/Release-tvOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                         -output ./package/ElasticApm_tvOS.xcframework
             - name: Package frameworks
+              id: package-frameworks
               run: |
-                APP_VERSION="$(sed -n 's/public static let ELASTIC_SWIFT_AGENT_VERSION : String = \"\(.*\)\"/\1/p' ./Sources/apm-agent-ios/Version.swift | sed -e 's/^[[:space:]]*//')"
+                av=`sed -n -E "s/public static let elasticSwiftAgentVersion: String = \"(.*)\"/\1/p" Sources/apm-agent-ios/Version.swift  | sed -e 's/^[[:space:]]*//'`
+                echo "using version ${av}"
+                echo "APP_VERSION=${av}" >> "$GITHUB_ENV"
                 rm -rf "./dist"
                 mkdir -p "./dist"
                 echo $(pwd)
-                tar -czf "./dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
+                tar -czf "./dist/ElasticApm_tvOS-${av}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
+                ls ./dist
 #                tar -czf "./dist/ElasticApm_macOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_macOS.xcframework
 #                tar -czf "./dist/ElasticApm_iOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_iOS.xcframework
             - name: Generate tvOS Framework provenance
               uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
               with:
-                subject-path: "${{ github.workspace }}/dist/ElasticApm_tvOS-*.tar.gz"
+                subject-path: "./dist/ElasticApm_tvOS-${{ APP_VERSION }}.tar.gz"
 #            - name: Generate iOS Framework provenance
 #              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
+#              env:
+#                APP_VERSION: ${{ steps.package-frameworks.outputs.APP_VERSION }}
 #              with:
 #                subject-path: "${{ github.workspace }}/build/ElasticApm_iOS-${APP_VERSION}.tar.gz"
 #            - name: Generate macOS Framework provenance
 #              uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
+#              env:
+#                APP_VERSION: ${{ steps.package-frameworks.outputs.APP_VERSION }}
 #              with:
 #                subject-path: "${{ github.workspace }}/build/ElasticApm_macOS-${APP_VERSION}.tar.gz"
             - uses: actions/upload-artifact@v4
               with:
-                name: snapshoty
+                name: ElasticAPM_macOS-${APP_VERSION}.tar.gz
                 path: |
-                    .ci/snapshoty.yml
-                    dist/**
+                    dist/ElasticAPM_macOS-${APP_VERSION}.tar.gz
+            - uses: actions/upload-artifact@v4
+              with:
+                name: ElasticAPM_tvOS-${APP_VERSION}.tar.gz
+                path: |
+                    dist/ElasticAPM_tvOS-${APP_VERSION}.tar.gz
+            - uses: actions/upload-artifact@v4
+              with:
+                name: ElasticAPM_iOS-${APP_VERSION}.tar.gz
+                path: |
+                    dist/ElasticAPM_iOS-${APP_VERSION}.tar.gz
