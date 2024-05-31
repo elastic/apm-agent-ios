@@ -66,13 +66,9 @@ jobs:
                         -output ./package/ElasticApm_tvOS.xcframework
             - name: Package frameworks
               run: |
-                readonly RELATIVE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-                readonly BASE_PROJECT="$(dirname $(dirname "${RELATIVE_DIR}"))"
                 APP_VERSION="$(sed -n 's/public static let ELASTIC_SWIFT_AGENT_VERSION : String = \"\(.*\)\"/\1/p' ./Sources/apm-agent-ios/Version.swift | sed -e 's/^[[:space:]]*//')"
-                rm -rf "${BASE_PROJECT}/dist"
-                mkdir -p "${BASE_PROJECT}/dist"
-
-                cd "${BASE_PROJECT}"
+                rm -rf "./dist"
+                mkdir -p "./dist"
                 echo $(pwd)
                 tar -czf "./dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
 #                tar -czf "./dist/ElasticApm_macOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_macOS.xcframework
