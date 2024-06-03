@@ -1,15 +1,15 @@
 ---
 name: xcframework builder
 on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - "main"
+    workflow_dispatch:
+    pull_request:
+    push:
+      branches:
+        - "main"
 permissions:
-  attestations: write
-  contents: read
-  id-token: write
+    attestations: write
+    contents: read
+    id-token: write
 jobs:
     macos:
         runs-on: macos-latest
@@ -67,30 +67,29 @@ jobs:
             - name: Package frameworks
               id: package-frameworks
               run: |
-                APP_VERSION=`sed -n -E "s/public static let elasticSwiftAgentVersion: String = \"(.*)\"/\1/p" Sources/apm-agent-ios/Version.swift  | sed -e 's/^[[:space:]]*//'`
-                echo "APP_VERSION=${APP_VERSION}" >> "$GITHUB_ENV"
-                rm -rf "./dist"
-                mkdir -p "./dist"
-                echo $(pwd)
-                tar -czf "./dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
-                tar -czf "./dist/ElasticApm_macOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_macOS.xcframework
-                tar -czf "./dist/ElasticApm_iOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_iOS.xcframework
+                  APP_VERSION=`sed -n -E "s/public static let elasticSwiftAgentVersion: String = \"(.*)\"/\1/p" Sources/apm-agent-ios/Version.swift  | sed -e 's/^[[:space:]]*//'`
+                  echo "APP_VERSION=${APP_VERSION}" >> "$GITHUB_ENV"
+                  rm -rf "./dist"
+                  mkdir -p "./dist"
+                  tar -czf "./dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
+                  tar -czf "./dist/ElasticApm_macOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_macOS.xcframework
+                  tar -czf "./dist/ElasticApm_iOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_iOS.xcframework
             - name: Generate Framework provenance
               uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
               with:
-                subject-path: "./dist/*"
+                  subject-path: "./dist/*"
             - uses: actions/upload-artifact@v4
               with:
-                name: ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
-                path: |
-                    dist/ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
+                  name: ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
+                  path: |
+                      dist/ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
             - uses: actions/upload-artifact@v4
               with:
-                name: ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
-                path: |
-                    dist/ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
+                  name: ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
+                  path: |
+                      dist/ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
             - uses: actions/upload-artifact@v4
               with:
-                name: ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
-                path: |
-                    dist/ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
+                  name: ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
+                  path: |
+                      dist/ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
