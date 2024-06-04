@@ -11,7 +11,7 @@ permissions:
     contents: read
     id-token: write
 jobs:
-    iOS:
+    iOS-device:
         runs-on: macos-latest
         steps:
             - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
@@ -24,7 +24,7 @@ jobs:
                   spec: project.yml
                   quiet: false
                   version: '2.41.0'
-            - name: generate iOS xcframeworks
+            - name: Build iOS device
               run: |
                   xcodebuild clean archive -scheme ElasticApm_iOS \
                       -configuration Release \
@@ -32,16 +32,68 @@ jobs:
                       -archivePath ./build/Release-iOS.xcarchive \
                       -derivedDataPath ./build/derivedDataPath \
                       SKIP_INSTALL=NO
+            - name: Save artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: Release-iOS.xcarchive
+                  path: ./build/Release-iOS.xcarchive
+    iOS-simulator:
+        runs-on: macos-latest
+        steps:
+            - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+              with:
+                  xcode-version: latest-stable
+            - uses: actions/checkout@v4
+            - name: xcodegen
+              uses: bryce-b/xcodegen-action@patch-1
+              with:
+                  spec: project.yml
+                  quiet: false
+                  version: '2.41.0'
+            - name: Build iOS simulator
+              run: |
                   xcodebuild clean archive -scheme ElasticApm_iOS \
                       -configuration Release \
                       -destination 'generic/platform=iOS Simulator' \
                       -archivePath ./build/Release-iphonesimulator.xcarchive \
                       -derivedDataPath ./build/derivedDataPath \
                       SKIP_INSTALL=NO
+            - name: Save artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: Release-iphonesimulator.xcarchive
+                  path: ./build/Release-iphonesimulator.xcarchive
+    iOS-xcframework:
+        runs-on: macos-latest
+        needs: [iOS-simulator, iOS-device]
+        steps:
+            - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+              with:
+                  xcode-version: latest-stable
+            - uses: actions/checkout@v4
+            - name: xcodegen
+              uses: bryce-b/xcodegen-action@patch-1
+              with:
+                  spec: project.yml
+                  quiet: false
+                  version: '2.41.0'
+            - name: Download device builds
+              uses: actions/download-artifact@v4
+              with:
+                  pattern: Release-*.xcarchive
+                  path: build
+            - name: Build iOS xcframework
+              run: |
+                  ls build
                   xcodebuild -create-xcframework \
                           -framework ${{ github.workspace }}/build/Release-iOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                           -framework ${{ github.workspace }}/build/Release-iphonesimulator.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                           -output ${{ github.workspace }}/package/ElasticApm_iOS.xcframework
+            - name: Upload xcframework
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ElasticApm_iOS.xcframework
+                  path: ${{ github.workspace }}/package
     macOS:
         runs-on: macos-latest
         steps:
@@ -55,7 +107,7 @@ jobs:
                   spec: project.yml
                   quiet: false
                   version: '2.41.0'
-            - name: generate macOS xcframework
+            - name: Build macOS xcframework
               run: |
                   xcodebuild clean archive -scheme ElasticApm_macOS \
                       -configuration Release \
@@ -66,6 +118,11 @@ jobs:
                   xcodebuild -create-xcframework \
                           -framework $(pwd)/build/Release-macOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                           -output ./package/ElasticApm_macOS.xcframework
+            - name: Upload xcframework
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ElasticApm_macOS.xcframework
+                  path: ${{ github.workspace }}/package
     tvOS:
         runs-on: macos-latest
         steps:
@@ -79,7 +136,7 @@ jobs:
                   spec: project.yml
                   quiet: false
                   version: '2.41.0'
-            - name: generate tvOS xcframework
+            - name: Build tvOS xcframework
               run: |
                 xcodebuild clean archive -scheme ElasticApm_tvOS \
                     -configuration Release \
@@ -90,14 +147,25 @@ jobs:
                 xcodebuild -create-xcframework \
                         -framework $(pwd)/build/Release-tvOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                         -output ./package/ElasticApm_tvOS.xcframework
-    package:
+            - name: Upload xcframework
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ElasticApm_tvOS.xcframework
+                  path: ${{ github.workspace }}/package
+    Package:
          runs-on: macos-latest
-         needs: [iOS, macOS, tvOS]
+         needs: [iOS-xcframework, macOS, tvOS]
          steps:
             - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
               with:
                   xcode-version: latest-stable
             - uses: actions/checkout@v4
+            - name: download xcframeworks
+              uses: actions/download-artifact@v4
+              with:
+                  pattern: ElasticApm_*.xcframework
+                  path: package
+                  merge-multiple: true
             - name: Package frameworks
               id: package-frameworks
               run: |
@@ -108,22 +176,12 @@ jobs:
                   tar -czf "./dist/ElasticApm_tvOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_tvOS.xcframework
                   tar -czf "./dist/ElasticApm_macOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_macOS.xcframework
                   tar -czf "./dist/ElasticApm_iOS-${APP_VERSION}.tar.gz" -C ./package ElasticApm_iOS.xcframework
-            - name: Generate Framework provenance
+            - name: Generate framework provenance
               uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
               with:
                   subject-path: "./dist/*"
             - uses: actions/upload-artifact@v4
               with:
-                  name: ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
+                  name: artifacts
                   path: |
-                      dist/ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
-                  path: |
-                      dist/ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
-                  path: |
-                      dist/ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
+                      dist/*.tar.gz
