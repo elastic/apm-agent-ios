@@ -30,7 +30,6 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: snapshoty
+        name: packages
         path: |
-          .ci/snapshoty.yml
           dist/**
