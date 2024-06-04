@@ -11,7 +11,7 @@ permissions:
     contents: read
     id-token: write
 jobs:
-    macos:
+    iOS:
         runs-on: macos-latest
         steps:
             - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
@@ -42,6 +42,19 @@ jobs:
                           -framework ${{ github.workspace }}/build/Release-iOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                           -framework ${{ github.workspace }}/build/Release-iphonesimulator.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                           -output ${{ github.workspace }}/package/ElasticApm_iOS.xcframework
+    macOS:
+        runs-on: macos-latest
+        steps:
+            - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+              with:
+                  xcode-version: latest-stable
+            - uses: actions/checkout@v4
+            - name: xcodegen
+              uses: bryce-b/xcodegen-action@patch-1
+              with:
+                  spec: project.yml
+                  quiet: false
+                  version: '2.41.0'
             - name: generate macOS xcframework
               run: |
                   xcodebuild clean archive -scheme ElasticApm_macOS \
@@ -53,6 +66,19 @@ jobs:
                   xcodebuild -create-xcframework \
                           -framework $(pwd)/build/Release-macOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                           -output ./package/ElasticApm_macOS.xcframework
+    tvOS:
+        runs-on: macos-latest
+        steps:
+            - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+              with:
+                  xcode-version: latest-stable
+            - uses: actions/checkout@v4
+            - name: xcodegen
+              uses: bryce-b/xcodegen-action@patch-1
+              with:
+                  spec: project.yml
+                  quiet: false
+                  version: '2.41.0'
             - name: generate tvOS xcframework
               run: |
                 xcodebuild clean archive -scheme ElasticApm_tvOS \
@@ -64,6 +90,14 @@ jobs:
                 xcodebuild -create-xcframework \
                         -framework $(pwd)/build/Release-tvOS.xcarchive/Products/Library/Frameworks/ElasticApm.framework \
                         -output ./package/ElasticApm_tvOS.xcframework
+    package:
+         runs-on: macos-latest
+         needs: [iOS, macOS, tvOS]
+         steps:
+            - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+              with:
+                  xcode-version: latest-stable
+            - uses: actions/checkout@v4
             - name: Package frameworks
               id: package-frameworks
               run: |
