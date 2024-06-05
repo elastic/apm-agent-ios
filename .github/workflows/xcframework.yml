@@ -198,18 +198,3 @@ jobs:
                       ./dist/*
               env:
                   GH_TOKEN: ${{ github.token }}
-#            - uses: actions/upload-artifact@v4
-#              with:
-#                  name: ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
-#                  path: |
-#                      dist/ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
-#            - uses: actions/upload-artifact@v4
-#              with:
-#                  name: ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
-#                  path: |
-#                      dist/ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
-#            - uses: actions/upload-artifact@v4
-#              with:
-#                  name: ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
-#                  path: |
-#                      dist/ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
