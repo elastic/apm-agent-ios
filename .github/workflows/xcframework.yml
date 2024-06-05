@@ -4,11 +4,13 @@ on:
     workflow_dispatch:
     pull_request:
     push:
+      tags:
+          - v*.*.*
       branches:
         - "main"
 permissions:
     attestations: write
-    contents: read
+    contents: write
     id-token: write
 jobs:
     iOS-device:
@@ -180,18 +182,34 @@ jobs:
               uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf2757ebbff0d  # v1.1.2
               with:
                   subject-path: "./dist/*"
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
-                  path: |
-                      dist/ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
-                  path: |
-                      dist/ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
-                  path: |
-                      dist/ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
+            - name: Create release (for tag release only)
+              if: startsWith(github.ref, 'refs/tags')
+              run: |
+                  readonly LATEST_GIT_TAG=$(git tag --list --sort=version:refname "v*" | grep -v - | tail -n1)
+                  if [[ "$GITHUB_REF_NAME" == "$LATEST_GIT_TAG" ]]; then
+                      IS_LATEST=true
+                  else
+                      IS_LATEST=false
+                  fi
+                  echo "INFO: Create '$GITHUB_REF_NAME' GitHub release (latest=$IS_LATEST)."
+                  gh release create "$GITHUB_REF_NAME" \
+                      --title "$GITHUB_REF_NAME" \
+                      --latest=$IS_LATEST \
+                      ./dist/*
+              env:
+                  GH_TOKEN: ${{ github.token }}
+#            - uses: actions/upload-artifact@v4
+#              with:
+#                  name: ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
+#                  path: |
+#                      dist/ElasticAPM_macOS-${{ env.APP_VERSION }}.tar.gz
+#            - uses: actions/upload-artifact@v4
+#              with:
+#                  name: ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
+#                  path: |
+#                      dist/ElasticAPM_tvOS-${{ env.APP_VERSION }}.tar.gz
+#            - uses: actions/upload-artifact@v4
+#              with:
+#                  name: ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
+#                  path: |
+#                      dist/ElasticAPM_iOS-${{ env.APP_VERSION }}.tar.gz
