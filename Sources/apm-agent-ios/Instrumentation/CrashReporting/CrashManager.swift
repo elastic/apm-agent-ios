@@ -112,6 +112,9 @@ struct CrashManager {
           print(text)
           // notes : branching code needed for signal vs mach vs nsexception for event generation
           //
+          
+          
+          
           var attributes = [
             SemanticAttributes.exceptionType.rawValue: AttributeValue.string(report.signalInfo.name),
             SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text)
@@ -130,6 +133,29 @@ struct CrashManager {
               "\(code) at \(report.signalInfo.address)")
           }
 
+          
+          var imageAttributeArray = [AttributeValue]()
+          for case let image as PLCrashReportBinaryImageInfo in report.images {
+            imageAttributeArray.append(AttributeValue.set(AttributeSet(labels: ["baseAddress" : (AttributeValue.string(String(format:"0x%016lX",image.imageBaseAddress))),
+                                                                                "imageSize":  AttributeValue.string(String(format:"%u",image.imageSize)),
+                                                                                "imageName": AttributeValue.string(image.imageName),
+                                                                                "imageUUID" : AttributeValue.string(image.imageUUID)])))
+          }
+          
+          attributes["stacktrace.images"] = AttributeValue.array(AttributeArray(values: imageAttributeArray))
+
+          
+          var threadsAttributeArray = [AttributeValue]()
+          for case let thread as PLCrashReportThreadInfo in report.threads {
+            var framesAttributeArray = [AttributeValue]()
+            for case let frame as PLCrashReportStackFrameInfo in thread.stackFrames {
+              framesAttributeArray.append(AttributeValue.string(String(format:"0x%016lX",frame.instructionPointer)))
+            }
+            threadsAttributeArray.append(AttributeValue.array(AttributeArray(values: framesAttributeArray)))
+          }
+          
+          attributes["stacktrace.threads"] = AttributeValue.array(AttributeArray(values: threadsAttributeArray))
+          
           logger.eventBuilder(name: Self.crashEventName)
             .setSeverity(.fatal)
             .setObservedTimestamp(report.systemInfo.timestamp)
