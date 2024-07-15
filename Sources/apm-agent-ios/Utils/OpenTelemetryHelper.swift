@@ -48,6 +48,17 @@ public class OpenTelemetryHelper {
         return userAgent
     }
 
+  public static func getURL(with config: AgentConfiguration) -> URL? {
+  
+    var port = "\(config.collectorPort)"
+    if config.collectorPort == 80 || config.collectorPort == 443 {
+      port = ""
+    }
+    
+    return URL(string: "(\(config.collectorTLS ? "https://" : "http://")\(config.collectorHost)\( port.isEmpty ? "" : ":\(port)")")
+    
+  }
+  
     public static func getChannel(with config: AgentConfiguration, group: EventLoopGroup) -> ClientConnection {
 
         if config.collectorTLS {

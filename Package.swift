@@ -44,6 +44,7 @@ let package = Package(
       name: "ElasticApm",
       dependencies: [
         .product(name: "OpenTelemetryProtocolExporter", package: "opentelemetry-swift"),
+        .product(name: "OpenTelemetryProtocolExporterHTTP", package: "opentelemetry-swift"),
         .product(name: "PersistenceExporter", package: "opentelemetry-swift"),
         .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift"),
         .product(name: "ResourceExtension", package: "opentelemetry-swift"),

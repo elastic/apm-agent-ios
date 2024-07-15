@@ -72,7 +72,12 @@ public class ElasticApmAgent {
     group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     openTelemetry = OpenTelemetryInitializer(group: group, sessionSampler: sessionSampler)
 
-    openTelemetry.initialize(agentConfigManager)
+    if agentConfigManager.agent.connectionType == .grpc {
+      openTelemetry.initialize(agentConfigManager)
+    } else {
+      openTelemetry.initializeWithHttp(agentConfigManager)
+    }
+      
 
     if instrumentationConfiguration.enableCrashReporting {
       crashManager = CrashManager(
