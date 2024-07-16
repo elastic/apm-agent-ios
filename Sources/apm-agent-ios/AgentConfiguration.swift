@@ -2,12 +2,19 @@ import Foundation
 import OpenTelemetrySdk
 import PersistenceExporter
 
+
+public enum AgentConnectionType {
+  case grpc
+  case http
+}
+
 public struct AgentConfiguration {
   init() {}
   public var enableAgent = true
   public var collectorHost = "127.0.0.1"
   public var collectorPort = 8200
   public var collectorTLS = false
+  public var connectionType : AgentConnectionType = .grpc
   var auth: String?
   var sampleRate: Double = 1.0
 

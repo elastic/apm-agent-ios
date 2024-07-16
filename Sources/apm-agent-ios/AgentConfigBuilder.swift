@@ -22,7 +22,7 @@ public class AgentConfigBuilder {
   var auth: String?
   static let bearer = "Bearer"
   static let api = "ApiKey"
-
+  var connectionType : AgentConnectionType = .grpc
   var sampleRate = 1.0
 
   var spanFilters = [SignalFilter<ReadableSpan>]()
@@ -45,6 +45,11 @@ public class AgentConfigBuilder {
     return self
   }
 
+  public func useConnectionType(_ type: AgentConnectionType) -> Self {
+    self.connectionType = type
+    return self
+  }
+  
   public func withApiKey(_ key: String) -> Self {
     self.auth = "\(Self.api) \(key)"
     return self
