@@ -17,14 +17,30 @@ import OpenTelemetrySdk
 import Kronos
 import os.log
 
-class NTPClock: OpenTelemetrySdk.Clock {
-    var now: Date {
-        if let date = Kronos.Clock.now {
-            os_log("Using Kronos Clock.now as fallback.")
-            return date
-        }
 
-        os_log("Kronos Clock.now unavailable. using system clock as fallback.")
-        return Date()
+class SuccessLogOnce {
+  static let run: Void = {
+    let logger  = OSLog(subsystem: "co.elastic.ElasticApm", category: "NTPClock")
+    os_log("NTPClock is now being used for signal timestamps.", log: logger, type: .info)
+    return ()
+  }()
+}
+
+class FailureLogOnce {
+  static let run: Void = {
+    let logger  = OSLog(subsystem: "co.elastic.ElasticApm", category: "NTPClock")
+    os_log("NTPClock is unavailable. Using system clock as fallback for signal timestamps.", log: logger, type: .info)
+    return()
+  }()
+}
+
+class NTPClock: OpenTelemetrySdk.Clock {
+  var now: Date {
+    if let date = Kronos.Clock.now {
+      SuccessLogOnce.run
+      return date
     }
+    FailureLogOnce.run
+    return Date()
+  }
 }
