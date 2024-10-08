@@ -23,7 +23,8 @@ jobs:
         permissions: >-
           {
             "members": "read",
-            "repository_projects": "write"
+            "organization_projects": "write",
+            "issues": "read"
           }
     - name: Add agent-ios and agent-mobile labels
       uses: AlexanderWert/issue-labeler@v2.3
