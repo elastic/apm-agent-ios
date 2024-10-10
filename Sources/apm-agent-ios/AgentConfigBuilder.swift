@@ -81,6 +81,7 @@ public class AgentConfigBuilder {
     config.logFilters = logFilters
     config.spanFilters = spanFilters
     config.metricFilters = metricFilters
+    config.connectionType = connectionType
 
     if let url = url {
       if let proto = url.scheme, proto == "https" {
