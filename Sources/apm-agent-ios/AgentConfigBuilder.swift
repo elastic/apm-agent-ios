@@ -49,7 +49,7 @@ public class AgentConfigBuilder {
     self.connectionType = type
     return self
   }
-  
+
   public func withApiKey(_ key: String) -> Self {
     self.auth = "\(Self.api) \(key)"
     return self
@@ -81,6 +81,7 @@ public class AgentConfigBuilder {
     config.logFilters = logFilters
     config.spanFilters = spanFilters
     config.metricFilters = metricFilters
+    config.connectionType = connectionType
 
     if let url = url {
       if let proto = url.scheme, proto == "https" {
