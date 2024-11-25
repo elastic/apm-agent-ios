@@ -15,5 +15,5 @@
 import Foundation
 
 extension ElasticApmAgent {
-    public static let elasticSwiftAgentVersion: String = "1.0.0"
+    public static let elasticSwiftAgentVersion: String = "1.2.0"
 }
