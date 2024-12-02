@@ -16,6 +16,11 @@
 [[release-notes-next]]
 === Next
 
+[[release-notes-v1.2.0]]
+=== v1.2.0
+==== Features
+- Updated OpenTelemetry-Swift to v1.12.1, addressing various issues.
+
 [[release-notes-v1.0.2]]
 === v1.0.2
 ==== Features
