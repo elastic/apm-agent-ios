@@ -3,6 +3,11 @@
 
 The Elastic APM iOS Agent measures the performance of your mobile applications in real-time.
 
+[NOTE]
+====
+The Elastic APM iOS Agent is not compatible with {serverless-docs}[{serverless-full}].
+====
+
 [float]
 [[how-it-works]]
 === How does the agent work?
