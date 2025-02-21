@@ -16,6 +16,14 @@
 [[release-notes-next]]
 === Next
 
+[[release-notes-v1.2.1]]
+=== v1.2.1
+==== Features
+- Updated OpenTelemetry-Swift to version 1.13.0.
+==== Fixes
+- Crash reports now upload respecting connectionType set in agent configuration.
+
+
 [[release-notes-v1.2.0]]
 === v1.2.0
 ==== Features
