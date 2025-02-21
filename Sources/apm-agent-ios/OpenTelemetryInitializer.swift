@@ -51,7 +51,7 @@ class OpenTelemetryInitializer {
   }
 
   // swiftlint:disable:next function_body_length
-  func initialize(_ configuration: AgentConfigManager) {
+  func initialize(_ configuration: AgentConfigManager) -> LogRecordExporter {
 
     var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
       SignalFilter<ReadableSpan>({ [self] _ in
@@ -155,13 +155,15 @@ class OpenTelemetryInitializer {
             logSampleFliter)
         ])
         .build())
+
+    return logExporter
   }
 
 
-  func initializeWithHttp(_ configuration: AgentConfigManager) {
+  func initializeWithHttp(_ configuration: AgentConfigManager) -> LogRecordExporter {
     guard let endpoint =  OpenTelemetryHelper.getURL(with: configuration.agent) else {
       os_log("Failed to start Elastic agent: invalid collector url.")
-      return
+      return NoopLogRecordExporter.instance
     }
 
     var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
@@ -262,5 +264,6 @@ class OpenTelemetryInitializer {
             logSampleFliter)
         ])
         .build())
+    return logExporter
   }
 }

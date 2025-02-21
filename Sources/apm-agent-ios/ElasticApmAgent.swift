@@ -39,6 +39,8 @@ public class ElasticApmAgent {
 
   let crashManager: CrashManager?
 
+  let crashLogExporter: LogRecordExporter
+
   let agentConfigManager: AgentConfigManager
 
   let openTelemetry: OpenTelemetryInitializer
@@ -72,18 +74,19 @@ public class ElasticApmAgent {
     group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     openTelemetry = OpenTelemetryInitializer(group: group, sessionSampler: sessionSampler)
 
-    if agentConfigManager.agent.connectionType == .grpc {
-      openTelemetry.initialize(agentConfigManager)
-    } else {
-      openTelemetry.initializeWithHttp(agentConfigManager)
-    }
-      
+
+      if agentConfigManager.agent.connectionType == .grpc {
+        crashLogExporter = openTelemetry.initialize(agentConfigManager)
+      } else {
+        crashLogExporter = openTelemetry.initializeWithHttp(agentConfigManager)
+      }
+
+
 
     if instrumentationConfiguration.enableCrashReporting {
       crashManager = CrashManager(
         resource: AgentResource.get().merging(other: AgentEnvResource.get()),
-        group: group,
-        agentConfiguration: agentConfigManager.agent)
+        logExporter: crashLogExporter)
     } else {
       crashManager = nil
     }

@@ -20,68 +20,60 @@ import NIO
 import OpenTelemetryApi
 import OpenTelemetryProtocolExporterCommon
 import OpenTelemetryProtocolExporterGrpc
+import OpenTelemetryProtocolExporterHttp
 import OpenTelemetrySdk
 
 import os.log
 
 struct CrashManager {
   static let crashEventName: String = "crash"
-  static let crashManagerVersion = "0.0.2"
-  static let logLabel = "Elastic-OTLP-Exporter"
+  static let crashManagerVersion = "0.0.3"
   static let lastResourceDefaultsKey: String = "elastic.last.resource"
   static let instrumentationName = "PLCrashReporter"
   let lastResource: Resource
-  let group: EventLoopGroup
   let loggerProvider: LoggerProvider
-  init(resource: Resource, group: EventLoopGroup, agentConfiguration: AgentConfiguration) {
-    self.group = group
+  private let logger = OSLog(subsystem: "co.elastic.crash-reporter", category: "instrumentation")
+  init(resource: Resource, logExporter: LogRecordExporter) {
     // if something went wrong with the lastResource in the user defaults, fallback of the current resource data.
     var tempResource = resource
-
-    let otlpConfiguration = OtlpConfiguration(
-      timeout: OtlpConfiguration.DefaultTimeoutInterval,
-      headers: OpenTelemetryHelper.generateExporterHeaders(agentConfiguration.auth))
 
     if let lastResourceJson = UserDefaults.standard.data(forKey: Self.lastResourceDefaultsKey) {
       do {
         let decoder = JSONDecoder()
         tempResource = try decoder.decode(Resource.self, from: lastResourceJson)
       } catch {
-        os_log(
-          "[Elastic][CrashManager] initialization: unable to load last Resource from user defaults."
-        )
+        os_log("initialization: unable to load last Resource from user defaults.",
+               log: logger,
+               type: .error)
       }
     }
     lastResource = tempResource
-    loggerProvider = LoggerProviderBuilder()
-      .with(resource: lastResource)
-      .with(processors: [
-        BatchLogRecordProcessor(
-          logRecordExporter: OtlpLogExporter(
-            channel: OpenTelemetryHelper.getChannel(with: agentConfiguration, group: group),
-            config: otlpConfiguration,
-            logger: Logger(label: Self.logLabel),
-            envVarHeaders: OpenTelemetryHelper.generateExporterHeaders(agentConfiguration.auth)))
-      ])
-      .build()
+      loggerProvider = LoggerProviderBuilder()
+        .with(resource: lastResource)
+        .with(processors: [
+          BatchLogRecordProcessor(
+            logRecordExporter: logExporter
+          )
+        ])
+        .build()
+
     do {
       let encoder = JSONEncoder()
       let data = try encoder.encode(resource)
       UserDefaults.standard.set(data, forKey: Self.lastResourceDefaultsKey)
     } catch {
-      os_log(
-        "[Elastic][CrashManager] initialization: unable to save current Resource from user defaults."
-      )
+      os_log("initialization: unable to save current Resource from user defaults.", log: logger,  type: .error)
 
     }
   }
+
 
   public func initializeCrashReporter(configuration: CrashManagerConfiguration) {
     // It is strongly recommended that local symbolication only be enabled for non-release builds.
     // Use [] for release versions.
     let config = PLCrashReporterConfig(signalHandlerType: getSignalHandler(), symbolicationStrategy: [])
     guard let crashReporter = PLCrashReporter(configuration: config) else {
-      print("Could not create an instance of PLCrashReporter")
+      os_log("Could not create an instance of PLCrashReporter", log: logger, type: .error)
       return
     }
 
@@ -91,7 +83,10 @@ struct CrashManager {
         try crashReporter.enableAndReturnError()
       }
     } catch let error {
-      print("Warning: Could not enable crash reporter: \(error)")
+      os_log("Warning: Could not enable crash reporter: %@",
+             log: logger,
+             type: .error,
+             error.localizedDescription)
     }
 
     // Try loading the crash report.
@@ -109,7 +104,7 @@ struct CrashManager {
         // We could send the report from here, but we'll just print out some debugging info instead.
         if let text = PLCrashReportTextFormatter.stringValue(
           for: report, with: PLCrashReportTextFormatiOS) {
-          print(text)
+          os_log("%@", log:self.logger, type: .debug, text)
           // notes : branching code needed for signal vs mach vs nsexception for event generation
           //
           var attributes = [
@@ -137,10 +132,13 @@ struct CrashManager {
             .emit()
 
         } else {
-          print("CrashReporter: can't convert report to text")
+          os_log("CrashReporter: can't convert report to text",log: self.logger, type: .error)
         }
       } catch let error {
-        print("CrashReporter failed to load and parse with error: \(error)")
+        os_log("CrashReporter failed to load and parse with error: %@",
+               log: logger,
+               type: .error,
+               error.localizedDescription)
       }
 
     }
@@ -170,7 +168,10 @@ struct CrashManager {
     name[3] = getpid()
 
     if sysctl(name, 4, &info, infoSize, nil, 0) == -1 {
-      print("sysctl() failed: \(String(describing: strerror(errno)))")
+      os_log("sysctl() failed: %@",
+             log: logger,
+             type:.error,
+             String(describing: strerror(errno)))
       return false
     }
 
