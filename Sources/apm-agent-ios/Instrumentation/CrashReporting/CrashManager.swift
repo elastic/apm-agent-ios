@@ -14,13 +14,8 @@
 
 import CrashReporter
 import Foundation
-import GRPC
 import Logging
-import NIO
 import OpenTelemetryApi
-import OpenTelemetryProtocolExporterCommon
-import OpenTelemetryProtocolExporterGrpc
-import OpenTelemetryProtocolExporterHttp
 import OpenTelemetrySdk
 
 import os.log
