@@ -108,9 +108,7 @@ class CentralConfigFetcher {
   }
 
   func buildCentralConfigRequest() -> URLRequest? {
-    var components = config.urlComponents()
-
-    components.path = "/config/v1/agents"
+    var components = config.managementUrlComponents()
 
     components.queryItems = [URLQueryItem(name: "service.name", value: serviceName),
                              URLQueryItem(name: "service.environment", value: serviceEnvironment)]
