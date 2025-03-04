@@ -1,6 +1,0 @@
-:pull: https://github.com/elastic/apm-agent-ios/pull/
-
-[[release-notes]]
-== Release notes
-
-include::../CHANGELOG.asciidoc[]
