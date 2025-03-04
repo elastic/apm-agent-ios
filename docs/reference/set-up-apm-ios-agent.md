@@ -1,42 +1,39 @@
-[[setup]]
-== Set up the Agent
+---
+mapped_pages:
+  - https://www.elastic.co/guide/en/apm/agent/swift/current/setup.html
+---
 
-:source-highlighter: coderay
+# Set up the APM iOS Agent [setup]
 
-[discrete]
-[[requirements]]
-=== Requirements
+
+## Requirements [requirements]
 
 This project requires Swift `5.7`, and is intended for use in Swift-base mobile apps.
 
 Other platform requires:
 
-[options="header"]
-|===
-| platform | version
-| `iOS` | `11`
-|`macOS` | `10.13`
-| `tvOS` | `v11`
-| `watchOS` | `3`
-|===
+| platform | version |
+| --- | --- |
+| `iOS` | `11` |
+| `macOS` | `10.13` |
+| `tvOS` | `v11` |
+| `watchOS` | `3` |
 
 
-[discrete]
-[[add-agent-dependency]]
-=== Add the Agent dependency
+## Add the Agent dependency [add-agent-dependency]
+
 Add the Elastic APM iOS Agent to your Xcode project or your `Package.swift`.
 
-Here are instructions for adding a https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app[package dependency] to a standard Xcode poject.
+Here are instructions for adding a [package dependency](https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app) to a standard Xcode poject.
 
-Details of adding dependencies to your Package.swift can be found on https://developer.apple.com/documentation/xcode/creating_a_standalone_swift_package_with_xcode#3578941['Add a Dependency on Another Swift Package'].
-Below is a helpful code-snippet:
+Details of adding dependencies to your Package.swift can be found on [*Add a Dependency on Another Swift Package*](https://developer.apple.com/documentation/xcode/creating_a_standalone_swift_package_with_xcode#3578941). Below is a helpful code-snippet:
 
 `package.swift`:
-[source,swift,linenums,highlight=2;10]
-----
+
+```swift
 Package(
     dependencies:[
-         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "1.2.1"),
+         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "1.2.0"),
     ],
   targets:[
     .target(
@@ -46,17 +43,16 @@ Package(
         ]
     ),
 ])
-----
+```
 
-[discrete]
-[[initialize]]
-=== Initialize the agent
+
+## Initialize the agent [initialize]
+
 Once the Agent has been added as a dependency, it must be initialized.
 
-If you're using `SwiftUI` to build your app add the following to your `App.swift`:
+If you’re using `SwiftUI` to build your app add the following to your `App.swift`:
 
-[source,swift,linenums,swift,highlight=2;4..15;19]
-----
+```swift
 import SwiftUI
 import ElasticApm
 
@@ -66,7 +62,7 @@ class AppDelegate : NSObject, UIApplicationDelegate {
             .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
             .withSecretToken("<SecretToken>") <2>
             .build()
-        
+
         ElasticApmAgent.start(with: config)
         return true
     }
@@ -83,15 +79,17 @@ struct MyApp: App {
         }
     }
 }
-----
-<1> APM Server URL
-<2> Set secret token for APM server connection
+```
 
-If you're not using `SwiftUI` you can alternatively add the same thing to your AppDelegate file:
+1. APM Server URL
+2. Set secret token for APM server connection
+
+
+If you’re not using `SwiftUI` you can alternatively add the same thing to your AppDelegate file:
 
 `AppDelegate.swift`
-[source,swift,linenums,highlight=2;7..11]
-----
+
+```swift
 import UIKit
 import ElasticApm
 @main
@@ -105,9 +103,9 @@ var config = AgentConfigBuilder()
         return true
     }
 }
-----
-<1> APM Server URL
-<2> Set secret token for APM server connection
+```
 
+1. APM Server URL
+2. Set secret token for APM server connection
 
 
