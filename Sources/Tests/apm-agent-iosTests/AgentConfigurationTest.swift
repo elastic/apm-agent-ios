@@ -31,8 +31,8 @@ class AgentConfigurationTest : XCTestCase {
 
   func testEDOTUrls() {
     let agentConfiguration = AgentConfigBuilder()
-      .WithExportUrl(URL(string:"https://localhost:443")!)
-      .withManagementURL(URL(string:"https://management.com:8200/v1/management")!)
+      .withExportUrl(URL(string:"https://localhost:443")!)
+      .withManagementUrl(URL(string:"https://management.com:8200/v1/management")!)
       .build()
     let managementUrlComponents = agentConfiguration.managementUrlComponents()
     XCTAssertEqual(managementUrlComponents.host, "management.com")
@@ -45,11 +45,21 @@ class AgentConfigurationTest : XCTestCase {
     XCTAssertEqual(agentConfiguration.connectionType, .grpc)
   }
 
+ func testEDOTUrlAndNoManagementUrl() {
+    let agentConfiguration = AgentConfigBuilder()
+      .withExportUrl(URL(string:"https://localhost:443")!)
+      .build()
+    XCTAssertNil(agentConfiguration.managementUrlComponents())
+    XCTAssertEqual(agentConfiguration.collectorHost, "localhost")
+    XCTAssertEqual(agentConfiguration.collectorPort, 443)
+   XCTAssertEqual(agentConfiguration.collectorTLS, true)
+ }
+
   func testEDOTUrlsWithDeprecatedServerUrl() {
     let agentConfiguration = AgentConfigBuilder()
       .withServerUrl(URL(string:"http://127.0.0.1:8080")!)
-      .WithExportUrl(URL(string:"https://localhost:443")!)
-      .withManagementURL(URL(string:"https://management.com:8200/v1/management")!)
+      .withExportUrl(URL(string:"https://localhost:443")!)
+      .withManagementUrl(URL(string:"https://management.com:8200/v1/management")!)
       .build()
 
     let managementUrlComponents = agentConfiguration.managementUrlComponents()

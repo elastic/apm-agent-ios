@@ -22,11 +22,35 @@ ElasticApmAgent.start(with:config)
 The `AgentConfigBuilder` can be configured with the following functions:
 
 
-#### `withServerUrl` [withServerUrl]
+#### `withServerUrl` [withServerUrl] **Deprecated** 
 
+* **Type:** URL
+* **Default:** nil
+
+The URL host endpoint that handles both OTLP data export as well as Elastic Central Config. 
+This configuration option is deprecated. Use `withExportUrl` instead. 
+
+#### `withExportUrl` [withExportUrl] 
 * **Type:** URL
 * **Default:** `http://127.0.0.1:8200`
 
+The host enpoint handling OTLP exports. This configuration will override `withServerUrl` when set. 
+
+#### `withManagementUrl` [withManagementUrl]
+* **Type:** URL
+* **Default:** ${exportUrl}/config/v1/agents
+
+The URL endpoint that handles Elastic Central Config. 
+It must be set with the correct path, e.g.: `/config/v1/agents`
+For backwards compatibility purposes, if this config is unset the agent will use the value set by `withExportUrl` as the host. 
+
+This config is intended to be used in conjunction with `withExportUrl`.
+
+#### `withRemoteManagement` [withRemoteManagement] 
+* **Type:** Bool
+* **Default:** `true`
+
+Controls whether the agent attempts to contact Elastic Central Config for runtime configuration updates. 
 
 #### `withSecretToken` [secretToken]
 

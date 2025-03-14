@@ -21,6 +21,7 @@ public class AgentConfigBuilder {
   private var url: URL?
   private var exportUrl: URL?
   private var managementUrl: URL?
+  private var enableRemoteManagement: Bool = true
   private var auth: String?
   private static let bearer = "Bearer"
   private static let api = "ApiKey"
@@ -44,13 +45,18 @@ public class AgentConfigBuilder {
     return self
   }
 
-  public func WithExportUrl(_ url: URL) -> Self {
+  public func withExportUrl(_ url: URL) -> Self {
     self.exportUrl = url
     return self
   }
 
-  public func withManagementURL(_ url: URL) -> Self {
+  public func withManagementUrl(_ url: URL) -> Self {
     self.managementUrl = url
+    return self
+  }
+
+  public func withRemoteManagement(_ enabled: Bool) -> Self {
+    enableRemoteManagement = enabled
     return self
   }
 
@@ -97,7 +103,8 @@ public class AgentConfigBuilder {
     config.metricFilters = metricFilters
     config.connectionType = connectionType
     config.managementUrl = self.managementUrl
-    
+    config.enableRemoteManagement = enableRemoteManagement
+
     let url = self.exportUrl ?? self.url
     if let url {
       if let proto = url.scheme, proto == "https" {

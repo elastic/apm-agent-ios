@@ -11,6 +11,7 @@ public enum AgentConnectionType {
 public struct AgentConfiguration {
   init() {}
   public var enableAgent = true
+  public var enableRemoteManagement = true
   public var managementUrl : URL?
   public var collectorHost = "127.0.0.1"
   public var collectorPort = 8200
@@ -25,7 +26,7 @@ public struct AgentConfiguration {
 
   public func managementUrlComponents() -> URLComponents {
     var components = URLComponents()
-    if let managementUrl  {
+    if let managementUrl {
       components.scheme = managementUrl.scheme
       components.host = managementUrl.host
       components.path = managementUrl.path
