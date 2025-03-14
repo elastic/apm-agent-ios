@@ -21,7 +21,6 @@ ElasticApmAgent.start(with:config)
 
 The `AgentConfigBuilder` can be configured with the following functions:
 
-
 #### `withServerUrl` [withServerUrl] **Deprecated** 
 
 * **Type:** URL
