@@ -49,7 +49,8 @@ class AgentConfigurationTest : XCTestCase {
     let agentConfiguration = AgentConfigBuilder()
       .withExportUrl(URL(string:"https://localhost:443")!)
       .build()
-    XCTAssertNil(agentConfiguration.managementUrlComponents())
+
+   XCTAssertEqual(agentConfiguration.managementUrlComponents().url, URL(string:"https://localhost:443/config/v1/agents"))
     XCTAssertEqual(agentConfiguration.collectorHost, "localhost")
     XCTAssertEqual(agentConfiguration.collectorPort, 443)
    XCTAssertEqual(agentConfiguration.collectorTLS, true)

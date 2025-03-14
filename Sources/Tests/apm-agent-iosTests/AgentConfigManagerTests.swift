@@ -20,9 +20,7 @@ class AgentConfigManagerTests : XCTestCase {
   func testRemoteConfigDisabled() {
 
     let manager = AgentConfigManager(resource: Resource(),
-                                     config: AgentConfigBuilder()
-      .withRemoteManagement(false)
-      .build(),
+                                     config: AgentConfigBuilder().withRemoteManagement(false).build(),
                                      instrumentationConfig: InstrumentationConfigBuilder().build())
     XCTAssertNotNil(manager.central)
     let configData = manager.central.data
