@@ -11,6 +11,8 @@ public enum AgentConnectionType {
 public struct AgentConfiguration {
   init() {}
   public var enableAgent = true
+  public var enableRemoteManagement = true
+  public var managementUrl : URL?
   public var collectorHost = "127.0.0.1"
   public var collectorPort = 8200
   public var collectorTLS = false
@@ -22,20 +24,25 @@ public struct AgentConfiguration {
   var logFilters = [SignalFilter<ReadableLogRecord>]()
   var metricFilters = [SignalFilter<Metric>]()
 
-  public func urlComponents() -> URLComponents {
-
+  public func managementUrlComponents() -> URLComponents {
     var components = URLComponents()
-
-    if collectorTLS {
-      components.scheme = "https"
+    if let managementUrl {
+      components.scheme = managementUrl.scheme
+      components.host = managementUrl.host
+      components.path = managementUrl.path
+      components.port = managementUrl.port
+      return components
     } else {
-      components.scheme = "http"
+
+      if collectorTLS {
+        components.scheme = "https"
+      } else {
+        components.scheme = "http"
+      }
+      components.host = collectorHost
+      components.port = collectorPort
+      components.path = "/config/v1/agents"
+      return components
     }
-
-    components.host = collectorHost
-
-    components.port = collectorPort
-
-    return components
   }
 }

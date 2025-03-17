@@ -17,17 +17,20 @@ import OpenTelemetrySdk
 import PersistenceExporter
 
 public class AgentConfigBuilder {
-  var enableAgent: Bool?
-  var url: URL?
-  var auth: String?
-  static let bearer = "Bearer"
-  static let api = "ApiKey"
-  var connectionType : AgentConnectionType = .grpc
-  var sampleRate = 1.0
+  private var enableAgent: Bool?
+  private var url: URL?
+  private var exportUrl: URL?
+  private var managementUrl: URL?
+  private var enableRemoteManagement: Bool = true
+  private var auth: String?
+  private static let bearer = "Bearer"
+  private static let api = "ApiKey"
+  private var connectionType : AgentConnectionType = .grpc
+  private var sampleRate = 1.0
 
-  var spanFilters = [SignalFilter<ReadableSpan>]()
-  var logFilters = [SignalFilter<ReadableLogRecord>]()
-  var metricFilters = [SignalFilter<Metric>]()
+  private var spanFilters = [SignalFilter<ReadableSpan>]()
+  private var logFilters = [SignalFilter<ReadableLogRecord>]()
+  private var metricFilters = [SignalFilter<Metric>]()
 
   public init() {}
 
@@ -35,8 +38,25 @@ public class AgentConfigBuilder {
     enableAgent = false
     return self
   }
+
+  @available(*, deprecated, renamed: "withExportUrl", message: "Export and config management URLs will be seperated in future.")
   public func withServerUrl(_ url: URL) -> Self {
     self.url = url
+    return self
+  }
+
+  public func withExportUrl(_ url: URL) -> Self {
+    self.exportUrl = url
+    return self
+  }
+
+  public func withManagementUrl(_ url: URL) -> Self {
+    self.managementUrl = url
+    return self
+  }
+
+  public func withRemoteManagement(_ enabled: Bool) -> Self {
+    enableRemoteManagement = enabled
     return self
   }
 
@@ -82,8 +102,11 @@ public class AgentConfigBuilder {
     config.spanFilters = spanFilters
     config.metricFilters = metricFilters
     config.connectionType = connectionType
+    config.managementUrl = self.managementUrl
+    config.enableRemoteManagement = enableRemoteManagement
 
-    if let url = url {
+    let url = self.exportUrl ?? self.url
+    if let url {
       if let proto = url.scheme, proto == "https" {
         config.collectorTLS = true
       }

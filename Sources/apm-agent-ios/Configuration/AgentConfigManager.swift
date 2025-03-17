@@ -34,7 +34,7 @@ class AgentConfigManager {
     let logger: Logger
     let resource: Resource
 
-    var fetcher: CentralConfigFetcher!
+    var fetcher: CentralConfigFetcher?
 
     init(resource: Resource,
          config: AgentConfiguration,
@@ -62,11 +62,12 @@ class AgentConfigManager {
 
         self.central = CentralConfig()
 
+      if agent.enableRemoteManagement {
         fetcher = CentralConfigFetcher(serviceName: serviceName,
                                        environment: serviceEnvironment,
                                        agentConfig: config, { data in
-            self.central.config = String(data: data, encoding: .utf8)
+          self.central.config = String(data: data, encoding: .utf8)
         })
-
+      }
     }
 }
