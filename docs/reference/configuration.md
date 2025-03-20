@@ -21,35 +21,35 @@ ElasticApmAgent.start(with:config)
 
 The `AgentConfigBuilder` can be configured with the following functions:
 
-#### `withServerUrl` [withServerUrl] **Deprecated** 
+#### `withServerUrl` [withServerUrl] **Deprecated**
 
 * **Type:** URL
 * **Default:** nil
 
-The URL host endpoint that handles both OTLP data export as well as Elastic Central Config. 
-This configuration option is deprecated. Use `withExportUrl` instead. 
+The URL host endpoint that handles both OTLP data export as well as Elastic Central Config.
+This configuration option is deprecated. Use `withExportUrl` instead.
 
-#### `withExportUrl` [withExportUrl] 
+#### `withExportUrl` [withExportUrl]
 * **Type:** URL
 * **Default:** `http://127.0.0.1:8200`
 
-The host enpoint handling OTLP exports. This configuration will override `withServerUrl` when set. 
+The host enpoint handling OTLP exports. This configuration will override `withServerUrl` when set.
 
 #### `withManagementUrl` [withManagementUrl]
 * **Type:** URL
 * **Default:** ${exportUrl}/config/v1/agents
 
-The URL endpoint that handles Elastic Central Config. 
+The URL endpoint that handles Elastic Central Config.
 It must be set with the correct path, e.g.: `/config/v1/agents`
-For backwards compatibility purposes, if this config is unset the agent will use the value set by `withExportUrl` as the host. 
+For backwards compatibility purposes, if this config is unset the agent will use the value set by `withExportUrl` as the host.
 
 This config is intended to be used in conjunction with `withExportUrl`.
 
-#### `withRemoteManagement` [withRemoteManagement] 
+#### `withRemoteManagement` [withRemoteManagement]
 * **Type:** Bool
 * **Default:** `true`
 
-Controls whether the agent attempts to contact Elastic Central Config for runtime configuration updates. 
+Controls whether the agent attempts to contact Elastic Central Config for runtime configuration updates.
 
 #### `withSecretToken` [secretToken]
 
@@ -186,7 +186,7 @@ In v0.5.0, the agent provides a means to set [resource attributes](https://githu
 Deployment environment is set to `default`. This can be overridden using the `OTEL_RESOURCE_ATTRIBUTES` set in your deployment’s plist. Use the field key as `OTEL_RESOURCE_ATTRIBUTES` and the value as `deployment.environment=staging`
 
 
-### Dynamic configuration ![dynamic config](images/dynamic-config.svg "") [dynamic-configuration]
+### Dynamic configuration ![dynamic config](/reference/images/dynamic-config.svg "") [dynamic-configuration]
 
 Dynamic configurations are available through the kibana UI and are read by the agent remotely to apply configuration on all active agents deployed in the field. More info on dynamic configurations can be found in  [agent configurations](docs-content://solutions/observability/apps/apm-agent-central-configuration.md).
 
@@ -197,7 +197,7 @@ A boolean specifying if the agent should be recording or not. When recording, th
 
 You can set this setting to dynamically disable Elastic APM at runtime
 
-![dynamic config](../images/dynamic-config.svg "")
+![dynamic config](/reference/images/dynamic-config.svg "")
 
 | Default | Type | Dynamic |
 | --- | --- | --- |
@@ -212,7 +212,7 @@ This session focused sampling technique is to preserve related data points, as o
 
 You can set this value dynamically at runtime.
 
-![dynamic config](../images/dynamic-config.svg "")
+![dynamic config](/reference/images/dynamic-config.svg "")
 
 | Default | Type | Dynamic |
 | --- | --- | --- |
