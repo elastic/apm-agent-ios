@@ -31,7 +31,7 @@ To check for security updates, go to [Security announcements for the Elastic sta
 ### Fixes [elastic-apm-ios-agent-101-fixes]
 * fixed memory leaks related to NTP usage [#212]
 
-# 1.0.0 [elastic-apm-ios-agent-100-release-notes]
+## 1.0.0 [elastic-apm-ios-agent-100-release-notes]
 
 ### Features and enhancements [elastic-apm-ios-agent-100-features-enhancements]
 * Added network status to all signals [#202]
