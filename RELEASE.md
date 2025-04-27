@@ -1,9 +1,9 @@
 # Release Checklist
 
 - [ ] update `Version.swift`
-- [ ] update version in `setup.asciidoc`
-- [ ] update opentelemetry-swift in `supported-tech.asciidoc`
+- [ ] update version in `docs/reference/set-up-apm-ios-agent.md`
+- [ ] update opentelemetry-swift in `docs/reference/supported-technologies.md`
 - [ ] update NOTICE if necessary
 - [ ] ensure all dependencies are using a semver version.
-- [ ] update `CHANGELOG.md`
+- [ ] update `docs/release-notes/index.md`
 - [ ] Create "release" in GitHub
