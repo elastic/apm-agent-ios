@@ -18,10 +18,15 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 import os.log
 
+private extension RecordEventsReadableSpan {
+  func overrideRecording() {
+    isRecording = true
+  }
+}
 public struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
   var exporter: SpanExporter
-  var filters = [SignalFilter<ReadableSpan>]()
+  var filters = [SignalFilter<any ReadableSpan>]()
   public let isStartRequired: Bool
   public let isEndRequired: Bool
 
@@ -46,7 +51,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
   public init(
     spanExporter: SpanExporter,
-    _ filters: [SignalFilter<ReadableSpan>] = [SignalFilter<ReadableSpan>](),
+    _ filters: [SignalFilter<any ReadableSpan>] = [SignalFilter< any ReadableSpan>](),
     scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
     maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512,
     willExportCallback: ((inout [SpanData]) -> Void)? = nil
@@ -80,12 +85,16 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
   public mutating func onEnd(span: OpenTelemetrySdk.ReadableSpan) {
 
-    for filter in filters where !filter.shouldInclude(span) {
+    var mutableSpan = span
+
+    (mutableSpan as! RecordEventsReadableSpan).overrideRecording()
+
+    for filter in filters where !filter.shouldInclude(&mutableSpan) {
       return
     }
 
-    if span.isHttpSpan() {
-      var spanData = span.toSpanData()
+    if mutableSpan.isHttpSpan() {
+      var spanData = mutableSpan.toSpanData()
       if spanData.parentSpanId == nil, let transactionSpan = span as? RecordEventsReadableSpan {
 
         var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
@@ -94,14 +103,14 @@ public struct ElasticSpanProcessor: SpanProcessor {
           value: AttributeValue.string(SessionManager.instance.session()),
           forKey: ElasticAttributes.sessionId.rawValue)
         let parentSpanContext = SpanContext.create(
-          traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(),
+          traceId: mutableSpan.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(),
           traceState: TraceState())
 
         let parentSpan = RecordEventsReadableSpan.startSpan(
           context: parentSpanContext,
           name: spanData.name,
-          instrumentationScopeInfo: span.instrumentationScopeInfo,
-          kind: span.kind,
+          instrumentationScopeInfo: mutableSpan.instrumentationScopeInfo,
+          kind: mutableSpan.kind,
           parentContext: nil,
           hasRemoteParent: false,
           spanLimits: transactionSpan.spanLimits,
@@ -124,11 +133,11 @@ public struct ElasticSpanProcessor: SpanProcessor {
     } else {
       #if os(iOS) && !targetEnvironment(macCatalyst)
 
-        span.setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
+      mutableSpan.setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
                           value: AttributeValue.string(NetworkStatusManager().status()))
       #endif // os(iOS) && !targetEnvironment(macCatalyst)
     }
-    processor.onEnd(span: span)
+    processor.onEnd(span: mutableSpan)
   }
 
   public mutating func shutdown(explicitTimeout: TimeInterval? = nil) {

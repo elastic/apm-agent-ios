@@ -166,8 +166,8 @@ class OpenTelemetryInitializer {
       return NoopLogRecordExporter.instance
     }
 
-    var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
-      SignalFilter<ReadableSpan>({ [self] _ in
+    var traceSampleFilter: [SignalFilter<any ReadableSpan>] = [
+      SignalFilter<any ReadableSpan>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]
