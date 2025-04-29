@@ -46,7 +46,7 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
     #endif // os(iOS) && !targetEnvironment(macCatalyst)
 
 
-    let appendedLogRecord = ReadableLogRecord(
+    var appendedLogRecord = ReadableLogRecord(
       resource: logRecord.resource,
       instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
       timestamp: logRecord.timestamp,
@@ -56,7 +56,8 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
       body: logRecord.body,
       attributes: attributes)
 
-      for filter in filters where !filter.shouldInclude(appendedLogRecord) {
+
+      for filter in filters where !filter.shouldInclude(&appendedLogRecord) {
         return
       }
 
