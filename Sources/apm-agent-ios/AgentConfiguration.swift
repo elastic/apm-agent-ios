@@ -16,6 +16,7 @@ public struct AgentConfiguration {
   public var collectorHost = "127.0.0.1"
   public var collectorPort = 8200
   public var collectorTLS = false
+  public var collectorPathPrefix: String?
   public var connectionType : AgentConnectionType = .grpc
   var auth: String?
   var sampleRate: Double = 1.0
@@ -41,7 +42,8 @@ public struct AgentConfiguration {
       }
       components.host = collectorHost
       components.port = collectorPort
-      components.path = "/config/v1/agents"
+      let pathPrefix = collectorPathPrefix ?? ""
+      components.path =  pathPrefix + "/config/v1/agents"
       return components
     }
   }

@@ -56,7 +56,7 @@ public class OpenTelemetryHelper {
     }
 
     return URL(string: "\(config.collectorTLS ? "https://" : "http://")\(config.collectorHost)\( port.isEmpty ? "" : ":\(port)")")
-
+    return URL(string: "\(config.collectorTLS ? "https://" : "http://")\(config.collectorHost)\( port.isEmpty ? "" : ":\(port)")\(config.collectorPathPrefix ?? "")")
   }
 
     public static func getChannel(with config: AgentConfiguration, group: EventLoopGroup) -> ClientConnection {
