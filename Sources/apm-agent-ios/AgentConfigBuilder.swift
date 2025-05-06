@@ -23,6 +23,7 @@ public class AgentConfigBuilder {
   private var managementUrl: URL?
   private var enableRemoteManagement: Bool = true
   private var auth: String?
+  private var collectorPathPrefix: String?
   private static let bearer = "Bearer"
   private static let api = "ApiKey"
   private var connectionType : AgentConnectionType = .grpc
@@ -94,6 +95,12 @@ public class AgentConfigBuilder {
     return self
   }
 
+  ///  prefix needs to start with '/'
+  public func addCollectorPathPrefix(_ prefix: String) -> Self {
+    self.collectorPathPrefix = prefix
+    return self
+  }
+
   public func build() -> AgentConfiguration {
 
     var config = AgentConfiguration()
@@ -104,6 +111,7 @@ public class AgentConfigBuilder {
     config.connectionType = connectionType
     config.managementUrl = self.managementUrl
     config.enableRemoteManagement = enableRemoteManagement
+    config.collectorPathPrefix = collectorPathPrefix
 
     let url = self.exportUrl ?? self.url
     if let url {
