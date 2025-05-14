@@ -1,4 +1,6 @@
 project: 'APM iOS agent docs'
+products:
+  - id: apm-agent
 cross_links:
   - docs-content
 toc:
