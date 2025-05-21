@@ -80,16 +80,16 @@ public class AgentConfigBuilder {
     return self
   }
 
-  public func addSpanFilter(_ shouldInclude: @escaping (ReadableSpan) -> Bool) -> Self {
+  public func addSpanFilter(_ shouldInclude: @escaping (inout any ReadableSpan) -> Bool) -> Self {
     spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
     return self
   }
-  public func addMetricFilter(_ shouldInclude: @escaping (Metric) -> Bool) -> Self {
+  public func addMetricFilter(_ shouldInclude: @escaping (inout Metric) -> Bool) -> Self {
     metricFilters.append(SignalFilter<Metric>(shouldInclude))
     return self
   }
 
-  public func addLogFilter(_ shouldInclude: @escaping (ReadableLogRecord) -> Bool) -> Self {
+  public func addLogFilter(_ shouldInclude: @escaping (inout ReadableLogRecord) -> Bool) -> Self {
     logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
     return self
   }
