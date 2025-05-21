@@ -19,30 +19,92 @@ import XCTest
 
 class ElasticLogRecordProcessorTest: XCTestCase {
 
-    func testSessionId() {
-        let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
+  func testSessionId() {
+    let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-        let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
-        let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
-        let observedDate = Date()
+    let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
+    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
+    let observedDate = Date()
 
-        let eventBuilder = logger.eventBuilder(name: "myEvent")
-        eventBuilder.setBody(AttributeValue.string("hello, world"))
-        .setSeverity(.fatal)
-        .setObservedTimestamp(observedDate)
-        .emit()
-        let exported = waitingExporter.waitForExport()
-        XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["session.id"])
-        XCTAssertEqual(exported?[0].attributes["session.id"]?.description, SessionManager.instance.session())
-        XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
-        XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "myEvent")
-        XCTAssertEqual(exported?[0].body, AttributeValue.string("hello, world"))
-        XCTAssertEqual(exported?[0].severity, .fatal)
-        XCTAssertEqual(exported?[0].observedTimestamp, observedDate)
+    let eventBuilder = logger.eventBuilder(name: "myEvent")
+    eventBuilder.setBody(AttributeValue.string("hello, world"))
+      .setSeverity(.fatal)
+      .setObservedTimestamp(observedDate)
+      .emit()
+    let exported = waitingExporter.waitForExport()
+    XCTAssertEqual(exported?.count, 1)
+    XCTAssertNotNil(exported?[0].attributes["session.id"])
+    XCTAssertEqual(exported?[0].attributes["session.id"]?.description, SessionManager.instance.session())
+    XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
+    XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "myEvent")
+    XCTAssertEqual(exported?[0].body, AttributeValue.string("hello, world"))
+    XCTAssertEqual(exported?[0].severity, .fatal)
+    XCTAssertEqual(exported?[0].observedTimestamp, observedDate)
 
-    }
+  }
+  func testLogRecordFiltering() {
+    let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
+
+    let  factory = LoggerProviderSdk(
+      logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,
+                                                      [SignalFilter<MutableLogRecord> { logRecord in
+                                                        logRecord.attributes["event.name"]?.description == "myEvent"
+                                                      }],
+                                                      scheduleDelay: 0.5)]
+    )
+    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
+    let observedDate = Date()
+
+    let eventBuilder = logger.eventBuilder(name: "myEvent")
+    eventBuilder.setBody(AttributeValue.string("hello, world"))
+      .setSeverity(.fatal)
+      .setObservedTimestamp(observedDate)
+      .emit()
+
+    let anotherEventBuilder = logger.eventBuilder(name: "NOTmyEvent")
+    anotherEventBuilder.setBody(AttributeValue.string("hello, world"))
+      .setSeverity(.fatal)
+      .setObservedTimestamp(observedDate)
+      .emit()
+
+
+    let exported = waitingExporter.waitForExport()
+    XCTAssertEqual(exported?.count, 1)
+    XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "myEvent")
+
+  }
+
+
+ func testLogRecordMutability() {
+    let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
+
+    let  factory = LoggerProviderSdk(
+      logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,
+                                                      [SignalFilter<MutableLogRecord> { logRecord in
+                                                        logRecord.attributes["newAttribute"] = .string("addMe")
+                                                        return true
+                                                      }],
+                                                      scheduleDelay: 0.5)]
+    )
+
+    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
+    let observedDate = Date()
+
+    let eventBuilder = logger.eventBuilder(name: "myEvent")
+    eventBuilder.setBody(AttributeValue.string("hello, world"))
+      .setSeverity(.fatal)
+      .setObservedTimestamp(observedDate)
+      .emit()
+
+    let exported = waitingExporter.waitForExport()
+    XCTAssertEqual(exported?.count, 1)
+    XCTAssertEqual(exported?[0].attributes["newAttribute"]?.description, "addMe")
+
+  }
+
 }
+
+
 
 class WaitingLogRecordExporter: LogRecordExporter {
     var logRecordList = [ReadableLogRecord]()

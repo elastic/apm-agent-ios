@@ -29,7 +29,7 @@ public class AgentConfigBuilder {
   private var sampleRate = 1.0
 
   private var spanFilters = [SignalFilter<ReadableSpan>]()
-  private var logFilters = [SignalFilter<ReadableLogRecord>]()
+  private var logFilters = [SignalFilter<MutableLogRecord>]()
   private var metricFilters = [SignalFilter<Metric>]()
 
   public init() {}
@@ -89,8 +89,8 @@ public class AgentConfigBuilder {
     return self
   }
 
-  public func addLogFilter(_ shouldInclude: @escaping (inout ReadableLogRecord) -> Bool) -> Self {
-    logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
+  public func addLogFilter(_ shouldInclude: @escaping (inout MutableLogRecord) -> Bool) -> Self {
+    logFilters.append(SignalFilter<MutableLogRecord>(shouldInclude))
     return self
   }
 

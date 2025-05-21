@@ -18,101 +18,136 @@ import OpenTelemetrySdk
 import XCTest
 
 class SessionSpanProcessorTest: XCTestCase {
-    let spanName1 = "MySpanName/1"
-    var tracer: Tracer!
-    let tracerSdkFactory = TracerProviderSdk()
-    let maxScheduleDelay = 0.5
+  let spanName1 = "MySpanName/1"
+  var tracer: Tracer!
+  let tracerSdkFactory = TracerProviderSdk()
+  let maxScheduleDelay = 0.5
 
-    override func setUp() {
-        tracer = tracerSdkFactory.get(instrumentationName: "BatchSpansProcessorTest")
-    }
+  override func setUp() {
+    tracer = tracerSdkFactory.get(instrumentationName: "BatchSpansProcessorTest")
+  }
 
-    override func tearDown() {
-        tracerSdkFactory.shutdown()
-    }
+  override func tearDown() {
+    tracerSdkFactory.shutdown()
+  }
 
-    @discardableResult private func createSampledHttpSpan(spanName: String) -> ReadableSpan {
-        let span = tracer.spanBuilder(spanName: spanName).setNoParent()
-            .setAttribute(key: SemanticAttributes.httpUrl.rawValue, value: "http://localhost").startSpan()
-        span.end()
-        return span as! ReadableSpan
-    }
+  @discardableResult private func createSampledHttpSpan(spanName: String) -> ReadableSpan {
+    let span = tracer.spanBuilder(spanName: spanName).setNoParent()
+      .setAttribute(key: SemanticAttributes.httpUrl.rawValue, value: "http://localhost").startSpan()
+    span.end()
+    return span as! ReadableSpan
+  }
 
-    @discardableResult private func createSampledEndedSpan(spanName: String) -> ReadableSpan {
-        let span = tracer.spanBuilder(spanName: spanName1).startSpan()
-        span.end()
-        return span as! ReadableSpan
-    }
+  @discardableResult private func createSampledEndedSpan(spanName: String) -> ReadableSpan {
+    let span = tracer.spanBuilder(spanName: spanName).startSpan()
+    span.end()
+    return span as! ReadableSpan
+  }
 
-    func testSessionId() {
-        let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
+  func testSessionId() {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
 
-        tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
-        _ = createSampledEndedSpan(spanName: spanName1)
-        let exported = waitingSpanExporter.waitForExport()
-        XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["session.id"])
-    }
+    tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
+    _ = createSampledEndedSpan(spanName: spanName1)
+    let exported = waitingSpanExporter.waitForExport()
+    XCTAssertEqual(exported?.count, 1)
+    XCTAssertNotNil(exported?[0].attributes["session.id"])
+  }
 
-    func testOrphanHttpSpans() {
-        let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
-        tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
-        _ = createSampledHttpSpan(spanName: spanName1)
-        let exported = waitingSpanExporter.waitForExport()
-        XCTAssertEqual(exported?.count, 2)
-        XCTAssertNotNil(exported?[0].attributes["session.id"])
-        XCTAssertNotNil(exported?[1].attributes["session.id"])
-        XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
-    }
-    func testHttpSpansWithParent() {
-        let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
-        tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
-        _ = createSampledHttpSpan(spanName: spanName1)
-        let exported = waitingSpanExporter.waitForExport()
-        XCTAssertEqual(exported?.count, 2)
-        XCTAssertNotNil(exported?[0].attributes["session.id"])
-        XCTAssertNotNil(exported?[1].attributes["session.id"])
-        XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
-    }
+  func testSpanFiltering() {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
+
+    tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(
+      spanExporter: waitingSpanExporter,
+      [SignalFilter<any ReadableSpan> { span in
+        span.name != self.spanName1
+      }],
+      scheduleDelay: maxScheduleDelay))
+    _ = createSampledEndedSpan(spanName: spanName1)
+    _ = createSampledEndedSpan(spanName: "Some Span")
+    let exported = waitingSpanExporter.waitForExport()
+
+    XCTAssertEqual(exported?.count, 1)
+  }
+
+  func testOrphanHttpSpans() {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
+    tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
+    _ = createSampledHttpSpan(spanName: spanName1)
+    let exported = waitingSpanExporter.waitForExport()
+    XCTAssertEqual(exported?.count, 2)
+    XCTAssertNotNil(exported?[0].attributes["session.id"])
+    XCTAssertNotNil(exported?[1].attributes["session.id"])
+    XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
+  }
+  func testHttpSpansWithParent() {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
+    tracerSdkFactory.addSpanProcessor(ElasticSpanProcessor(spanExporter: waitingSpanExporter, scheduleDelay: maxScheduleDelay))
+    _ = createSampledHttpSpan(spanName: spanName1)
+    let exported = waitingSpanExporter.waitForExport()
+    XCTAssertEqual(exported?.count, 2)
+    XCTAssertNotNil(exported?[0].attributes["session.id"])
+    XCTAssertNotNil(exported?[1].attributes["session.id"])
+    XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
+  }
+
+  func testSpanFilterMutibility() {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
+    tracerSdkFactory
+      .addSpanProcessor(
+        ElasticSpanProcessor(
+          spanExporter: waitingSpanExporter,
+          [SignalFilter<any ReadableSpan> { span in
+            span.setAttribute(key: "foo", value: "bar")
+            return true
+          }],
+          scheduleDelay: maxScheduleDelay
+        )
+      )
+    _ = createSampledHttpSpan(spanName: spanName1)
+    let exported = waitingSpanExporter.waitForExport()
+
+    XCTAssertTrue(exported?[0].attributes["foo"]?.description == "bar")
+  }
 }
 
 class WaitingSpanExporter: SpanExporter {
-    var spanDataList = [SpanData]()
-    let cond = NSCondition()
-    let numberToWaitFor: Int
-    var shutdownCalled = false
+  var spanDataList = [SpanData]()
+  let cond = NSCondition()
+  let numberToWaitFor: Int
+  var shutdownCalled = false
 
-    init(numberToWaitFor: Int) {
-        self.numberToWaitFor = numberToWaitFor
+  init(numberToWaitFor: Int) {
+    self.numberToWaitFor = numberToWaitFor
+  }
+
+  func waitForExport() -> [SpanData]? {
+    var ret: [SpanData]
+    cond.lock()
+    defer { cond.unlock() }
+
+    while spanDataList.count < numberToWaitFor {
+      cond.wait()
     }
+    ret = spanDataList
+    spanDataList.removeAll()
 
-    func waitForExport() -> [SpanData]? {
-        var ret: [SpanData]
-        cond.lock()
-        defer { cond.unlock() }
+    return ret
+  }
 
-        while spanDataList.count < numberToWaitFor {
-            cond.wait()
-        }
-        ret = spanDataList
-        spanDataList.removeAll()
+  func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
+    cond.lock()
+    spanDataList.append(contentsOf: spans)
+    cond.unlock()
+    cond.broadcast()
+    return .success
+  }
 
-        return ret
-    }
+  func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
+    return .success
+  }
 
-    func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
-        cond.lock()
-        spanDataList.append(contentsOf: spans)
-        cond.unlock()
-        cond.broadcast()
-        return .success
-    }
-
-    func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
-        return .success
-    }
-
-    func shutdown(explicitTimeout: TimeInterval? = nil) {
-        shutdownCalled = true
-    }
+  func shutdown(explicitTimeout: TimeInterval? = nil) {
+    shutdownCalled = true
+  }
 }
