@@ -59,8 +59,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
-      SignalFilter<ReadableLogRecord>({ [self] _ in
+    var logSampleFliter: [SignalFilter<MutableLogRecord>] = [
+      SignalFilter<MutableLogRecord>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]
@@ -172,8 +172,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
-      SignalFilter<ReadableLogRecord>({ [self] _ in
+    var logSampleFliter: [SignalFilter<MutableLogRecord>] = [
+      SignalFilter<MutableLogRecord>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]

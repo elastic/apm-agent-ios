@@ -21,7 +21,7 @@ public struct AgentConfiguration {
   var sampleRate: Double = 1.0
 
   var spanFilters = [SignalFilter<ReadableSpan>]()
-  var logFilters = [SignalFilter<ReadableLogRecord>]()
+  var logFilters = [SignalFilter<MutableLogRecord>]()
   var metricFilters = [SignalFilter<Metric>]()
 
   public func managementUrlComponents() -> URLComponents {

@@ -18,10 +18,10 @@ import OpenTelemetrySdk
 
 public struct ElasticLogRecordProcessor: LogRecordProcessor {
   var processor: BatchLogRecordProcessor
-  var filters = [SignalFilter<ReadableLogRecord>]()
+  var filters = [SignalFilter<MutableLogRecord>]()
   internal init(
     logRecordExporter: LogRecordExporter,
-    _ filters: [SignalFilter<ReadableLogRecord>] = [SignalFilter<ReadableLogRecord>](),
+    _ filters: [SignalFilter<MutableLogRecord>] = [SignalFilter<MutableLogRecord>](),
     scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048,
     maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord]) -> Void)? = nil
   ) {
@@ -46,22 +46,15 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
     #endif // os(iOS) && !targetEnvironment(macCatalyst)
 
 
-    var appendedLogRecord = ReadableLogRecord(
-      resource: logRecord.resource,
-      instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
-      timestamp: logRecord.timestamp,
-      observedTimestamp: logRecord.observedTimestamp,
-      spanContext: logRecord.spanContext,
-      severity: logRecord.severity,
-      body: logRecord.body,
-      attributes: attributes)
+    var appendedLogRecord = MutableLogRecord(from: logRecord)
+    appendedLogRecord.attributes.merge(attributes) { (_, new) in new }
 
 
-      for filter in filters where !filter.shouldInclude(&appendedLogRecord) {
+    for filter in filters where !filter.shouldInclude(&appendedLogRecord) {
         return
       }
 
-    processor.onEmit(logRecord: appendedLogRecord)
+    processor.onEmit(logRecord: appendedLogRecord.finish())
 
   }
 
