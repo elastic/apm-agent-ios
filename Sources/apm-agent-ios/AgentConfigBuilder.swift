@@ -116,6 +116,11 @@ public class AgentConfigBuilder {
       if let port = url.port {
         config.collectorPort = port
       }
+
+
+      config.collectorPath = url.path
+
+
       if let auth = self.auth {
         config.auth = auth
       }

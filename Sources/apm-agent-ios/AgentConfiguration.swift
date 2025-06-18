@@ -14,6 +14,7 @@ public struct AgentConfiguration {
   public var enableRemoteManagement = true
   public var managementUrl : URL?
   public var collectorHost = "127.0.0.1"
+  public var collectorPath = ""
   public var collectorPort = 8200
   public var collectorTLS = false
   public var connectionType : AgentConnectionType = .grpc
@@ -41,7 +42,7 @@ public struct AgentConfiguration {
       }
       components.host = collectorHost
       components.port = collectorPort
-      components.path = "/config/v1/agents"
+      components.path = collectorPath + "/config/v1/agents"
       return components
     }
   }
