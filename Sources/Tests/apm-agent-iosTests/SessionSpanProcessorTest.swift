@@ -98,6 +98,7 @@ class SessionSpanProcessorTest: XCTestCase {
         ElasticSpanProcessor(
           spanExporter: waitingSpanExporter,
           [SignalFilter<any ReadableSpan> { span in
+
             span.setAttribute(key: "foo", value: "bar")
             return true
           }],

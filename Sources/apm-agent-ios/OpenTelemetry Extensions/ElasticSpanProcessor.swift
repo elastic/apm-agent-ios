@@ -18,11 +18,7 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 import os.log
 
-private extension RecordEventsReadableSpan {
-  func overrideRecording() {
-    isRecording = true
-  }
-}
+
 public struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
   var exporter: SpanExporter
@@ -85,9 +81,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
   public mutating func onEnd(span: OpenTelemetrySdk.ReadableSpan) {
 
-    var mutableSpan = span
-
-    (mutableSpan as! RecordEventsReadableSpan).overrideRecording()
+    var mutableSpan = MutableSpan(span: span) ?? span
 
     for filter in filters where !filter.shouldInclude(&mutableSpan) {
       return
