@@ -12,7 +12,9 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#if !os(watchOS)
 import CrashReporter
+#endif
 import Foundation
 import Logging
 import OpenTelemetryApi
@@ -20,6 +22,7 @@ import OpenTelemetrySdk
 
 import os.log
 
+#if !os(watchOS)
 struct CrashManager {
   static let crashEventName: String = "crash"
   static let crashManagerVersion = "0.0.3"
@@ -177,3 +180,5 @@ struct CrashManager {
     return false
   }
 }
+
+#endif // !os(watchOS)

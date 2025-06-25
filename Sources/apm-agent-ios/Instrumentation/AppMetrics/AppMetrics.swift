@@ -13,9 +13,12 @@
 //   limitations under the License.
 
 import Foundation
-import MetricKit
 import OpenTelemetryApi
 import OpenTelemetrySdk
+
+#if !os(watchOS)
+import MetricKit
+#endif
 
 #if os(iOS)
 
