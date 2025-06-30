@@ -22,7 +22,11 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
     func testLifecycleActive() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-        let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
+        let config = AgentConfiguration()
+
+      let  factory = LoggerProviderSdk(
+        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: config, scheduleDelay: 0.5)]
+      )
 
         OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
 
@@ -43,7 +47,12 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
     func testLifecycleInactive() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-        let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
+      let config = AgentConfiguration()
+
+
+      let  factory = LoggerProviderSdk(
+        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: config, scheduleDelay: 0.5)]
+      )
 
         OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
 
@@ -64,7 +73,11 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
     func testLifecycleBackground() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-        let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
+      let config = AgentConfiguration()
+
+      let  factory = LoggerProviderSdk(
+        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,configuration: config, scheduleDelay: 0.5)]
+      )
 
         OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
 
@@ -84,7 +97,11 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
     func testLifecycleForeground() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-        let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
+      let config = AgentConfiguration()
+
+      let  factory = LoggerProviderSdk(
+        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,configuration: config, scheduleDelay: 0.5)]
+      )
 
         OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
 
@@ -105,7 +122,11 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
     func testLifecycleTerminate() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-        let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
+      let config = AgentConfiguration()
+
+      let  factory = LoggerProviderSdk(
+        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: config, scheduleDelay: 0.5)]
+      )
 
         OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
 

@@ -12,19 +12,25 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+public struct MultiInterceptor<T> : Interceptor {
+  var interceptors: [any Interceptor<T>] = []
 
-public protocol Interceptor<T> {
-  associatedtype T
-  func intercept(_ item: T) -> T
-}
-
-extension Interceptor {
-  func join(_ other: any Interceptor<T>) -> any Interceptor<T> {
-    if self is NoopInterceptor<T> { return other }
-    if other is NoopInterceptor<T> { return self }
-    return MultiInterceptor([self, other])
+  public init(_ interceptors: [any Interceptor<T>]) {
+    interceptors.filter { $0 is MultiInterceptor<T> }.forEach {
+      self.interceptors.append(contentsOf: ($0 as! MultiInterceptor<T>).interceptors)
+    }
+    interceptors
+      .filter { !($0 is MultiInterceptor<T> || $0 is NoopInterceptor<T>) }
+      .forEach {
+        self.interceptors.append($0)
+    }
   }
-  func join(_ closure: @escaping (T) -> (T)) -> any Interceptor<T> {
-    return self.join(ClosureInterceptor<T>(closure))
+
+  public func intercept(_ item: T) -> T {
+    var result: T = item
+    interceptors.forEach {
+      result = $0.intercept(result)
+    }
+    return result
   }
 }

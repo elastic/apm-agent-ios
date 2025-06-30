@@ -60,7 +60,7 @@ public class ElasticMetricProcessor: MetricProcessor {
 
     var mutableMetric = metric
 
-    for filter in filters where !filter.shouldInclude(&mutableMetric) {
+    for filter in filters where !filter.shouldInclude(mutableMetric) {
       return
     }
 

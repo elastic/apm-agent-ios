@@ -1,4 +1,5 @@
 import Foundation
+import OpenTelemetryApi
 import OpenTelemetrySdk
 import PersistenceExporter
 
@@ -22,8 +23,11 @@ public struct AgentConfiguration {
   var sampleRate: Double = 1.0
 
   var spanFilters = [SignalFilter<ReadableSpan>]()
-  var logFilters = [SignalFilter<MutableLogRecord>]()
+  var logFilters = [SignalFilter<ReadableLogRecord>]()
   var metricFilters = [SignalFilter<Metric>]()
+
+  var spanAttributeInterceptor : any Interceptor<[String:AttributeValue]> = NoopInterceptor<[String:AttributeValue]>()
+  var logRecordAttributeInterceptor : any Interceptor<[String:AttributeValue]> = NoopInterceptor<[String:AttributeValue]>()
 
   public func managementUrlComponents() -> URLComponents {
     var components = URLComponents()

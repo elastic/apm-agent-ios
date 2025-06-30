@@ -22,7 +22,9 @@ class ElasticLogRecordProcessorTest: XCTestCase {
   func testSessionId() {
     let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-    let  factory = LoggerProviderSdk(logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, scheduleDelay: 0.5)])
+    let  factory = LoggerProviderSdk(
+      logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: AgentConfiguration(), scheduleDelay: 0.5)]
+    )
     let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
     let observedDate = Date()
 
@@ -45,11 +47,14 @@ class ElasticLogRecordProcessorTest: XCTestCase {
   func testLogRecordFiltering() {
     let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
+    var agentConfiguration: AgentConfiguration = .init()
+    agentConfiguration.logFilters = [SignalFilter<ReadableLogRecord> { logRecord in
+      logRecord.attributes["event.name"]?.description == "myEvent"
+    }]
+
     let  factory = LoggerProviderSdk(
       logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,
-                                                      [SignalFilter<MutableLogRecord> { logRecord in
-                                                        logRecord.attributes["event.name"]?.description == "myEvent"
-                                                      }],
+                                                      configuration: agentConfiguration,
                                                       scheduleDelay: 0.5)]
     )
     let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
@@ -75,15 +80,21 @@ class ElasticLogRecordProcessorTest: XCTestCase {
   }
 
 
- func testLogRecordMutability() {
+ func testLogRecordAttributeInterceptor() {
     let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
+   var agentConfiguration: AgentConfiguration = .init()
+   agentConfiguration.logFilters = [SignalFilter<ReadableLogRecord> { logRecord in
+     logRecord.attributes["event.name"]?.description == "myEvent"
+   }]
+   agentConfiguration.logRecordAttributeInterceptor =  ClosureInterceptor<[String:AttributeValue]> { attributes in
+     var newAttributes = attributes
+     newAttributes["newAttribute"] = .string("addMe")
+     return newAttributes
+   }
 
     let  factory = LoggerProviderSdk(
       logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,
-                                                      [SignalFilter<MutableLogRecord> { logRecord in
-                                                        logRecord.attributes["newAttribute"] = .string("addMe")
-                                                        return true
-                                                      }],
+                                                      configuration: agentConfiguration,
                                                       scheduleDelay: 0.5)]
     )
 

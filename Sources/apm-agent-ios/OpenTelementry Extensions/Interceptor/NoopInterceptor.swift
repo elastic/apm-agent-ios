@@ -13,18 +13,6 @@
 //   limitations under the License.
 
 
-public protocol Interceptor<T> {
-  associatedtype T
-  func intercept(_ item: T) -> T
-}
-
-extension Interceptor {
-  func join(_ other: any Interceptor<T>) -> any Interceptor<T> {
-    if self is NoopInterceptor<T> { return other }
-    if other is NoopInterceptor<T> { return self }
-    return MultiInterceptor([self, other])
-  }
-  func join(_ closure: @escaping (T) -> (T)) -> any Interceptor<T> {
-    return self.join(ClosureInterceptor<T>(closure))
-  }
+public struct NoopInterceptor<T> : Interceptor {
+  public func intercept(_ item: T) -> T { return item }
 }

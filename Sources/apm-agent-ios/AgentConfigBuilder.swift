@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetryApi
 import OpenTelemetrySdk
 import PersistenceExporter
 
@@ -29,9 +30,11 @@ public class AgentConfigBuilder {
   private var sampleRate = 1.0
 
   private var spanFilters = [SignalFilter<ReadableSpan>]()
-  private var logFilters = [SignalFilter<MutableLogRecord>]()
+  private var logFilters = [SignalFilter<ReadableLogRecord>]()
   private var metricFilters = [SignalFilter<Metric>]()
 
+  private var spanAttributeInterceptors : [any Interceptor<[String:AttributeValue]>] = []
+  private var logRecordAttributeInterceptors : [any Interceptor<[String:AttributeValue]>] = []
   public init() {}
 
   public func disableAgent() -> Self {
@@ -80,17 +83,27 @@ public class AgentConfigBuilder {
     return self
   }
 
-  public func addSpanFilter(_ shouldInclude: @escaping (inout any ReadableSpan) -> Bool) -> Self {
+  public func addSpanFilter(_ shouldInclude: @escaping (any ReadableSpan) -> Bool) -> Self {
     spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
     return self
   }
-  public func addMetricFilter(_ shouldInclude: @escaping (inout Metric) -> Bool) -> Self {
+  public func addMetricFilter(_ shouldInclude: @escaping (Metric) -> Bool) -> Self {
     metricFilters.append(SignalFilter<Metric>(shouldInclude))
     return self
   }
 
-  public func addLogFilter(_ shouldInclude: @escaping (inout MutableLogRecord) -> Bool) -> Self {
-    logFilters.append(SignalFilter<MutableLogRecord>(shouldInclude))
+  public func addLogFilter(_ shouldInclude: @escaping (ReadableLogRecord) -> Bool) -> Self {
+    logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
+    return self
+  }
+
+  public func addSpanAttributeInterceptor(_ interceptor: any Interceptor<[String:AttributeValue]>) -> Self {
+    self.spanAttributeInterceptors.append(interceptor)
+    return self
+  }
+
+  public func addLogRecordAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
+    self.logRecordAttributeInterceptors.append(interceptor)
     return self
   }
 
@@ -104,6 +117,22 @@ public class AgentConfigBuilder {
     config.connectionType = connectionType
     config.managementUrl = self.managementUrl
     config.enableRemoteManagement = enableRemoteManagement
+
+    if !self.spanAttributeInterceptors.isEmpty {
+      if self.spanAttributeInterceptors.count > 1 {
+        config.spanAttributeInterceptor = MultiInterceptor(self.spanAttributeInterceptors)
+      } else {
+        config.spanAttributeInterceptor = self.spanAttributeInterceptors[0]
+      }
+    }
+
+    if !self.logRecordAttributeInterceptors.isEmpty {
+      if self.logRecordAttributeInterceptors.count > 1 {
+        config.logRecordAttributeInterceptor = MultiInterceptor(self.logRecordAttributeInterceptors)
+      } else {
+        config.logRecordAttributeInterceptor = self.logRecordAttributeInterceptors[0]
+      }
+    }
 
     let url = self.exportUrl ?? self.url
     if let url {
