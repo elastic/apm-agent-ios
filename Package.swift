@@ -69,7 +69,7 @@ let package = Package(
       path: "Sources/apm-agent-ios",
       resources: [
         .process("Resources/PrivacyInfo.xcprivacy")
-      ],
+      ]
     ),
     .testTarget(
       name: "ElasticApmTests",
