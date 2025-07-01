@@ -101,6 +101,19 @@ Adds an anonymous function that will be executed on each metric in the span proc
 
 Adds an anonymous function that will be executed on each log in the span processor to decide if that log should be sent to the back end.
 
+#### `addSpanAttributeInterceptor` [addSpanAttributeInterceptor]
+* **Type:** any Interceptor<[String:AttributeValue>]
+* **Default:** nil
+
+You can provide interceptors for all spans attributes, which will be executed on every span created, where you can read/modify them if needed.
+
+#### `addLogRecordAttributeInterceptor` [addLogRecordAttributeInterceptor]
+* **Type:** any Interceptor<[String:AttributeValue>]
+* **Default:** nil
+
+You can provide interceptors for all LogRecord attributes, which will be executed on every span created, where you can read/modify them if needed.
+
+
 
 ## Instrumentation configuration [instrumentationConfiguration]
 
