@@ -34,5 +34,14 @@ class InterceptorTests : XCTestCase {
     )
     XCTAssertEqual(nestedMultiInterceptor.intercept(""), "true")
   }
+
+  func testSeveralInterceptors() {
+    let interceptors = ClosureInterceptor<String> {s in return s + " hello" }
+      .join { s in
+        return s + ", world"
+      }
+    XCTAssertEqual(interceptors.intercept("well,"), "well, hello, world")
+
+  }
 }
 
