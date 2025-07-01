@@ -3,7 +3,6 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 import PersistenceExporter
 
-
 public enum AgentConnectionType {
   case grpc
   case http
@@ -13,12 +12,12 @@ public struct AgentConfiguration {
   init() {}
   public var enableAgent = true
   public var enableRemoteManagement = true
-  public var managementUrl : URL?
+  public var managementUrl: URL?
   public var collectorHost = "127.0.0.1"
   public var collectorPath = ""
   public var collectorPort = 8200
   public var collectorTLS = false
-  public var connectionType : AgentConnectionType = .grpc
+  public var connectionType: AgentConnectionType = .grpc
   var auth: String?
   var sampleRate: Double = 1.0
 
@@ -26,8 +25,8 @@ public struct AgentConfiguration {
   var logFilters = [SignalFilter<ReadableLogRecord>]()
   var metricFilters = [SignalFilter<Metric>]()
 
-  var spanAttributeInterceptor : any Interceptor<[String:AttributeValue]> = NoopInterceptor<[String:AttributeValue]>()
-  var logRecordAttributeInterceptor : any Interceptor<[String:AttributeValue]> = NoopInterceptor<[String:AttributeValue]>()
+  var spanAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
+  var logRecordAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
 
   public func managementUrlComponents() -> URLComponents {
     var components = URLComponents()

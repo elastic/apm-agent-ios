@@ -12,7 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-
-public struct NoopInterceptor<T> : Interceptor {
-  public func intercept(_ item: T) -> T { return item }
+public struct NoopInterceptor<Item>: Interceptor {
+  public func intercept(_ item: Item) -> Item { return item }
 }

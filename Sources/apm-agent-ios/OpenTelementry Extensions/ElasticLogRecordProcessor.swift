@@ -19,15 +19,15 @@ import OpenTelemetrySdk
 public struct ElasticLogRecordProcessor: LogRecordProcessor {
   var processor: BatchLogRecordProcessor
   var filters = [SignalFilter<ReadableLogRecord>]()
-  var attributeInterceptor : any Interceptor<[String: AttributeValue]>
+  var attributeInterceptor: any Interceptor<[String: AttributeValue]>
   internal init(
     logRecordExporter: LogRecordExporter,
     configuration: AgentConfiguration,
     scheduleDelay: TimeInterval = 5,
- exportTimeout: TimeInterval = 30,
- maxQueueSize: Int = 2048,
+    exportTimeout: TimeInterval = 30,
+    maxQueueSize: Int = 2048,
     maxExportBatchSize: Int = 512,
- willExportCallback: ((inout [ReadableLogRecord]) -> Void)? = nil
+    willExportCallback: ((inout [ReadableLogRecord]) -> Void)? = nil
   ) {
     self.filters = configuration.logFilters
     self.attributeInterceptor = configuration.logRecordAttributeInterceptor
@@ -45,7 +45,6 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
           #endif // os(iOS) && !targetEnvironment(macCatalyst)
           return newAttributes
         }
-
 
     processor = BatchLogRecordProcessor(
       logRecordExporter: logRecordExporter, scheduleDelay: scheduleDelay,

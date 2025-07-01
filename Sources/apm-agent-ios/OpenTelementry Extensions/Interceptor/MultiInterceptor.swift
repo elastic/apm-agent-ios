@@ -12,12 +12,14 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-public struct MultiInterceptor<T> : Interceptor {
+public struct MultiInterceptor<T>: Interceptor {
   var interceptors: [any Interceptor<T>] = []
 
   public init(_ interceptors: [any Interceptor<T>]) {
     interceptors.filter { $0 is MultiInterceptor<T> }.forEach {
-      self.interceptors.append(contentsOf: ($0 as! MultiInterceptor<T>).interceptors)
+      if let multiInterceptor = $0 as? MultiInterceptor<T> {
+        self.interceptors.append(contentsOf: multiInterceptor.interceptors)
+      }
     }
     interceptors
       .filter { !($0 is MultiInterceptor<T> || $0 is NoopInterceptor<T>) }

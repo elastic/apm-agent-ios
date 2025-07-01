@@ -22,7 +22,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
   var exporter: SpanExporter
   var filters = [SignalFilter<any ReadableSpan>]()
-  var attributeInterceptor: any Interceptor<[String:AttributeValue]>
+  var attributeInterceptor: any Interceptor<[String: AttributeValue]>
   public let isStartRequired: Bool
   public let isEndRequired: Bool
 
@@ -78,7 +78,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
   ) {
 
     span.setAttributes(attributeInterceptor.intercept(span.getAttributes()))
-    
+
     #if os(iOS) && !targetEnvironment(macCatalyst)
     if span.isHttpSpan(), let networkStatusInjector = Self.netstatInjector {
       networkStatusInjector.inject(span: span)
