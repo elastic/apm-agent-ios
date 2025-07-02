@@ -126,6 +126,11 @@ public struct ElasticSpanProcessor: SpanProcessor {
           totalRecordedLinks: transactionSpan.totalRecordedLinks,
           startTime: transactionSpan.startTime)
 
+        parentSpan
+          .setAttributes(
+            attributeInterceptor.intercept(parentSpan.getAttributes())
+          )
+
         parentSpan.end(time: transactionSpan.endTime!)
 
         spanData.settingParentSpanId(parentSpanContext.spanId)

@@ -77,6 +77,29 @@ class SessionSpanProcessorTest: XCTestCase {
     XCTAssertEqual(exported?.count, 1)
   }
 
+  func testHttpSpansAreIntercepted() {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
+    let config = AgentConfigBuilder()
+      .addSpanAttributeInterceptor(ClosureInterceptor { attributes in
+        var attributes = attributes
+        attributes["test"] = .bool(true)
+        return attributes
+      })
+      .build()
+    tracerSdkFactory
+      .addSpanProcessor(
+        ElasticSpanProcessor(
+          spanExporter: waitingSpanExporter,
+          agentConfiguration: config, scheduleDelay: maxScheduleDelay
+        )
+      )
+    _ = createSampledHttpSpan(spanName: spanName1)
+    let exported = waitingSpanExporter.waitForExport()
+    XCTAssertEqual(exported?.count, 2)
+    XCTAssertNotNil(exported?[0].attributes["test"])
+    XCTAssertNotNil(exported?[1].attributes["test"])
+  }
+
   func testOrphanHttpSpans() {
     let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
     let config = AgentConfiguration()
