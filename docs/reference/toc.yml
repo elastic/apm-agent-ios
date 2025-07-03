@@ -1,7 +1,0 @@
-project: 'APM iOS agent reference'
-toc:
-  - file: index.md
-  - file: supported-technologies.md
-  - file: set-up-apm-ios-agent.md
-  - file: configuration.md
-  - file: instrumentation.md
