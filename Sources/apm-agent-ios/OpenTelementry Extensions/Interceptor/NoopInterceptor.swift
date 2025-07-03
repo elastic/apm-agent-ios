@@ -1,4 +1,4 @@
-// Copyright © 2023 Elasticsearch BV
+// Copyright © 2025 Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -12,12 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-import Foundation
-
-public struct SignalFilter<Signal> {
-    public private(set) var shouldInclude: (Signal) -> Bool
-
-    init(_ shouldInclude: @escaping (Signal) -> Bool) {
-        self.shouldInclude = shouldInclude
-    }
+public struct NoopInterceptor<Item>: Interceptor {
+  public func intercept(_ item: Item) -> Item { return item }
 }

@@ -59,8 +59,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var logSampleFliter: [SignalFilter<MutableLogRecord>] = [
-      SignalFilter<MutableLogRecord>({ [self] _ in
+    var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
+      SignalFilter<ReadableLogRecord>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]
@@ -138,7 +138,7 @@ class OpenTelemetryInitializer {
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, traceSampleFilter)
+            spanExporter: traceExporter, agentConfiguration: configuration.agent)
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
@@ -152,7 +152,7 @@ class OpenTelemetryInitializer {
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: logExporter,
-            logSampleFliter)
+            configuration: configuration.agent)
         ])
         .build())
 
@@ -172,8 +172,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var logSampleFliter: [SignalFilter<MutableLogRecord>] = [
-      SignalFilter<MutableLogRecord>({ [self] _ in
+    var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
+      SignalFilter<ReadableLogRecord>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]
@@ -247,7 +247,7 @@ class OpenTelemetryInitializer {
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, traceSampleFilter)
+            spanExporter: traceExporter, agentConfiguration: configuration.agent)
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
@@ -261,7 +261,7 @@ class OpenTelemetryInitializer {
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: logExporter,
-            logSampleFliter)
+            configuration: configuration.agent)
         ])
         .build())
     return logExporter
