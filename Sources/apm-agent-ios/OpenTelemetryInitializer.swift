@@ -138,7 +138,7 @@ class OpenTelemetryInitializer {
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, traceSampleFilter)
+            spanExporter: traceExporter, agentConfiguration: configuration.agent)
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
@@ -152,7 +152,7 @@ class OpenTelemetryInitializer {
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: logExporter,
-            logSampleFliter)
+            configuration: configuration.agent)
         ])
         .build())
 
@@ -166,8 +166,8 @@ class OpenTelemetryInitializer {
       return NoopLogRecordExporter.instance
     }
 
-    var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
-      SignalFilter<ReadableSpan>({ [self] _ in
+    var traceSampleFilter: [SignalFilter<any ReadableSpan>] = [
+      SignalFilter<any ReadableSpan>({ [self] _ in
         self.sessionSampler.shouldSample
       })
     ]
@@ -247,7 +247,7 @@ class OpenTelemetryInitializer {
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, traceSampleFilter)
+            spanExporter: traceExporter, agentConfiguration: configuration.agent)
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
@@ -261,7 +261,7 @@ class OpenTelemetryInitializer {
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: logExporter,
-            logSampleFliter)
+            configuration: configuration.agent)
         ])
         .build())
     return logExporter

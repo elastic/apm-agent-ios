@@ -21,7 +21,8 @@ import os.log
 public struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
   var exporter: SpanExporter
-  var filters = [SignalFilter<ReadableSpan>]()
+  var filters = [SignalFilter<any ReadableSpan>]()
+  var attributeInterceptor: any Interceptor<[String: AttributeValue]>
   public let isStartRequired: Bool
   public let isEndRequired: Bool
 
@@ -46,7 +47,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
   public init(
     spanExporter: SpanExporter,
-    _ filters: [SignalFilter<ReadableSpan>] = [SignalFilter<ReadableSpan>](),
+    agentConfiguration: AgentConfiguration,
     scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30,
     maxQueueSize: Int = 2048, maxExportBatchSize: Int = 512,
     willExportCallback: ((inout [SpanData]) -> Void)? = nil
@@ -58,23 +59,35 @@ public struct ElasticSpanProcessor: SpanProcessor {
     isStartRequired = processor.isStartRequired
     isEndRequired = processor.isEndRequired
     exporter = spanExporter
-    self.filters = filters
+    self.filters = agentConfiguration.spanFilters
+    self.attributeInterceptor = agentConfiguration.spanAttributeInterceptor
+      .join { attributes in
+        var newAttributes = attributes
+        newAttributes["type"] =  .string("mobile")
+        return newAttributes
+      }
+      .join { attributes in
+        var newAttributes = attributes
+        newAttributes[ElasticAttributes.sessionId.rawValue] = .string(SessionManager.instance.session())
+        return newAttributes
+      }
   }
 
   public func onStart(
     parentContext: OpenTelemetryApi.SpanContext?, span: OpenTelemetrySdk.ReadableSpan
   ) {
-    span.setAttribute(
-      key: ElasticAttributes.sessionId.rawValue,
-      value: AttributeValue.string(SessionManager.instance.session()))
- 
-    #if os(iOS) && !targetEnvironment(macCatalyst)
-      if let networkStatusInjector = Self.netstatInjector {
-        networkStatusInjector.inject(span: span)
-      }
-    #endif // os(iOS) && !targetEnvironment(macCatalyst)
 
-    span.setAttribute(key: "type", value: AttributeValue.string("mobile"))
+    span.setAttributes(attributeInterceptor.intercept(span.getAttributes()))
+
+    #if os(iOS) && !targetEnvironment(macCatalyst)
+    if span.isHttpSpan(), let networkStatusInjector = Self.netstatInjector {
+      networkStatusInjector.inject(span: span)
+    } else {
+      span
+        .setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
+                      value: .string(NetworkStatusManager().status()))
+    }
+    #endif
     processor.onStart(parentContext: parentContext, span: span)
   }
 
@@ -89,7 +102,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
       if spanData.parentSpanId == nil, let transactionSpan = span as? RecordEventsReadableSpan {
 
         var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
-        newAttributes.updateValue(value: AttributeValue.string("mobile"), forKey: "type")
+        newAttributes.updateValue(value: .string("mobile"), forKey: "type")
         newAttributes.updateValue(
           value: AttributeValue.string(SessionManager.instance.session()),
           forKey: ElasticAttributes.sessionId.rawValue)
@@ -113,6 +126,11 @@ public struct ElasticSpanProcessor: SpanProcessor {
           totalRecordedLinks: transactionSpan.totalRecordedLinks,
           startTime: transactionSpan.startTime)
 
+        parentSpan
+          .setAttributes(
+            attributeInterceptor.intercept(parentSpan.getAttributes())
+          )
+
         parentSpan.end(time: transactionSpan.endTime!)
 
         spanData.settingParentSpanId(parentSpanContext.spanId)
@@ -121,13 +139,8 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
         return
       }
-    } else {
-      #if os(iOS) && !targetEnvironment(macCatalyst)
-
-        span.setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
-                          value: AttributeValue.string(NetworkStatusManager().status()))
-      #endif // os(iOS) && !targetEnvironment(macCatalyst)
     }
+
     processor.onEnd(span: span)
   }
 

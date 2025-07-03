@@ -19,13 +19,33 @@ import OpenTelemetrySdk
 public struct ElasticLogRecordProcessor: LogRecordProcessor {
   var processor: BatchLogRecordProcessor
   var filters = [SignalFilter<ReadableLogRecord>]()
+  var attributeInterceptor: any Interceptor<[String: AttributeValue]>
   internal init(
     logRecordExporter: LogRecordExporter,
-    _ filters: [SignalFilter<ReadableLogRecord>] = [SignalFilter<ReadableLogRecord>](),
-    scheduleDelay: TimeInterval = 5, exportTimeout: TimeInterval = 30, maxQueueSize: Int = 2048,
-    maxExportBatchSize: Int = 512, willExportCallback: ((inout [ReadableLogRecord]) -> Void)? = nil
+    configuration: AgentConfiguration,
+    scheduleDelay: TimeInterval = 5,
+    exportTimeout: TimeInterval = 30,
+    maxQueueSize: Int = 2048,
+    maxExportBatchSize: Int = 512,
+    willExportCallback: ((inout [ReadableLogRecord]) -> Void)? = nil
   ) {
-    self.filters = filters
+    self.filters = configuration.logFilters
+    self.attributeInterceptor = configuration.logRecordAttributeInterceptor
+      .join { attributes in
+          var newAttributes = attributes
+          newAttributes[ElasticAttributes.sessionId.rawValue] = .string(
+            SessionManager.instance.session())
+          return newAttributes
+        }
+      .join { attributes in
+          var newAttributes = attributes
+          #if os(iOS) && !targetEnvironment(macCatalyst)
+          newAttributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue
+            .string(NetworkStatusManager().status())
+          #endif // os(iOS) && !targetEnvironment(macCatalyst)
+          return newAttributes
+        }
+
     processor = BatchLogRecordProcessor(
       logRecordExporter: logRecordExporter, scheduleDelay: scheduleDelay,
       exportTimeout: exportTimeout, maxQueueSize: maxQueueSize,
@@ -36,31 +56,16 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
     guard CentralConfig().data.recording else {
       return
     }
+    var appendedLogRecord = MutableLogRecord(from: logRecord)
+    appendedLogRecord.attributes = attributeInterceptor.intercept(appendedLogRecord.attributes)
 
-    var attributes = logRecord.attributes
-    attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(
-      SessionManager.instance.session())
-    #if os(iOS) && !targetEnvironment(macCatalyst)
-      attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue
-        .string(NetworkStatusManager().status())
-    #endif // os(iOS) && !targetEnvironment(macCatalyst)
+    let finalLogRecord = appendedLogRecord.finish()
 
-
-    let appendedLogRecord = ReadableLogRecord(
-      resource: logRecord.resource,
-      instrumentationScopeInfo: logRecord.instrumentationScopeInfo,
-      timestamp: logRecord.timestamp,
-      observedTimestamp: logRecord.observedTimestamp,
-      spanContext: logRecord.spanContext,
-      severity: logRecord.severity,
-      body: logRecord.body,
-      attributes: attributes)
-
-      for filter in filters where !filter.shouldInclude(appendedLogRecord) {
+    for filter in filters where !filter.shouldInclude(finalLogRecord) {
         return
       }
 
-    processor.onEmit(logRecord: appendedLogRecord)
+    processor.onEmit(logRecord: finalLogRecord)
 
   }
 

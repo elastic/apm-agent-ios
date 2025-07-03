@@ -1,4 +1,4 @@
-//swift-tools-version: 5.7
+//swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,10 +6,10 @@ import PackageDescription
 let package = Package(
   name: "apm-agent-ios",
   platforms: [
-    .iOS(.v13),
-    .macOS(.v10_15),
-    .tvOS(.v13),
-    .watchOS(.v4),
+    .iOS(.v16),
+    .macOS(.v13),
+    .tvOS(.v16),
+    .watchOS(.v10),
   ],
   products: [
     // Products define the executables and libraries a package produces, and make them visible to other package.
@@ -20,10 +20,10 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.2.4"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.14.0"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift", exact: "1.17.0"),
     .package(url: "https://github.com/MobileNativeFoundation/Kronos.git", .upToNextMajor(from: "4.2.2")),
     .package(
-      url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.0.0")),
+      url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.12.0")),
   ],
   targets: [
     .target(
@@ -48,9 +48,21 @@ let package = Package(
         .product(name: "PersistenceExporter", package: "opentelemetry-swift"),
         .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift"),
         .product(name: "ResourceExtension", package: "opentelemetry-swift"),
-        .product(name: "Reachability", package: "Reachability.swift"),
-        .product(name: "Kronos", package: "Kronos"),
-        .product(name: "CrashReporter", package: "plcrashreporter"),
+        .product(
+          name: "Reachability",
+          package: "Reachability.swift",
+          condition: .when(platforms: [.macOS, .iOS, .tvOS])
+        ),
+        .product(
+          name: "Kronos",
+          package: "Kronos",
+          condition: .when(platforms: [.macOS, .iOS, .tvOS])
+        ),
+        .product(
+          name: "CrashReporter",
+          package: "plcrashreporter",
+          condition: .when(platforms: [.macOS, .iOS, .tvOS])
+        ),
         "MemorySampler",
         "CPUSampler",
       ],
@@ -58,7 +70,6 @@ let package = Package(
       resources: [
         .process("Resources/PrivacyInfo.xcprivacy")
       ]
-//      plugins: [.plugin(name: "SwiftLintPlugin", package:"SwiftLint")]
     ),
     .testTarget(
       name: "ElasticApmTests",

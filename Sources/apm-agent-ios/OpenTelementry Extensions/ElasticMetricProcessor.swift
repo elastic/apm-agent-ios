@@ -58,10 +58,12 @@ public class ElasticMetricProcessor: MetricProcessor {
       return
     }
 
-    for filter in filters where !filter.shouldInclude(metric) {
+    var mutableMetric = metric
+
+    for filter in filters where !filter.shouldInclude(mutableMetric) {
       return
     }
 
-    metrics.append(metric)
+    metrics.append(mutableMetric)
   }
 }

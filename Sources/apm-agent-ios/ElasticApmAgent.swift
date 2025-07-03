@@ -1,10 +1,12 @@
+#if !os(watchOS)
 import CrashReporter
+import Kronos
+#endif
 import Foundation
 import NIO
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import os.log
-import Kronos
 
 public class ElasticApmAgent {
  public static let name = "apm-agent-ios"
@@ -17,8 +19,10 @@ public class ElasticApmAgent {
       os_log("Elastic APM Agent has been disabled.")
       return
     }
+    #if !os(watchOS)
+    Kronos.Clock.sync()
+    #endif
 
-      Kronos.Clock.sync()
     instance = ElasticApmAgent(
       configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
   }
@@ -37,7 +41,9 @@ public class ElasticApmAgent {
 
   let instrumentation: InstrumentationWrapper
 
+  #if !os(watchOS)
   let crashManager: CrashManager?
+  #endif
 
   let crashLogExporter: LogRecordExporter
 
@@ -74,15 +80,13 @@ public class ElasticApmAgent {
     group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     openTelemetry = OpenTelemetryInitializer(group: group, sessionSampler: sessionSampler)
 
-
       if agentConfigManager.agent.connectionType == .grpc {
         crashLogExporter = openTelemetry.initialize(agentConfigManager)
       } else {
         crashLogExporter = openTelemetry.initializeWithHttp(agentConfigManager)
       }
 
-
-
+    #if !os(watchOS)
     if instrumentationConfiguration.enableCrashReporting {
       crashManager = CrashManager(
         resource: AgentResource.get().merging(other: AgentEnvResource.get()),
@@ -90,12 +94,17 @@ public class ElasticApmAgent {
     } else {
       crashManager = nil
     }
+    #endif
+
     os_log("Initializing Elastic APM Agent.")
 
     instrumentation.initalize()
+
+    #if !os(watchOS)
     if agentConfigManager.instrumentation.enableCrashReporting {
       crashManager?.initializeCrashReporter(configuration: crashConfig)
     }
+    #endif
   }
 
   deinit {

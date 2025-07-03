@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetryApi
 import OpenTelemetrySdk
 import PersistenceExporter
 
@@ -25,13 +26,15 @@ public class AgentConfigBuilder {
   private var auth: String?
   private static let bearer = "Bearer"
   private static let api = "ApiKey"
-  private var connectionType : AgentConnectionType = .grpc
+  private var connectionType: AgentConnectionType = .grpc
   private var sampleRate = 1.0
 
   private var spanFilters = [SignalFilter<ReadableSpan>]()
   private var logFilters = [SignalFilter<ReadableLogRecord>]()
   private var metricFilters = [SignalFilter<Metric>]()
 
+  private var spanAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
+  private var logRecordAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
   public init() {}
 
   public func disableAgent() -> Self {
@@ -39,7 +42,8 @@ public class AgentConfigBuilder {
     return self
   }
 
-  @available(*, deprecated, renamed: "withExportUrl", message: "Export and config management URLs will be seperated in future.")
+  @available(*, deprecated, renamed: "withExportUrl",
+             message: "Export and config management URLs will be seperated in future.")
   public func withServerUrl(_ url: URL) -> Self {
     self.url = url
     return self
@@ -80,7 +84,7 @@ public class AgentConfigBuilder {
     return self
   }
 
-  public func addSpanFilter(_ shouldInclude: @escaping (ReadableSpan) -> Bool) -> Self {
+  public func addSpanFilter(_ shouldInclude: @escaping (any ReadableSpan) -> Bool) -> Self {
     spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
     return self
   }
@@ -91,6 +95,16 @@ public class AgentConfigBuilder {
 
   public func addLogFilter(_ shouldInclude: @escaping (ReadableLogRecord) -> Bool) -> Self {
     logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
+    return self
+  }
+
+  public func addSpanAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
+    self.spanAttributeInterceptors.append(interceptor)
+    return self
+  }
+
+  public func addLogRecordAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
+    self.logRecordAttributeInterceptors.append(interceptor)
     return self
   }
 
@@ -105,6 +119,22 @@ public class AgentConfigBuilder {
     config.managementUrl = self.managementUrl
     config.enableRemoteManagement = enableRemoteManagement
 
+    if !self.spanAttributeInterceptors.isEmpty {
+      if self.spanAttributeInterceptors.count > 1 {
+        config.spanAttributeInterceptor = MultiInterceptor(self.spanAttributeInterceptors)
+      } else {
+        config.spanAttributeInterceptor = self.spanAttributeInterceptors[0]
+      }
+    }
+
+    if !self.logRecordAttributeInterceptors.isEmpty {
+      if self.logRecordAttributeInterceptors.count > 1 {
+        config.logRecordAttributeInterceptor = MultiInterceptor(self.logRecordAttributeInterceptors)
+      } else {
+        config.logRecordAttributeInterceptor = self.logRecordAttributeInterceptors[0]
+      }
+    }
+
     let url = self.exportUrl ?? self.url
     if let url {
       if let proto = url.scheme, proto == "https" {
@@ -116,6 +146,9 @@ public class AgentConfigBuilder {
       if let port = url.port {
         config.collectorPort = port
       }
+
+      config.collectorPath = url.path
+
       if let auth = self.auth {
         config.auth = auth
       }

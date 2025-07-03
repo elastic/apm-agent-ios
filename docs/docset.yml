@@ -6,6 +6,7 @@ cross_links:
 toc:
   - toc: release-notes
 subs:
+  edot: Elastic Distribution of OpenTelemetry
   serverless-full:   "Elastic Cloud Serverless"
   es:   "Elasticsearch"
   kib:   "Kibana"

@@ -14,9 +14,10 @@
 
 import Foundation
 import OpenTelemetrySdk
-import Kronos
 import os.log
-
+#if !os(watchOS)
+import Kronos
+#endif
 
 class SuccessLogOnce {
   static let run: Void = {
@@ -36,11 +37,13 @@ class FailureLogOnce {
 
 class NTPClock: OpenTelemetrySdk.Clock {
   var now: Date {
+    #if !os(watchOS)
     if let date = Kronos.Clock.now {
       SuccessLogOnce.run
       return date
     }
     FailureLogOnce.run
+    #endif
     return Date()
   }
 }
