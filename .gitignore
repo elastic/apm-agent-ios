@@ -103,3 +103,6 @@ html_docs
 
 ## Dist folder
 dist/
+
+.artifacts
+docs/.artifacts
