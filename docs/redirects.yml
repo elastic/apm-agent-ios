@@ -1,6 +1,6 @@
 redirects:
-  'reference/apm/agents/ios/index.md': 'opentelemetry://reference/opentelemetry/edot-sdks/ios/index.md'
-  'reference/apm/agents/ios/supported-technologies.md': 'opentelemetry://reference/opentelemetry/edot-sdks/ios/supported-technologies.md'
-  'reference/apm/agents/ios/set-up-apm-ios-agent.md': 'opentelemetry://reference/opentelemetry/edot-sdks/ios/set-up-apm-ios-agent.md'
-  'reference/apm/agents/ios/configuration.md': 'opentelemetry://reference/opentelemetry/edot-sdks/ios/configuration.md'
-  'reference/apm/agents/ios/instrumentation.md': 'opentelemetry://reference/opentelemetry/edot-sdks/ios/instrumentation.md'
+  'reference/apm/agents/ios/index.md': 'opentelemetry://reference/edot-sdks/ios/index.md'
+  'reference/apm/agents/ios/supported-technologies.md': 'opentelemetry://reference/edot-sdks/ios/supported-technologies.md'
+  'reference/apm/agents/ios/set-up-apm-ios-agent.md': 'opentelemetry://reference/edot-sdks/ios/set-up-apm-ios-agent.md'
+  'reference/apm/agents/ios/configuration.md': 'opentelemetry://reference/edot-sdks/ios/configuration.md'
+  'reference/apm/agents/ios/instrumentation.md': 'opentelemetry://reference/edot-sdks/ios/instrumentation.md'
