@@ -1,5 +1,5 @@
 Elastic APM iOS Agent
-Copyright 2021-2022 Elasticsearch B.V.
+Copyright 2021-2025 Elasticsearch B.V.
 
 ###############################################################################
 
@@ -16,8 +16,8 @@ This product includes software licensed under Apache 2.0 from the following sour
 - swift-nio-transport-services (https://github.com/apple/swift-nio-transport-services.git)
 - swift-protobuf (https://github.com/apple/swift-protobuf.git)
 - Thrift-Swift (https://github.com/undefinedlabs/Thrift-Swift)
-- TrueTime.swift (https://github.com/instacart/TrueTime.swift)
 - PLCrashReporter (https://github.com/microsoft/plcrashreporter)
+- Kronos (https://github.com/MobileNativeFoundation/Kronos)
 
 ------------------------------------------------------------------------------
 
