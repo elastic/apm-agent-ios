@@ -15,3 +15,15 @@
 
 import Foundation
 
+import XCTest
+@testable import ElasticApm
+
+class OpampStateTest: XCTestCase {
+  func testMutex() {
+    let state = OpampState<Int>(0)
+    DispatchQueue.concurrentPerform(iterations: 1000, execute: { _ in
+      state.value += 1
+    })
+    XCTAssertTrue(state == 1000)
+  }
+}

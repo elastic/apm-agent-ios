@@ -15,9 +15,16 @@
 
 import Foundation
 import OpenTelemetryApi
+import OpenTelemetrySdk
 
 public struct OpampClientBuilder {
-//  private let requestService: RequestService
+  private var requestService: RequestService
+  private let remoteConfigStatusState = OpampState<Opamp_Proto_RemoteConfigStatus>(.init())
+  private let sequenceNumberState = OpampState<Int>(1)
+  private let agentDescriptionState = OpampState<Opamp_Proto_AgentDescription>(.init())
+  private let capabilitiesState = OpampState<Opamp_Proto_AgentCapabilities>(.reportsStatus)
+  private let instanceUidState: OpampState<Data>
+  private let effectiveConfigState: OpampState<Opamp_Proto_EffectiveConfig>
 
 //  public func build() -> OpampClient {
 //    return OpampClient()
@@ -28,44 +35,49 @@ public struct OpampClientBuilder {
   /// Sets an implementation of a `RequestService` to handle the request's sending process.
   /// - Parameter requestService: the RequestService Implementation
   /// - Returns Self
-  public func setRequestService(requestService _: RequestService) -> Self {
-//    self.requestService = requestService
+  public mutating func setRequestService(_ requestService: RequestService) -> Self {
+    self.requestService = requestService
     return self
   }
 
-  public func setInstsanceUid(instanceUid _: Data) -> Self {
-    
+  public mutating func setInstsanceUid(_ instanceUid : Data) -> Self {
+    instanceUidState.value = instanceUid
     return self
   }
 
-  public func setServiceName(serviceName _: String) -> Self {
+  public mutating func setServiceName(_ serviceName: String) -> Self {
+    return addIdentifyingAttribute(
+      key: ResourceAttributes.serviceName.rawValue,
+      value: .string(serviceName))
+  }
+
+  public mutating func setServiceNamespace(_ serviceNamespace: String) -> Self {
+    return addIdentifyingAttribute(
+      key: ResourceAttributes.serviceNamespace.rawValue,
+      value: .string(serviceNamespace)
+    )
+  }
+
+  public mutating func setServiceVersion(_ serviceVersion: String) -> Self {
+    return addIdentifyingAttribute(
+      key: ResourceAttributes.serviceVersion.rawValue,
+      value: .string(serviceVersion))
+  }
+
+  public mutating func setServiceEnvironment(_ serviceEnvironment: String) -> Self {
+   return addIdentifyingAttribute(
+      key: "deployment.environment.name" ,
+      value: .string(serviceEnvironment)
+    )
+  }
+
+  public mutating func enableRemoteConfig() -> Self {
 
     return self
   }
 
-  public func setServiceNamespace(serviceNamespace _: String) -> Self {
-
-    return self
-  }
-
-  public func setServiceVersion(serviceVersion _: String) -> Self {
-
-    return self
-  }
-
-  public func setServiceEnvironment(serviceEnvironment _: String) -> Self {
-    
-    return self
-  }
-
-  public func enableRemoteConfig() -> Self {
-
-    return self
-  }
-
-  public func addIdentifyingAttribute(key: String, value: AttributeValue) -> Self {
-      var agentDescription = Opamp_Proto_AgentDescription()
-    agentDescription.identifyingAttributes
+  public mutating func addIdentifyingAttribute(key: String, value: AttributeValue) -> Self {
+    agentDescriptionState.value.identifyingAttributes
       .append(OpampClientBuilder.createKeyValue(key:key, attributeValue:value))
     return self
   }
@@ -148,7 +160,5 @@ public struct OpampClientBuilder {
     }
     return anyValue
   }
-
-
   internal init() {}
 }
