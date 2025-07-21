@@ -27,30 +27,26 @@ jobs:
         fi
     - name: update version file
       run: |
-        echo '// Copyright © 2025 Elasticsearch BV
-        //
-        //   Licensed under the Apache License, Version 2.0 (the "License");
-        //   you may not use this file except in compliance with the License.
-        //   You may obtain a copy of the License at
-        //
-        //       http://www.apache.org/licenses/LICENSE-2.0
-        //
-        //   Unless required by applicable law or agreed to in writing, software
-        //   distributed under the License is distributed on an "AS IS" BASIS,
-        //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        //   See the License for the specific language governing permissions and
-        //   limitations under the License.
+        sed -e 's/<NEW_VERSION>/${{ inputs.new_version }}/' Version.template > Sources/apm-agent-ios/Version.swift
 
-        import Foundation
-
-        extension ElasticApmAgent {
-            public static let elasticSwiftAgentVersion: String = "${{ inputs.new_version }}"
-        ' > Sources/apm-agent-ios/Version.swift  
     - name: update docs versions
       run: | 
         sed -i -e 's/from: ".*"),$/from: "${inputs.new_version}"),/' docs/reference/set-up-apm-ios-agent.md
         OPENTELEMETRY_VERSION=$(sed -E -n 's/[[:space:]]+url: "https:\/\/github.com\/open-telemetry\/opentelemetry-swift", exact: "(.*)"\),$/\1/p' Package.swift)
         sed -i -e 's/| OpenTelemetry-Swift | .* |/| OpenTelemetry-Swift | ${OPENTELEMETRY_VERSION} |/' docs/reference/supported-technologies.md 
+    - name: Get token
+      id: get_token
+      uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+      with:
+        app_id: ${{ secrets.RELEASE_TOKEN }}
+        private_key: ${{ secrets.RELEASE_TOKEN_PEM }}
+        permissions: >-
+          {
+            "contents": "write",
+            "pull_requests": "write"
+          }
+        repositories: >-
+          ["apm-agent-ios"]
     - name: Create pull request 
       uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
       with:

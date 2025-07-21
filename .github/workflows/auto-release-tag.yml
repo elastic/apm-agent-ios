@@ -31,4 +31,4 @@ jobs:
         with: 
           tag: ${{ steps.check-release.outputs.version }}
           prerelease: true
-          generateReleaseNotes: true
+          generateReleaseNotes: truejjjqq
