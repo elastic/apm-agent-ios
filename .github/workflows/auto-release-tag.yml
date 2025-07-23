@@ -7,7 +7,9 @@ on :
       - closed
 jobs:
   CheckRelease:
-    runs-on: macos-15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check if merge is release branch
         id: check-release
@@ -32,4 +34,4 @@ jobs:
         with: 
           tag: ${{ steps.check-release.outputs.version }}
           prerelease: true
-          generateReleaseNotes: truejjjqq
+          generateReleaseNotes: true
