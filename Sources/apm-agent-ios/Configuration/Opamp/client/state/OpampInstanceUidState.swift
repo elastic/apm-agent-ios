@@ -15,9 +15,8 @@
 
 import Foundation
 
-
-public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus> {
+public class OpampInstanceUidState: OpampState<UUID> {
   public init() {
-    super.init(.init())
+    super.init(UUID())
   }
 }

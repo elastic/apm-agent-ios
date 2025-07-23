@@ -18,29 +18,29 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 
 public struct OpampClientBuilder {
-  private var requestService: RequestService
-  private let remoteConfigStatusState = OpampState<Opamp_Proto_RemoteConfigStatus>(.init())
-  private let sequenceNumberState = OpampState<Int>(1)
-  private let agentDescriptionState = OpampState<Opamp_Proto_AgentDescription>(.init())
-  private let capabilitiesState = OpampState<Opamp_Proto_AgentCapabilities>(.reportsStatus)
-  private let instanceUidState: OpampState<Data>
-  private let effectiveConfigState: OpampState<Opamp_Proto_EffectiveConfig>
+  private let remoteConfigStatusState = OpampRemoteConfigStatusState()
+  private let sequenceNumberState = OpampSequenceNumberState()
+  private let agentDescriptionState = OpampAgentDescriptionState()
+  private let capabilitiesState = OpampCapabilitiesState()
+  private let instanceUidState = OpampInstanceUidState()
+  private let effectiveConfigState = OpampEffectiveConfigState()
 
-//  public func build() -> OpampClient {
-//    return OpampClient()
-//  }
-
-
-
-  /// Sets an implementation of a `RequestService` to handle the request's sending process.
-  /// - Parameter requestService: the RequestService Implementation
-  /// - Returns Self
-  public mutating func setRequestService(_ requestService: RequestService) -> Self {
-    self.requestService = requestService
-    return self
+  public func build(requestService: some RequestService) -> OpampClient {
+    let clientState = OpampClientState(
+      remoteConfigStatusState: remoteConfigStatusState,
+      sequenceNumberState: sequenceNumberState,
+      agentDescriptionState: agentDescriptionState,
+      capabilitiesState: capabilitiesState,
+      instanceUidState: instanceUidState,
+      effectiveConfigState: effectiveConfigState
+    )
+    return OpampClientImpl(
+      requestService: requestService,
+      clientState: clientState
+    )
   }
 
-  public mutating func setInstsanceUid(_ instanceUid : Data) -> Self {
+  public mutating func setInstsanceUid(_ instanceUid : UUID) -> Self {
     instanceUidState.value = instanceUid
     return self
   }

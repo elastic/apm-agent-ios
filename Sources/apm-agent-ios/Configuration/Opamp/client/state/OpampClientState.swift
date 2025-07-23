@@ -15,9 +15,11 @@
 
 import Foundation
 
-
-public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus> {
-  public init() {
-    super.init(.init())
-  }
+public struct OpampClientState {
+  let remoteConfigStatusState: OpampRemoteConfigStatusState
+  let sequenceNumberState: OpampSequenceNumberState
+  let agentDescriptionState: OpampAgentDescriptionState
+  let capabilitiesState: OpampCapabilitiesState
+  let instanceUidState: OpampInstanceUidState
+  let effectiveConfigState: OpampEffectiveConfigState
 }

@@ -15,9 +15,8 @@
 
 import Foundation
 
-
-public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus> {
-  public init() {
-    super.init(.init())
+public class OpampCapabilitiesState: OpampState<Opamp_Proto_AgentCapabilities> {
+  init() {
+    super.init(.reportsStatus)
   }
 }

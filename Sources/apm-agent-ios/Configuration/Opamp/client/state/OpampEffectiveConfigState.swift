@@ -1,3 +1,4 @@
+
 //
 //  Copyright © 2025  Elasticsearch BV
 //
@@ -13,10 +14,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-import Foundation
-
-
-public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus> {
+public class OpampEffectiveConfigState: OpampState<Opamp_Proto_EffectiveConfig> {
   public init() {
     super.init(.init())
   }

@@ -21,7 +21,7 @@ public protocol OpampClient {
   ///  attempts will be reported via the `Callback` `onConnectFailed` callback.
   /// - Parameter callback: The callback to be invoked when the client connects, fails to connect,
   ///                        or receives a message.
-  func start(callback _: OpampClientCallback)
+  func start(_ callback: OpampClientCallback)
 
   /// Stops the OpAMP client. May only be called after `start`. May only be called once.
   /// After successful return it is garanteed that no callbacks will be called.
@@ -30,7 +30,7 @@ public protocol OpampClient {
 
   /// Sets the current remote config status which will be sent in the next agent-to-server request.
   ///  - Parameter remoteConfigStatus: the new remote config status.
-  func setRemoteConfigStatus(remoteConfigStatus _: Opamp_Proto_RemoteConfigStatus)
+  func setRemoteConfigStatus(_ remoteConfigStatus: Opamp_Proto_RemoteConfigStatus)
 
 }
 
