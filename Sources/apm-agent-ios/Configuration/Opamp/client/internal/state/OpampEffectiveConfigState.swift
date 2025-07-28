@@ -14,7 +14,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-public class OpampEffectiveConfigState: OpampState<Opamp_Proto_EffectiveConfig> {
+public class OpampEffectiveConfigState: OpampState<Opamp_Proto_EffectiveConfig>, @unchecked Sendable {
   public init() {
     super.init(.init())
   }

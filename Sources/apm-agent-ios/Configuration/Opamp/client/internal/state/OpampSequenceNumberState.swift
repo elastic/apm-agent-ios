@@ -15,9 +15,13 @@
 
 import Foundation
 
+public class OpampSequenceNumberState: OpampState<Int>, @unchecked Sendable {
 
-public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus> {
   public init() {
-    super.init(.init())
+    super.init(1)
+  }
+
+  public func increment() {
+    self.value += 1
   }
 }

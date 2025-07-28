@@ -15,8 +15,8 @@
 
 import Foundation
 
-public class OpampAgentDescriptionState: OpampState<Opamp_Proto_AgentDescription> {
-  public init() {
-    super.init(.init())
+public class OpampCapabilitiesState: OpampState<Opamp_Proto_AgentCapabilities>, @unchecked Sendable {
+  init() {
+    super.init(.reportsStatus)
   }
 }

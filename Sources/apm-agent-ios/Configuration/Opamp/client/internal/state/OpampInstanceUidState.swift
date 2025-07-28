@@ -15,13 +15,8 @@
 
 import Foundation
 
-public class OpampSequenceNumberState: OpampState<Int> {
-
+public class OpampInstanceUidState: OpampState<UUID>, @unchecked Sendable {
   public init() {
-    super.init(1)
-  }
-
-  public func increment() {
-    self.value += 1
+    super.init(UUID())
   }
 }

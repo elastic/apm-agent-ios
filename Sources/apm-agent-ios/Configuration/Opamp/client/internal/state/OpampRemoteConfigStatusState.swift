@@ -15,8 +15,9 @@
 
 import Foundation
 
-public protocol RequestService {
-  func start(callback: RequestServiceCallback, request: OpampRequest)
-  func sendRequest()
-  func stop()
+
+public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus>, @unchecked Sendable {
+  public init() {
+    super.init(.init())
+  }
 }

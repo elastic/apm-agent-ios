@@ -15,8 +15,9 @@
 
 import Foundation
 
-public class OpampInstanceUidState: OpampState<UUID> {
-  public init() {
-    super.init(UUID())
+public struct OpampRequest {
+  public let agentToServer: Opamp_Proto_AgentToServer
+  public init(agentToServer: Opamp_Proto_AgentToServer) {
+    self.agentToServer = agentToServer
   }
 }
