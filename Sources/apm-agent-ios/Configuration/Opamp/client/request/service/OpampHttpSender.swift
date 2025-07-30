@@ -10,7 +10,7 @@ import FoundationNetworking
 #endif
 
 /// Client for sending requests over HTTP.
-final class OpampHttpClient {
+final class OpampHttpSender: OpampSender {
   private let url: URL
   private let session: URLSession
 
@@ -31,7 +31,7 @@ final class OpampHttpClient {
   }
 
   func send(opampRequest: OpampRequest,
-            completion: @escaping (Result<(OpampResponse, HTTPURLResponse), Error>) -> Void) {
+            completion: @escaping (Result<(OpampResponse, URLResponse), Error>) -> Void) {
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.addValue("application/x-protobuf", forHTTPHeaderField: "Content-Type")
@@ -57,7 +57,7 @@ struct URLSessionTransportInconsistencyException: Error {}
 /// it into only two possible states of `HTTPTransportResult`.
 private func httpClientResult(
   for urlSessionTaskCompletion: (Data?, URLResponse?, Error?)
-) -> Result<(OpampResponse, HTTPURLResponse), Error> {
+) -> Result<(OpampResponse, URLResponse), Error> {
   let (data, response, error) = urlSessionTaskCompletion
 
   if let error {
