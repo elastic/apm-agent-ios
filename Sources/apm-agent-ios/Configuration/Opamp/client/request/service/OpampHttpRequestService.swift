@@ -16,26 +16,28 @@
 import Foundation
 import os.log
 
-public class OpampHttpReqeustService: RequestService {
-  private let httpClient: OpampHttpClient
+public class OpampHttpRequestService: RequestService {
+  private let httpClient: OpampSender
   private let requestDelay: TimeInterval
   private let retryDelay: TimeInterval
   private let requestQueue = DispatchQueue(
     label: "com.elastic.apm.agent.opamp.http.request.timer",
     qos: .utility)
   private let lock = NSLock()
+  private var retryModeEnabled = false
+  private var exponentialBackoffSkips = 0
   private let requestTimer: DispatchSourceTimer
 
   private var callback: RequestServiceCallback?
   private var request: OpampRequest?
 
-  private var isRunning = false
-  private var isStopped = false
+  public private(set) var isRunning = false
+  public private(set) var isStopped = false
 
-  private static let defaultURL = URL(string: "http://localhost:4320/v1/opamp")!
+  internal static let defaultURL = URL(string: "http://localhost:4320/v1/opamp")!
 
   init(
-    httpClient: OpampHttpClient = OpampHttpClient(url: defaultURL),
+    httpClient: OpampSender = OpampHttpSender(url: defaultURL),
     requestDelay: TimeInterval = 30.0,
     retryDelay: TimeInterval = 30.0,
   ) {
@@ -48,8 +50,6 @@ public class OpampHttpReqeustService: RequestService {
         guard let self = self else {
           return
         }
-        self.lock.lock()
-        defer { self.lock.unlock() }
         self.doSendRequest()
       }
     }
@@ -95,6 +95,112 @@ public class OpampHttpReqeustService: RequestService {
     requestTimer.cancel()
   }
 
+
+  private func isSuccessful(_ response: URLResponse) -> Bool{
+    if let httpResponse = response as? HTTPURLResponse {
+      return httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
+    }
+    return false
+  }
+
+  private func shouldUpdateRetryDelay(_ response: HTTPURLResponse) -> Bool {
+      return response.statusCode == 429 || response.statusCode == 503
+  }
+
+
+  private func handleHttpError(_ response: URLResponse) {
+    if let httpResponse = response as? HTTPURLResponse {
+      if shouldUpdateRetryDelay(httpResponse) {
+        if let retryAfterHeader = httpResponse.value(forHTTPHeaderField:"Retry-After") {
+          let retryAfter: TimeInterval = Double(retryAfterHeader) ?? self.retryDelay // todo: parse RFC_1123 date format
+        }
+      }
+
+      let error = NSError(
+        domain: HTTPURLResponse
+          .localizedString(forStatusCode: httpResponse.statusCode),
+        code: httpResponse.statusCode,
+      )
+
+      DispatchQueue.global().async { [weak self, error] in
+        guard let self = self else { return }
+        self.callback?.onRequestFailed(error: error, retryAfter: self.retryDelay)
+      }
+    }
+  }
+
+
+  private func enableRetryMode(_ retryAfter: TimeInterval) {
+    if !retryModeEnabled {
+      retryModeEnabled = true
+      self.requestTimer
+        .schedule(deadline: .now() + retryAfter, repeating: retryAfter)
+    }
+  }
+
+  private func disableRetryMode() {
+    if retryModeEnabled {
+      retryModeEnabled = false
+      self.requestTimer.schedule(deadline: .now() + self.requestDelay, repeating: self.requestDelay)
+
+    }
+  }
+
+
+  private func handleErrorResponse(
+    _ errorResponse: Opamp_Proto_ServerErrorResponse
+  ) {
+    switch errorResponse.type {
+    case .unavailable:
+      let retryAfter = errorResponse.retryInfo.retryAfterNanoseconds
+      if retryAfter > 0 {
+        enableRetryMode(TimeInterval.fromNanoseconds(Int64(retryAfter)))
+      } else {
+        incrementExponentialBackoff()
+        let retryAfter = 30.0 * Double(exponentialBackoffSkips)
+        enableRetryMode(retryAfter)
+      }
+    case .badRequest, .unknown, .UNRECOGNIZED(_):
+      incrementExponentialBackoff()
+      enableRetryMode(30.0 * Double(exponentialBackoffSkips))
+    }
+    }
+
+  private func incrementExponentialBackoff() {
+    if (exponentialBackoffSkips == 0) {
+      exponentialBackoffSkips = 1;
+    } else {
+      exponentialBackoffSkips *= 2;
+    }
+    if (exponentialBackoffSkips >= 32) {
+      exponentialBackoffSkips = 32;
+    }
+  }
+
+  private func resetExponentialBackoffSkips() {
+    exponentialBackoffSkips = 0
+    disableRetryMode()
+  }
+
+  private func handleNetworkError(_ error: Error) {
+    DispatchQueue.global().async { [weak self, error] in
+      guard let self = self else { return }
+      self.callback?.onConnectionFailure(error: error, retryAfter: self.retryDelay) //todo: implement back-off
+    }
+  }
+
+  private func handleResponse(_ opampResponse: OpampResponse) {
+    disableRetryMode()
+    if opampResponse.serverToAgent.hasErrorResponse {
+      handleErrorResponse(opampResponse.serverToAgent.errorResponse)
+    }
+    DispatchQueue.main.async { [weak self, opampResponse] in
+      guard let self = self else { return }
+      self.callback?.onRequestSuccess(response: opampResponse)
+    }
+
+  }
+
   private func doSendRequest() {
     // get agentToServer
     self.lock.lock()
@@ -108,35 +214,15 @@ opampRequest: request,
 
    guard let self = self else { return }
         switch result {
-        case let .success((serverToAgent, httpResponse)):
-          if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
-            DispatchQueue.main.async { [weak self, serverToAgent] in
-                guard let self = self else { return }
-                self.callback?.onRequestSuccess(response: serverToAgent)
-              }
+        case let .success((opampResponse, urlResponse)):
+          if isSuccessful(urlResponse) {
+            resetExponentialBackoffSkips()
+            handleResponse(opampResponse)
           } else {
-            if httpResponse.statusCode == 503 || httpResponse.statusCode == 429 {
-              if let retryAfterHeader = httpResponse.value(forHTTPHeaderField:"Retry-After") {
-                let retryAfter: TimeInterval = Double(retryAfterHeader) ?? self.retryDelay // todo: parse RFC_1123 date format
-              }
-            }
-
-            let error = NSError(
-              domain: HTTPURLResponse
-                .localizedString(forStatusCode: httpResponse.statusCode),
-              code: httpResponse.statusCode,
-                )
-
-            DispatchQueue.main.async { [weak self, error] in
-              guard let self = self else { return }
-              self.callback?.onRequestFailed(error: error, retryAfter: self.retryDelay)
-            }
+            handleHttpError(urlResponse)
           }
         case let .failure(error):
-          DispatchQueue.main.async { [weak self, error] in
-            guard let self = self else { return }
-            self.callback?.onConnectionFailure(error: error, retryAfter: self.retryDelay) //todo: implement back-off
-          }
+          handleNetworkError(error)
         }
       })
     }
