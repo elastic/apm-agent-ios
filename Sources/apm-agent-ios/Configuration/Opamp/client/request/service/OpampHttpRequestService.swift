@@ -108,14 +108,20 @@ public class OpampHttpRequestService: RequestService {
   }
 
 
+
+
   private func handleHttpError(_ response: URLResponse) {
     if let httpResponse = response as? HTTPURLResponse {
+      var retryAfter: TimeInterval = retryDelay
       if shouldUpdateRetryDelay(httpResponse) {
         if let retryAfterHeader = httpResponse.value(forHTTPHeaderField:"Retry-After") {
-          let retryAfter: TimeInterval = Double(retryAfterHeader) ?? self.retryDelay // todo: parse RFC_1123 date format
+          if let parsedRetryAfter =  Double(retryAfterHeader) {
+            retryAfter = parsedRetryAfter
+          } else if let parsedDate = OpampHttpDate.parse(dateString: retryAfterHeader) {
+            retryAfter = parsedDate.timeIntervalSinceNow
+          }
         }
       }
-
       let error = NSError(
         domain: HTTPURLResponse
           .localizedString(forStatusCode: httpResponse.statusCode),
@@ -124,8 +130,10 @@ public class OpampHttpRequestService: RequestService {
 
       DispatchQueue.global().async { [weak self, error] in
         guard let self = self else { return }
-        self.callback?.onRequestFailed(error: error, retryAfter: self.retryDelay)
+        self.callback?.onRequestFailed(error: error, retryAfter: retryAfter)
       }
+      enableRetryMode(retryAfter)
+
     }
   }
 
@@ -157,14 +165,11 @@ public class OpampHttpRequestService: RequestService {
         enableRetryMode(TimeInterval.fromNanoseconds(Int64(retryAfter)))
       } else {
         incrementExponentialBackoff()
-        let retryAfter = 30.0 * Double(exponentialBackoffSkips)
-        enableRetryMode(retryAfter)
       }
     case .badRequest, .unknown, .UNRECOGNIZED(_):
       incrementExponentialBackoff()
-      enableRetryMode(30.0 * Double(exponentialBackoffSkips))
     }
-    }
+  }
 
   private func incrementExponentialBackoff() {
     if (exponentialBackoffSkips == 0) {
@@ -175,6 +180,7 @@ public class OpampHttpRequestService: RequestService {
     if (exponentialBackoffSkips >= 32) {
       exponentialBackoffSkips = 32;
     }
+    enableRetryMode(retryDelay * Double(exponentialBackoffSkips))
   }
 
   private func resetExponentialBackoffSkips() {
@@ -183,9 +189,10 @@ public class OpampHttpRequestService: RequestService {
   }
 
   private func handleNetworkError(_ error: Error) {
+    incrementExponentialBackoff()
     DispatchQueue.global().async { [weak self, error] in
       guard let self = self else { return }
-      self.callback?.onConnectionFailure(error: error, retryAfter: self.retryDelay) //todo: implement back-off
+      self.callback?.onConnectionFailure(error: error, retryAfter: self.retryDelay)
     }
   }
 
@@ -194,7 +201,7 @@ public class OpampHttpRequestService: RequestService {
     if opampResponse.serverToAgent.hasErrorResponse {
       handleErrorResponse(opampResponse.serverToAgent.errorResponse)
     }
-    DispatchQueue.main.async { [weak self, opampResponse] in
+    DispatchQueue.global().async { [weak self, opampResponse] in
       guard let self = self else { return }
       self.callback?.onRequestSuccess(response: opampResponse)
     }
