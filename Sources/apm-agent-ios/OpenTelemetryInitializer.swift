@@ -65,15 +65,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var metricSampleFilter: [SignalFilter<Metric>] = [
-      SignalFilter<Metric>({ [self] _ in
-        self.sessionSampler.shouldSample
-      })
-    ]
-
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
-    metricSampleFilter.append(contentsOf: configuration.agent.metricFilters)
 
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
@@ -125,12 +118,19 @@ class OpenTelemetryInitializer {
     }()
 
     // initialize meter provider
-
     OpenTelemetry.registerMeterProvider(
-      meterProvider: MeterProviderBuilder()
-        .with(processor: ElasticMetricProcessor(metricSampleFilter))
-        .with(resource: resources)
-        .with(exporter: metricExporter)
+      meterProvider: MeterProviderSdk.builder()
+        .registerView(
+          selector: InstrumentSelector
+            .builder()
+            .setInstrument(name: ".*")
+            .build(),
+          view: StableView.builder().build()
+        )
+        .registerMetricReader(
+          reader: PeriodicMetricReaderBuilder(
+            exporter: metricExporter
+          ).build())
         .build())
 
     // initialize trace provider
@@ -178,15 +178,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var metricSampleFilter: [SignalFilter<Metric>] = [
-      SignalFilter<Metric>({ [self] _ in
-        self.sessionSampler.shouldSample
-      })
-    ]
-
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
-    metricSampleFilter.append(contentsOf: configuration.agent.metricFilters)
 
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
@@ -235,12 +228,20 @@ class OpenTelemetryInitializer {
       return defaultExporter as LogRecordExporter
     }()
 
-    OpenTelemetry.registerMeterProvider(
-      meterProvider: MeterProviderBuilder()
-        .with(processor: ElasticMetricProcessor(metricSampleFilter))
-        .with(resource: resources)
-        .with(exporter: metricExporter)
-        .build())
+OpenTelemetry.registerMeterProvider(
+    meterProvider: MeterProviderSdk.builder()
+      .registerView(
+        selector: InstrumentSelector
+          .builder()
+          .setInstrument(name: ".*")
+          .build(),
+        view: View.builder().build()
+      )
+      .registerMetricReader(
+        reader: PeriodicMetricReaderBuilder(
+          exporter: metricExporter
+        ).build()
+      ).build())
 
     // initialize trace provider
     OpenTelemetry.registerTracerProvider(

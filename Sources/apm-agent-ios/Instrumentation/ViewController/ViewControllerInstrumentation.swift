@@ -22,7 +22,7 @@ import UIKit
 import os
 
 @available(iOS 13.0, *)
-public extension View {
+public extension SwiftUI.View {
   func reportName(_ name: String) -> Self {
     VCNameOverrideStore.shared().name = name
     return self

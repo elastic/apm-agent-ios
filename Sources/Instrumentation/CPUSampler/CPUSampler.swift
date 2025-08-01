@@ -17,15 +17,21 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 
 public class CPUSampler {
-    let meter: Meter
-    var gauge: DoubleObserverMetric
+  let meter: any Meter
+  var gauge: ObservableDoubleGauge
     public init() {
-        meter = OpenTelemetry.instance.meterProvider.get(instrumentationName: "CPU Sampler", instrumentationVersion: "0.0.1")
-        gauge = meter.createDoubleObservableGauge(name: "system.cpu.usage") {
-            gauge in
-            gauge.observe(value: CPUSampler.cpuFootprint(), labels: ["state": "app"])
-        }
+      meter = OpenTelemetry.instance.meterProvider
+        .meterBuilder(name: "CPU Sampler")
+        .setInstrumentationVersion(instrumentationVersion: "1.0.0")
+        .build()
+      gauge = meter.gaugeBuilder(name: "system.cpu.usage").buildWithCallback({ measurement in
+        measurement.record(value: CPUSampler.cpuFootprint(), attributes: ["state": .string("app")])
+      })
     }
+
+  deinit {
+    gauge.close()
+  }
 
     static func cpuFootprint() -> Double {
         var kr: kern_return_t

@@ -17,17 +17,27 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 
 public class MemorySampler {
-    let meter: Meter
-    var gauge: IntObserverMetric
+  let meter: any Meter
+  var gauge: ObservableLongGauge
 
     public init() {
-        meter = OpenTelemetry.instance.meterProvider.get(instrumentationName: "Memory Sampler", instrumentationVersion: "0.0.1")
-        gauge = meter.createIntObservableGauge(name: "system.memory.usage") { gauge in
+      meter = OpenTelemetry.instance.meterProvider
+        .meterBuilder(name: "Memory Sampler")
+        .setInstrumentationVersion(instrumentationVersion: "1.0.0")
+        .build()
+      gauge = meter
+        .gaugeBuilder(name: "system.memory.usage")
+        .ofLongs()
+        .buildWithCallback({ gauge in
             if let memoryUsage = MemorySampler.memoryFootprint() {
-                gauge.observe(value: Int(memoryUsage), labels: ["state": "app"])
+              gauge.record(value: Int(memoryUsage), attributes: ["state": .string("app")])
             }
-        }
+        })
     }
+
+  deinit {
+    gauge.close()
+  }
 
     static func memoryFootprint() -> mach_vm_size_t? {
         // The `TASK_VM_INFO_COUNT` and `TASK_VM_INFO_REV1_COUNT` macros are too
