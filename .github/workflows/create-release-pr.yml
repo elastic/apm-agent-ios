@@ -37,21 +37,17 @@ jobs:
         sed -i -e 's/from: ".*"),$/from: "${NEW_VERSION}"),/' docs/reference/set-up-apm-ios-agent.md
         OPENTELEMETRY_VERSION=$(sed -E -n 's/[[:space:]]+url: "https:\/\/github.com\/open-telemetry\/opentelemetry-swift", exact: "(.*)"\),$/\1/p' Package.swift)
         sed -i -e 's/| OpenTelemetry-Swift | .* |/| OpenTelemetry-Swift | ${OPENTELEMETRY_VERSION} |/' docs/reference/supported-technologies.md 
-    - name: Get token
-      id: get_token
-      uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+    - uses: actions/create-github-app-token@v2
+      id: app-token
       with:
-        app_id: ${{ secrets.RELEASE_TOKEN }}
-        private_key: ${{ secrets.RELEASE_TOKEN_PEM }}
-        permissions: >-
-          {
-            "contents": "write",
-            "pull_requests": "write"
-          }
+        app-id: ${{ secrets.GITHUB_APP_ID }}
+        private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
         repositories: >-
           ["apm-agent-ios"]
     - name: Setup github CLI
       uses: elastic/oblt-actions/git/setup@v1
+      with:
+        github-token: ${{ steps.app-token.outputs.token }}
     - name: Create pull request 
       env:
         NEW_VERSION: ${{ inputs.new_version }}
