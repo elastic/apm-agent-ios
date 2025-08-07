@@ -14,3 +14,16 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct InstanceUidAppender: AgentToServerAppender {
+  private let instanceUid: any Supplier<UUID>
+
+  public init(instanceUid: any Supplier<UUID>) {
+    self.instanceUid = instanceUid
+  }
+
+  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
+    agentToServer.instanceUid = instanceUid.get().data
+  }
+}
+

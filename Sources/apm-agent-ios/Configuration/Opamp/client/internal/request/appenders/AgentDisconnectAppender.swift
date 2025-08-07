@@ -14,3 +14,11 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct AgentDisconnectAppender: AgentToServerAppender {
+  public init() {}
+
+  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
+    agentToServer.agentDisconnect = Opamp_Proto_AgentDisconnect()
+  }
+}

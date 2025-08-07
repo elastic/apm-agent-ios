@@ -14,3 +14,14 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct AgentDescriptionAppender : AgentToServerAppender {
+  private let agentDescriptor: any Supplier<Opamp_Proto_AgentDescription>
+  init(agentDescriptor: any Supplier<Opamp_Proto_AgentDescription>) {
+    self.agentDescriptor = agentDescriptor
+  }
+  
+  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
+    agentToServer.agentDescription = agentDescriptor.get()
+  }
+}

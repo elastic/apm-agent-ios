@@ -14,3 +14,8 @@
 //   limitations under the License.
 
 import Foundation
+
+public protocol Supplier<Supply> {
+  associatedtype Supply
+  func get() -> Supply
+}

@@ -14,3 +14,11 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct RequestRecipe {
+  public let fields: [FieldType]
+
+  init(fields: [FieldType]) {
+    self.fields = fields
+  }
+}
