@@ -14,3 +14,13 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct EffectiveConfigAppender: AgentToServerAppender {
+  let effectiveConfig: any Supplier<Opamp_Proto_EffectiveConfig>
+  public init(effectiveConfig: any Supplier<Opamp_Proto_EffectiveConfig>) {
+    self.effectiveConfig = effectiveConfig
+  }
+  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
+    agentToServer.effectiveConfig = effectiveConfig.get()
+  }
+}

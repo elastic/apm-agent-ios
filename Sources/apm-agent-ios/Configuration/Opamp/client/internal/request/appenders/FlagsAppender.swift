@@ -14,3 +14,10 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct FlagsAppender : AgentToServerAppender {
+  public init() {}
+  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
+    agentToServer.flags = 0
+  }
+}

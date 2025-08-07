@@ -14,3 +14,17 @@
 //   limitations under the License.
 
 import Foundation
+
+extension UUID {
+  public init?(from data: Data) {
+    guard data.count == 16 else { return nil }
+      let bytes = data.withUnsafeBytes {
+        return $0.bindMemory(to: UInt8.self).baseAddress!
+      }
+    self = UUID.ReferenceType(uuidBytes: bytes) as UUID
+  }
+
+  var data: Data {
+    return withUnsafeBytes(of: self.uuid, { Data($0) })
+  }
+}

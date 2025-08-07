@@ -14,3 +14,14 @@
 //   limitations under the License.
 
 import Foundation
+
+public enum FieldType : String {
+  case INSTANCE_UID = "instance_uid"
+  case SEQUENCE_NUMBER = "sequence_number"
+  case AGENT_DESCRIPTION = "agent_description"
+  case CAPABILITIES = "capabilities"
+  case EFFECTIVE_CONFIG = "effective_config"
+  case REMOTE_CONFIG_STATUS = "remote_config_status"
+  case AGENT_DISCONNECT = "agent_disconnect"
+  case FLAGS = "flags"
+}

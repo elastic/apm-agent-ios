@@ -14,3 +14,21 @@
 //   limitations under the License.
 
 import Foundation
+
+public class RecipeManager {
+  private let previousRecipeLock = NSRecursiveLock()
+  private let recipeBuilderLock = NSRecursiveLock()
+  private let constFields: [FieldType]
+  private var previousRecipe: RequestRecipe? = nil
+
+  public func previous() -> RequestRecipe? {
+    previousRecipeLock.lock()
+    defer { previousRecipeLock.unlock() }
+    return previousRecipe
+  }
+  public func next() -> RecipeBuilder {
+    recipeBuilderLock.lock()
+    defer { recipeBuilderLock.unlock() }
+    return RecipeBuilder(constFields: constFields)
+  }
+}

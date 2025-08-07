@@ -14,3 +14,14 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct RemoteConfigStatusAppender: AgentToServerAppender {
+  private let config: any Supplier<Opamp_Proto_RemoteConfigStatus>
+  public init(config: any Supplier<Opamp_Proto_RemoteConfigStatus>) {
+    self.config = config
+  }
+
+  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
+    agentToServer.remoteConfigStatus = config.get()
+  }
+}

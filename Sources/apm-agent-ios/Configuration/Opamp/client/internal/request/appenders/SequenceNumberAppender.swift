@@ -14,3 +14,14 @@
 //   limitations under the License.
 
 import Foundation
+
+public struct SequenceNumberAppender: AgentToServerAppender {
+  private let sequenceNumber: any Supplier<UInt64>
+  public init(sequenceNumber: any Supplier<UInt64>) {
+    self.sequenceNumber = sequenceNumber
+  }
+
+  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
+    agentToServer.sequenceNum = sequenceNumber.get()
+  }
+}

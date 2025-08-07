@@ -16,9 +16,13 @@
 import Foundation
 
 
-public class OpampState<Value: Equatable> : @unchecked Sendable, Equatable {
+public class OpampState<Value: Equatable> : Supplier, @unchecked Sendable, Equatable {
   private var _value: Value
   private let rwlock: UnsafeMutablePointer<pthread_rwlock_t> = UnsafeMutablePointer.allocate(capacity: 1)
+
+  public func get() -> Value {
+    return value
+  }
 
   public var value : Value {
     get {
