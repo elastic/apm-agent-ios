@@ -46,6 +46,7 @@ jobs:
     - name: Create pull request 
       env:
         NEW_VERSION: ${{ inputs.new_version }}
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
       run: |
         if [[ ! ${NEW_VERSION} =~ ^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$ ]]; then
           echo "Invalid version format. Expected format: X.Y.Z"
