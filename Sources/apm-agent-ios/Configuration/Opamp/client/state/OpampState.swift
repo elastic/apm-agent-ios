@@ -15,7 +15,6 @@
 
 import Foundation
 
-
 public class OpampState<Value: Equatable> : Supplier, @unchecked Sendable, Equatable {
   private var _value: Value
   private let rwlock: UnsafeMutablePointer<pthread_rwlock_t> = UnsafeMutablePointer.allocate(capacity: 1)
@@ -42,6 +41,7 @@ public class OpampState<Value: Equatable> : Supplier, @unchecked Sendable, Equat
         precondition(err == 0, "pthread_rwlock_wrlock failed with error \(err)")
 
       }
+      self.notify()
       yield &_value
     }
   }
@@ -51,6 +51,8 @@ public class OpampState<Value: Equatable> : Supplier, @unchecked Sendable, Equat
     precondition(err == 0, "pthread_mutex_init failed with error \(err)")
     self._value = value
   }
+
+  public func notify() {}
 
   public static func ==(lhs: OpampState<Value>, rhs: Value) -> Bool {
     lhs.value == rhs

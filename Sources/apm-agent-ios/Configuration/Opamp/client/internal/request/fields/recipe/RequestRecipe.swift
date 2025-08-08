@@ -15,7 +15,7 @@
 
 import Foundation
 
-public struct RequestRecipe {
+public class RequestRecipe {
   public let fields: [FieldType]
 
   init(fields: [FieldType]) {

@@ -19,4 +19,11 @@ public class OpampAgentDescriptionState: OpampState<Opamp_Proto_AgentDescription
   public init() {
     super.init(.init())
   }
+  override public func notify() {
+    NotificationCenter.default
+      .post(
+        name: Notification.Name(Opamp.STATE_CHANGE_NOTIFICATION),
+        object: FieldType.AGENT_DESCRIPTION
+      )
+  }
 }

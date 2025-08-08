@@ -16,19 +16,31 @@
 import Foundation
 
 public class RecipeManager {
-  private let previousRecipeLock = NSRecursiveLock()
-  private let recipeBuilderLock = NSRecursiveLock()
-  private let constFields: [FieldType]
+  private let recipeLock = NSRecursiveLock()
+  internal let constFields: [FieldType]
   private var previousRecipe: RequestRecipe? = nil
+  private var recipeBuilder: RequestRecipe.Builder! = nil
+
+  internal init(constFields: [FieldType] = []) {
+    self.constFields = constFields
+    self.recipeBuilder = RequestRecipe.Builder(manager: self)
+  }
 
   public func previous() -> RequestRecipe? {
-    previousRecipeLock.lock()
-    defer { previousRecipeLock.unlock() }
+    recipeLock.lock()
+    defer { recipeLock.unlock() }
     return previousRecipe
   }
-  public func next() -> RecipeBuilder {
-    recipeBuilderLock.lock()
-    defer { recipeBuilderLock.unlock() }
-    return RecipeBuilder(constFields: constFields)
+  internal func setPrevious(recipe: RequestRecipe) {
+    recipeLock.lock()
+    defer { recipeLock.unlock() }
+    previousRecipe = recipe
+    recipeBuilder = RequestRecipe.Builder(manager: self)
+  }
+  public func next() -> RequestRecipe.Builder {
+    recipeLock.lock()
+    defer { recipeLock.unlock() }
+    return recipeBuilder
+
   }
 }

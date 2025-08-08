@@ -15,10 +15,18 @@
 
 import Foundation
 
-public class OpampSequenceNumberState: OpampState<Int>, @unchecked Sendable {
+public class OpampSequenceNumberState: OpampState<UInt64>, @unchecked Sendable {
 
   public init() {
     super.init(1)
+  }
+
+  override public func notify() {
+    NotificationCenter.default
+      .post(
+        name: Notification.Name(Opamp.STATE_CHANGE_NOTIFICATION),
+        object: FieldType.se
+      )
   }
 
   public func increment() {

@@ -19,4 +19,11 @@ public class OpampInstanceUidState: OpampState<UUID>, @unchecked Sendable {
   public init() {
     super.init(UUID())
   }
+  override public func notify() {
+    NotificationCenter.default
+      .post(
+        name: Notification.Name(Opamp.STATE_CHANGE_NOTIFICATION),
+        object: FieldType.INSTANCE_UID.rawValue
+      )
+  }
 }

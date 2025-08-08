@@ -15,9 +15,20 @@
 
 import Foundation
 public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
+  private static let CONSTANT_FIELDS = [
+    FieldType.INSTANCE_UID,
+    FieldType.SEQUENCE_NUMBER,
+    FieldType.CAPABILITIES]
+  private static let COMPRESSABLE_FIELDS = [
+    FieldType.AGENT_DESCRIPTION,
+    FieldType.EFFECTIVE_CONFIG,
+    FieldType.REMOTE_CONFIG_STATUS,
+  ]
   public typealias Supply = OpampRequest
   private let requestService: RequestService
+  private let recipeManager: RecipeManager
   private let clientState: OpampClientState
+  private let appenders: AgentToServerAppenders
   private let runningLock = NSLock()
   private var isRunning = false
   private var isStopped = false
@@ -26,15 +37,50 @@ public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
     requestService: RequestService,
     clientState: OpampClientState
   ) -> OpampClient {
-    OpampClientImpl(requestService: requestService, clientState: clientState)
+
+    OpampClientImpl(
+      requestService: requestService,
+      appenders: AgentToServerAppenders(
+        agentDescriptionAppender: AgentDescriptionAppender(
+          agentDescriptor: clientState.agentDescriptionState
+        ),
+        effectiveConfigAppender: EffectiveConfigAppender(
+          effectiveConfig: clientState.effectiveConfigState
+        ),
+        remoteConfigStatusAppender: RemoteConfigStatusAppender(
+          config: clientState.remoteConfigStatusState
+        ),
+        sequenceNumberAppender: SequenceNumberAppender(
+          sequenceNumber: clientState.sequenceNumberState
+        ),
+        capabilitiesAppender: CapabilitiesAppender(
+          capabilities:clientState.capabilitiesState),
+        instanceUidAppender: InstanceUidAppender(
+          instanceUid:clientState.instanceUidState),
+        flagAppender: FlagsAppender(),
+        agentDisconnectAppender: AgentDisconnectAppender()
+        ),
+      clientState: clientState,
+      recipeManager: RecipeManager(constFields: Self.CONSTANT_FIELDS)
+      )
   }
   
   internal init(
   requestService: RequestService,
-  clientState: OpampClientState)
+  appenders: AgentToServerAppenders,
+  clientState: OpampClientState,
+  recipeManager: RecipeManager)
   {
     self.requestService = requestService
     self.clientState = clientState
+    self.recipeManager = recipeManager
+    self.appenders = appenders
+  }
+
+  @objc public func onStateForFieldChanged(notifaction: Notification) {
+    if let fieldType = notifaction.object as? FieldType {
+      recipeManager.next().addField(fieldType)
+    }
   }
 
   public func start(_ callback: any OpampClientCallback) {
@@ -43,16 +89,38 @@ public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
     
     if(!isRunning) {
       self.callback = callback
-//      /*observeStateChange*/()
-//      disableCompression()
+      NotificationCenter.default.addObserver(
+self,
+selector: #selector(onStateForFieldChanged),
+                                             name: Notification
+  .Name(
+    Opamp.STATE_CHANGE_NOTIFICATION
+  ),
+object: nil
+      )
+      disableCompression()
       self.requestService.start(callback: self, request: self)
       self.requestService.sendRequest()
     }
   }
 
   public func get() -> OpampRequest {
+    var agentToServer = Opamp_Proto_AgentToServer()
+    for field in recipeManager.next().build().fields {
+      appenders.allAppenders[field]?.append(to: &agentToServer)
+    }
+    return OpampRequest(agentToServer: agentToServer)
 
+  }
 
+  internal func prepareDisconnectRequest() {
+    recipeManager.next().addField(.AGENT_DISCONNECT)
+  }
+
+  internal func preserveFailedRequestRecipe() {
+    if let previous = recipeManager.previous() {
+      recipeManager.next().merge(with: previous)
+    }
   }
 
   public func stop() {
@@ -77,7 +145,7 @@ public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
     //handle errorResponse
     let reportFullState = Opamp_Proto_ServerToAgentFlags.reportFullState.rawValue
     if((response.flags & UInt64(reportFullState)) == reportFullState) {
-      // disableCompression
+      disableCompression()
     }
 
     handleAgentIdentification(response)
@@ -85,6 +153,10 @@ public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
     if (response.hasRemoteConfig) {
       callback?.onMessage(client: self, message: OpampMessage(remoteConfig: response.remoteConfig))
     }
+  }
+
+  private func disableCompression() {
+    recipeManager.next().addAllFields(Self.COMPRESSABLE_FIELDS)
   }
 
   private func handleAgentIdentification(_ response: Opamp_Proto_ServerToAgent) {
@@ -106,7 +178,7 @@ public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
 
   public func onConnectionFailure(error: any Error, retryAfter: TimeInterval) {
     callback?.onConnectFailed(client: self, error: error, retryAfter: retryAfter)
-    // preserveFailedReqeustRecipe
+    preserveFailedRequestRecipe()
   }
 
   public func onRequestSuccess(response: OpampResponse) {

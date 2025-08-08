@@ -14,8 +14,17 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+import Foundation
+
 public class OpampEffectiveConfigState: OpampState<Opamp_Proto_EffectiveConfig>, @unchecked Sendable {
   public init() {
     super.init(.init())
+  }
+  override public func notify() {
+    NotificationCenter.default
+      .post(
+        name: Notification.Name(Opamp.STATE_CHANGE_NOTIFICATION),
+        object: FieldType.EFFECTIVE_CONFIG
+      )
   }
 }
