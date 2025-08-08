@@ -20,4 +20,11 @@ public class OpampCapabilitiesState: OpampState<Opamp_Proto_AgentCapabilities>, 
   init() {
     super.init(.reportsStatus)
   }
+  override public func notify() {
+    NotificationCenter.default
+      .post(
+        name: Notification.Name(Opamp.STATE_CHANGE_NOTIFICATION),
+        object: FieldType.CAPABILITIES
+      )
+  }
 }

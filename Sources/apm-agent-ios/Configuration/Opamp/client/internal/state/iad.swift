@@ -15,5 +15,15 @@
 
 import Foundation
 
-public struct AgentToServerAppenders {
+public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus>, @unchecked Sendable {
+  public init() {
+    super.init(.init())
+  }
+  override public func notify() {
+    NotificationCenter.default
+      .post(
+        name: Notification.Name(Opamp.STATE_CHANGE_NOTIFICATION),
+        object: FieldType.REMOTE_CONFIG_STATUS
+      )
+  }
 }

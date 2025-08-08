@@ -35,7 +35,6 @@ public protocol OpampClient {
 }
 
 public extension OpampClient {
-  ///
   static func builder() -> OpampClientBuilder {
     return OpampClientBuilder()
   }

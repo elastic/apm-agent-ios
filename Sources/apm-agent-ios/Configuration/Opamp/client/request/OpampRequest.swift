@@ -16,7 +16,7 @@
 import Foundation
 
 public struct OpampRequest {
-  public let agentToServer: Opamp_Proto_AgentToServer
+  public var agentToServer: Opamp_Proto_AgentToServer
   public init(agentToServer: Opamp_Proto_AgentToServer) {
     self.agentToServer = agentToServer
   }

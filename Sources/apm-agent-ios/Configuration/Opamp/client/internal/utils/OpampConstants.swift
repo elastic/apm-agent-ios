@@ -15,9 +15,7 @@
 
 import Foundation
 
+public enum Opamp {
+  public static let STATE_CHANGE_NOTIFICATION = "OPAMP_STATE_CHANGE_NOTIFICATION"
 
-public class OpampRemoteConfigStatusState: OpampState<Opamp_Proto_RemoteConfigStatus>, @unchecked Sendable {
-  public init() {
-    super.init(.init())
-  }
 }

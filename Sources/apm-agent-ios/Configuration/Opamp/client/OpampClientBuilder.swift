@@ -34,7 +34,7 @@ public struct OpampClientBuilder {
       instanceUidState: instanceUidState,
       effectiveConfigState: effectiveConfigState
     )
-    return OpampClientImpl(
+    return OpampClientImpl.create(
       requestService: requestService,
       clientState: clientState
     )
