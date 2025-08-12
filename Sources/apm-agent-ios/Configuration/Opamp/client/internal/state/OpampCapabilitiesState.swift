@@ -15,11 +15,22 @@
 
 import Foundation
 
-public class OpampCapabilitiesState: OpampState<Opamp_Proto_AgentCapabilities>,  @unchecked Sendable {
+public class OpampCapabilitiesState: OpampState<UInt64>,  @unchecked Sendable {
 
-  init() {
-    super.init(.reportsStatus)
+  public convenience init() {
+    self.init(.reportsStatus)
   }
+
+  private init(_ capability: Opamp_Proto_AgentCapabilities) {
+    super.init(UInt64(capability.rawValue))
+  }
+
+  public func add(capabilities: Opamp_Proto_AgentCapabilities) {
+
+    value = get() | UInt64(capabilities.rawValue)
+
+  }
+
   override public func notify() {
     NotificationCenter.default
       .post(

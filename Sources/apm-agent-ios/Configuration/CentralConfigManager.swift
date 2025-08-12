@@ -15,21 +15,5 @@
 
 import Foundation
 
-public class OpampSequenceNumberState: OpampState<UInt64>, @unchecked Sendable {
 
-  public init() {
-    super.init(1)
-  }
-
-  override public func notify() {
-    NotificationCenter.default
-      .post(
-        name: Notification.Name(Opamp.STATE_CHANGE_NOTIFICATION),
-        object: FieldType.SEQUENCE_NUMBER
-      )
-  }
-
-  public func increment() {
-    self.value += 1
-  }
-}
+public class CentralConfigManager {}

@@ -14,14 +14,14 @@
 
 import Foundation
 
-public protocol OpampClient {
-
+public protocol OpampClientInterface {
+  associatedtype Client: OpampClientInterface
   /// Starts the OpAMP client & attempts to connect to the Server. Once a connection is established
   ///  the client will attempt to maintain it by reconnecting if the connection is lost. All failed connection
   ///  attempts will be reported via the `Callback` `onConnectFailed` callback.
   /// - Parameter callback: The callback to be invoked when the client connects, fails to connect,
   ///                        or receives a message.
-  func start(_ callback: OpampClientCallback)
+  func start(_ callback: any OpampClientCallback<Client>)
 
   /// Stops the OpAMP client. May only be called after `start`. May only be called once.
   /// After successful return it is garanteed that no callbacks will be called.
@@ -34,8 +34,19 @@ public protocol OpampClient {
 
 }
 
-public extension OpampClient {
-  static func builder() -> OpampClientBuilder {
-    return OpampClientBuilder()
+public protocol OpampClientBuilderProvider<Builder> {
+     associatedtype Builder: OpampClientBuilderInterface
+     static func builder() -> Builder
+   }
+
+public protocol OpampClientBuilderInterface<Client> {
+  associatedtype Client: OpampClientInterface
+  func build(requestService: some RequestService) -> Client;
+}
+
+public struct OpampClient : OpampClientBuilderProvider  {
+  public typealias Builder = OpampClientImpl.Builder
+  public static func builder() -> Builder {
+    return OpampClientImpl.Builder()
   }
 }

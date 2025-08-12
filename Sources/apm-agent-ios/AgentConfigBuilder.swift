@@ -24,6 +24,7 @@ public class AgentConfigBuilder {
   private var managementUrl: URL?
   private var enableRemoteManagement: Bool = true
   private var auth: String?
+  private var enableOpAPM: Bool = false
   private static let bearer = "Bearer"
   private static let api = "ApiKey"
   private var connectionType: AgentConnectionType = .grpc
@@ -71,6 +72,11 @@ public class AgentConfigBuilder {
 
   public func useConnectionType(_ type: AgentConnectionType) -> Self {
     self.connectionType = type
+    return self
+  }
+
+  public func useOpAMP() -> Self {
+    enableOpAPM = true
     return self
   }
 
@@ -157,6 +163,8 @@ public class AgentConfigBuilder {
     if let enableAgent = enableAgent {
       config.enableAgent = enableAgent
     }
+
+    config.enableOpAMP = enableOpAPM
     return config
   }
 }
