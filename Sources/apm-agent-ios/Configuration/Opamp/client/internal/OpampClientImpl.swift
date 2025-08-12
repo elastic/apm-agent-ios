@@ -14,7 +14,8 @@
 //   limitations under the License.
 
 import Foundation
-public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
+public class OpampClientImpl : OpampClientInterface, RequestServiceCallback, Supplier {
+
   private static let CONSTANT_FIELDS = [
     FieldType.INSTANCE_UID,
     FieldType.SEQUENCE_NUMBER,
@@ -32,11 +33,11 @@ public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
   private let runningLock = NSLock()
   private var isRunning = false
   private var isStopped = false
-  private var callback: (any OpampClientCallback)?
+  private var callback: (any OpampClientCallback<OpampClientImpl>)?
   public static func create(
     requestService: RequestService,
     clientState: OpampClientState
-  ) -> OpampClient {
+  ) -> OpampClientImpl {
 
     OpampClientImpl(
       requestService: requestService,
@@ -83,7 +84,7 @@ public class OpampClientImpl : OpampClient, RequestServiceCallback, Supplier {
     }
   }
 
-  public func start(_ callback: any OpampClientCallback) {
+  public func start(_ callback: any OpampClientCallback<OpampClientImpl>) {
     runningLock.lock()
     defer { runningLock.unlock() }
     

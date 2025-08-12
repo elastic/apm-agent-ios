@@ -16,58 +16,31 @@ import Foundation
 import OpenTelemetrySdk
 import Logging
 
-enum CentralConfigResponse: Int {
-    case okay = 200
-    case notModified = 304
-    case forbidden = 403
-    case notFound = 40
-    case unavailable = 503
-}
 
 class AgentConfigManager {
-    public let agent: AgentConfiguration
-    public let central: CentralConfig
-    public let instrumentation: InstrumentationConfiguration
-
-    let serviceEnvironment: String
-    let serviceName: String
-    let logger: Logger
-    let resource: Resource
-
-    var fetcher: CentralConfigFetcher?
-
-    init(resource: Resource,
-         config: AgentConfiguration,
-         instrumentationConfig: InstrumentationConfiguration,
-         logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
-        SwiftLogNoOpLogHandler()
-    }) {
-        self.resource = resource
-        self.agent = config
-        self.instrumentation = instrumentationConfig
-        self.logger = logger
-        switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
-        case let .string(value):
-            serviceEnvironment = value
-        default:
-            serviceEnvironment = ""
-        }
-
-        switch resource.attributes[ResourceAttributes.serviceName.rawValue] {
-        case let .string(value):
-            serviceName = value
-        default:
-            serviceName = ""
-        }
-
-        self.central = CentralConfig()
-
-      if agent.enableRemoteManagement {
-        fetcher = CentralConfigFetcher(serviceName: serviceName,
-                                       environment: serviceEnvironment,
-                                       agentConfig: config, { data in
-          self.central.config = String(data: data, encoding: .utf8)
-        })
-      }
+  let centralConfigManager: CentralConfigManager
+  
+  init(resource: Resource,
+       config: AgentConfiguration,
+       instrumentationConfig: InstrumentationConfiguration,
+       logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
+    SwiftLogNoOpLogHandler()
+  }) {
+    if (config.enableOpAMP) {
+      centralConfigManager = OpampCentralConfigManager(
+        resource: resource,
+        agent:config,
+        instrumentationConfig: instrumentationConfig,
+        logger: logger
+      )
+    } else {
+      centralConfigManager = ElasticAgentConfigManager(
+        resource: resource,
+        config: config,
+        instrumentationConfig: instrumentationConfig,
+        logger: logger
+      )
     }
+  }
 }
+

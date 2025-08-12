@@ -15,12 +15,13 @@
 
 import Foundation
 
-public protocol OpampClientCallback {
+public protocol OpampClientCallback<Client> {
+  associatedtype Client: OpampClientInterface
   /// Called when the connection to the Sever is successfully established. May be called after
   /// `OpampClient.start(callback _:)` is called & every time a connection is established to
   ///  the Server. For HTTP clients this is called for any request if the resonse status is *OK*. '
   ///  - Parameter client: the relevant `OpampClient`
-  func onConnect(client: OpampClient);
+  func onConnect(client: Client);
 
   /// Called when the conenction to the Server cannot be established. May bre called after
   /// `OpampClient.start(callback _:)` is called and tries to connect to the Server.
@@ -29,7 +30,7 @@ public protocol OpampClientCallback {
   ///  - client: the relevant `OpampClient`
   ///  - error: The connection error
   ///  - retryAfter: The `TimeInterval` afterwhich a retry will be attempted.
-  func onConnectFailed(client: OpampClient, error: Error, retryAfter: TimeInterval);
+  func onConnectFailed(client: Client, error: Error, retryAfter: TimeInterval);
 
   /// Called when the Server reports an error in response to some previously sent request. Useful for
   /// logging purposes. The Agent should not attempt to process the error by reconnecting or retrying
@@ -39,7 +40,7 @@ public protocol OpampClientCallback {
   ///  - client: the relevant `OpampClient`
   ///  - error: The response error
   ///  - retryAfter: the `TimeInterval` afterwhich the retry is attempted.
-  func onErrorResponse(client: OpampClient, error: Error, retryAfter: TimeInterval);
+  func onErrorResponse(client: Client, error: Error, retryAfter: TimeInterval);
 
   /// Called when the Agent receives a message that needs to be processed. See `OpampMessage`
   /// definition for the data that may be available for processing. During `OnMessage` execution the
@@ -51,5 +52,5 @@ public protocol OpampClientCallback {
   /// - Parameters:
   ///  - client: The relevant `OpampClient`
   ///  - message: The server response data that needs processing.
-  func onMessage(client: OpampClient, message: OpampMessage);
+  func onMessage(client: Client, message: OpampMessage);
 }
