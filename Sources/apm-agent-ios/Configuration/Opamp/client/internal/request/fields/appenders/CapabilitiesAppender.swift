@@ -16,13 +16,13 @@
 import Foundation
 
 public struct CapabilitiesAppender: AgentToServerAppender {
-  private let capabilities: any Supplier<Opamp_Proto_AgentCapabilities>
-  init(capabilities: any Supplier<Opamp_Proto_AgentCapabilities>) {
+  private let capabilities: any Supplier<UInt64>
+  init(capabilities: any Supplier<UInt64>) {
     self.capabilities = capabilities
   }
 
   public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
-    agentToServer.capabilities = UInt64(capabilities.get().rawValue)
+    agentToServer.capabilities = capabilities.get()
   }
 
 }

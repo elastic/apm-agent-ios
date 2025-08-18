@@ -393,6 +393,10 @@ public enum Opamp_Proto_AgentCapabilities: SwiftProtobuf.Enum, Swift.CaseIterabl
   /// The agent will report AvailableComponents via the AgentToServer.available_components field.
   /// Status: [Development]
   case reportsAvailableComponents // = 16384
+
+  /// The agent will report ConnectionSettingsOffers status via AgentToServer.connection_settings_status field.
+  /// Status: [Development]
+  case reportsConnectionSettingsStatus // = 32768
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -417,6 +421,7 @@ public enum Opamp_Proto_AgentCapabilities: SwiftProtobuf.Enum, Swift.CaseIterabl
     case 4096: self = .reportsRemoteConfig
     case 8192: self = .reportsHeartbeat
     case 16384: self = .reportsAvailableComponents
+    case 32768: self = .reportsConnectionSettingsStatus
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -439,6 +444,7 @@ public enum Opamp_Proto_AgentCapabilities: SwiftProtobuf.Enum, Swift.CaseIterabl
     case .reportsRemoteConfig: return 4096
     case .reportsHeartbeat: return 8192
     case .reportsAvailableComponents: return 16384
+    case .reportsConnectionSettingsStatus: return 32768
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -461,6 +467,59 @@ public enum Opamp_Proto_AgentCapabilities: SwiftProtobuf.Enum, Swift.CaseIterabl
     .reportsRemoteConfig,
     .reportsHeartbeat,
     .reportsAvailableComponents,
+    .reportsConnectionSettingsStatus,
+  ]
+
+}
+
+/// Status: [Development]
+public enum Opamp_Proto_ConnectionSettingsStatuses: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public typealias RawValue = Int
+
+  /// The value of status field is not set.
+  case unset // = 0
+
+  /// ConnectionSettings were successfully applied by the Agent.
+  case applied // = 1
+
+  /// Agent is currently applying the ConnectionSettings that it received.
+  case applying // = 2
+
+  /// Agent tried to apply the ConnectionSettings it received earlier, but failed.
+  /// See error_message for more details.
+  case failed // = 3
+  case UNRECOGNIZED(Int)
+
+  public init() {
+    self = .unset
+  }
+
+  public init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .unset
+    case 1: self = .applied
+    case 2: self = .applying
+    case 3: self = .failed
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  public var rawValue: Int {
+    switch self {
+    case .unset: return 0
+    case .applied: return 1
+    case .applying: return 2
+    case .failed: return 3
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  public static let allCases: [Opamp_Proto_ConnectionSettingsStatuses] = [
+    .unset,
+    .applied,
+    .applying,
+    .failed,
   ]
 
 }
@@ -742,6 +801,19 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   public var hasAvailableComponents: Bool {return _storage._availableComponents != nil}
   /// Clears the value of `availableComponents`. Subsequent reads from it will return its default value.
   public mutating func clearAvailableComponents() {_uniqueStorage()._availableComponents = nil}
+
+  /// The status of the OfferedConnectionSettings that was previously received
+  /// from the Server. This field SHOULD be unset if the offered connection
+  /// settings status is unchanged since the last AgentToServer message.
+  /// Status: [Development]
+  public var connectionSettingsStatus: Opamp_Proto_ConnectionSettingsStatus {
+    get {return _storage._connectionSettingsStatus ?? Opamp_Proto_ConnectionSettingsStatus()}
+    set {_uniqueStorage()._connectionSettingsStatus = newValue}
+  }
+  /// Returns true if `connectionSettingsStatus` has been explicitly set.
+  public var hasConnectionSettingsStatus: Bool {return _storage._connectionSettingsStatus != nil}
+  /// Clears the value of `connectionSettingsStatus`. Subsequent reads from it will return its default value.
+  public mutating func clearConnectionSettingsStatus() {_uniqueStorage()._connectionSettingsStatus = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -1073,12 +1145,24 @@ public struct Opamp_Proto_OpAMPConnectionSettings: Sendable {
   /// Status: [Development]
   public var heartbeatIntervalSeconds: UInt64 = 0
 
+  /// Optional connection specific TLS settings.
+  /// Status: [Development]
+  public var tls: Opamp_Proto_TLSConnectionSettings {
+    get {return _tls ?? Opamp_Proto_TLSConnectionSettings()}
+    set {_tls = newValue}
+  }
+  /// Returns true if `tls` has been explicitly set.
+  public var hasTls: Bool {return self._tls != nil}
+  /// Clears the value of `tls`. Subsequent reads from it will return its default value.
+  public mutating func clearTls() {self._tls = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
   fileprivate var _headers: Opamp_Proto_Headers? = nil
   fileprivate var _certificate: Opamp_Proto_TLSCertificate? = nil
+  fileprivate var _tls: Opamp_Proto_TLSConnectionSettings? = nil
 }
 
 /// The TelemetryConnectionSettings message is a collection of fields which comprise an
@@ -1124,12 +1208,24 @@ public struct Opamp_Proto_TelemetryConnectionSettings: Sendable {
   /// Clears the value of `certificate`. Subsequent reads from it will return its default value.
   public mutating func clearCertificate() {self._certificate = nil}
 
+  /// Optional connection specific TLS settings.
+  /// Status: [Development]
+  public var tls: Opamp_Proto_TLSConnectionSettings {
+    get {return _tls ?? Opamp_Proto_TLSConnectionSettings()}
+    set {_tls = newValue}
+  }
+  /// Returns true if `tls` has been explicitly set.
+  public var hasTls: Bool {return self._tls != nil}
+  /// Clears the value of `tls`. Subsequent reads from it will return its default value.
+  public mutating func clearTls() {self._tls = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
   fileprivate var _headers: Opamp_Proto_Headers? = nil
   fileprivate var _certificate: Opamp_Proto_TLSCertificate? = nil
+  fileprivate var _tls: Opamp_Proto_TLSConnectionSettings? = nil
 }
 
 /// The OtherConnectionSettings message is a collection of fields which comprise an
@@ -1194,12 +1290,55 @@ public struct Opamp_Proto_OtherConnectionSettings: Sendable {
   /// interpret.
   public var otherSettings: Dictionary<String,String> = [:]
 
+  /// Optional connection specific TLS settings.
+  /// Status: [Development]
+  public var tls: Opamp_Proto_TLSConnectionSettings {
+    get {return _tls ?? Opamp_Proto_TLSConnectionSettings()}
+    set {_tls = newValue}
+  }
+  /// Returns true if `tls` has been explicitly set.
+  public var hasTls: Bool {return self._tls != nil}
+  /// Clears the value of `tls`. Subsequent reads from it will return its default value.
+  public mutating func clearTls() {self._tls = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
   fileprivate var _headers: Opamp_Proto_Headers? = nil
   fileprivate var _certificate: Opamp_Proto_TLSCertificate? = nil
+  fileprivate var _tls: Opamp_Proto_TLSConnectionSettings? = nil
+}
+
+/// TLSConnectionSettings are optional connection settings that can be passed to
+/// the client in order to specify TLS configuration.
+/// Status: [Development]
+public struct Opamp_Proto_TLSConnectionSettings: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Provides CA cert contents as a string.
+  public var caPemContents: String = String()
+
+  /// Load system CA pool alongside any passed CAs.
+  public var includeSystemCaCertsPool: Bool = false
+
+  /// skip certificate verification.
+  public var insecureSkipVerify: Bool = false
+
+  /// Miniumum accepted TLS version; default "1.2".
+  public var minVersion: String = String()
+
+  /// Maxiumum accepted TLS version; default "".
+  public var maxVersion: String = String()
+
+  /// Explicit list of cipher suites.
+  public var cipherSuites: [String] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
 }
 
 /// Status: [Beta]
@@ -1651,6 +1790,29 @@ public struct Opamp_Proto_RemoteConfigStatus: @unchecked Sendable {
   public init() {}
 }
 
+/// Status: [Development]
+public struct Opamp_Proto_ConnectionSettingsStatus: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// The hash of the connection settings that was last recieved by this Agent
+  /// in the connection_settings.hash field. The Server SHOULD compare this
+  /// hash with the OfferedConnectionSettings hash it has for the Agent and if
+  /// the hashes are different the Server MUST include the connection_settings
+  /// field in the response in the ServerToAgent message.
+  public var lastConnectionSettingsHash: Data = Data()
+
+  public var status: Opamp_Proto_ConnectionSettingsStatuses = .unset
+
+  /// Optional error message if status==FAILED.
+  public var errorMessage: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 /// The PackageStatuses message describes the status of all packages that the Agent
 /// has or was offered.
 /// Status: [Beta]
@@ -1976,6 +2138,16 @@ extension Opamp_Proto_AgentCapabilities: SwiftProtobuf._ProtoNameProviding {
     4096: .same(proto: "AgentCapabilities_ReportsRemoteConfig"),
     8192: .same(proto: "AgentCapabilities_ReportsHeartbeat"),
     16384: .same(proto: "AgentCapabilities_ReportsAvailableComponents"),
+    32768: .same(proto: "AgentCapabilities_ReportsConnectionSettingsStatus"),
+  ]
+}
+
+extension Opamp_Proto_ConnectionSettingsStatuses: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "ConnectionSettingsStatuses_UNSET"),
+    1: .same(proto: "ConnectionSettingsStatuses_APPLIED"),
+    2: .same(proto: "ConnectionSettingsStatuses_APPLYING"),
+    3: .same(proto: "ConnectionSettingsStatuses_FAILED"),
   ]
 }
 
@@ -2015,6 +2187,7 @@ extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._Messa
     12: .standard(proto: "custom_capabilities"),
     13: .standard(proto: "custom_message"),
     14: .standard(proto: "available_components"),
+    15: .standard(proto: "connection_settings_status"),
   ]
 
   fileprivate class _StorageClass {
@@ -2032,6 +2205,7 @@ extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._Messa
     var _customCapabilities: Opamp_Proto_CustomCapabilities? = nil
     var _customMessage: Opamp_Proto_CustomMessage? = nil
     var _availableComponents: Opamp_Proto_AvailableComponents? = nil
+    var _connectionSettingsStatus: Opamp_Proto_ConnectionSettingsStatus? = nil
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -2060,6 +2234,7 @@ extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._Messa
       _customCapabilities = source._customCapabilities
       _customMessage = source._customMessage
       _availableComponents = source._availableComponents
+      _connectionSettingsStatus = source._connectionSettingsStatus
     }
   }
 
@@ -2092,6 +2267,7 @@ extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._Messa
         case 12: try { try decoder.decodeSingularMessageField(value: &_storage._customCapabilities) }()
         case 13: try { try decoder.decodeSingularMessageField(value: &_storage._customMessage) }()
         case 14: try { try decoder.decodeSingularMessageField(value: &_storage._availableComponents) }()
+        case 15: try { try decoder.decodeSingularMessageField(value: &_storage._connectionSettingsStatus) }()
         default: break
         }
       }
@@ -2146,6 +2322,9 @@ extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._Messa
       try { if let v = _storage._availableComponents {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 14)
       } }()
+      try { if let v = _storage._connectionSettingsStatus {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -2169,6 +2348,7 @@ extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._Messa
         if _storage._customCapabilities != rhs_storage._customCapabilities {return false}
         if _storage._customMessage != rhs_storage._customMessage {return false}
         if _storage._availableComponents != rhs_storage._availableComponents {return false}
+        if _storage._connectionSettingsStatus != rhs_storage._connectionSettingsStatus {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -2540,6 +2720,7 @@ extension Opamp_Proto_OpAMPConnectionSettings: SwiftProtobuf.Message, SwiftProto
     2: .same(proto: "headers"),
     3: .same(proto: "certificate"),
     4: .standard(proto: "heartbeat_interval_seconds"),
+    5: .same(proto: "tls"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2552,6 +2733,7 @@ extension Opamp_Proto_OpAMPConnectionSettings: SwiftProtobuf.Message, SwiftProto
       case 2: try { try decoder.decodeSingularMessageField(value: &self._headers) }()
       case 3: try { try decoder.decodeSingularMessageField(value: &self._certificate) }()
       case 4: try { try decoder.decodeSingularUInt64Field(value: &self.heartbeatIntervalSeconds) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._tls) }()
       default: break
       }
     }
@@ -2574,6 +2756,9 @@ extension Opamp_Proto_OpAMPConnectionSettings: SwiftProtobuf.Message, SwiftProto
     if self.heartbeatIntervalSeconds != 0 {
       try visitor.visitSingularUInt64Field(value: self.heartbeatIntervalSeconds, fieldNumber: 4)
     }
+    try { if let v = self._tls {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2582,6 +2767,7 @@ extension Opamp_Proto_OpAMPConnectionSettings: SwiftProtobuf.Message, SwiftProto
     if lhs._headers != rhs._headers {return false}
     if lhs._certificate != rhs._certificate {return false}
     if lhs.heartbeatIntervalSeconds != rhs.heartbeatIntervalSeconds {return false}
+    if lhs._tls != rhs._tls {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2593,6 +2779,7 @@ extension Opamp_Proto_TelemetryConnectionSettings: SwiftProtobuf.Message, SwiftP
     1: .standard(proto: "destination_endpoint"),
     2: .same(proto: "headers"),
     3: .same(proto: "certificate"),
+    4: .same(proto: "tls"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2604,6 +2791,7 @@ extension Opamp_Proto_TelemetryConnectionSettings: SwiftProtobuf.Message, SwiftP
       case 1: try { try decoder.decodeSingularStringField(value: &self.destinationEndpoint) }()
       case 2: try { try decoder.decodeSingularMessageField(value: &self._headers) }()
       case 3: try { try decoder.decodeSingularMessageField(value: &self._certificate) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._tls) }()
       default: break
       }
     }
@@ -2623,6 +2811,9 @@ extension Opamp_Proto_TelemetryConnectionSettings: SwiftProtobuf.Message, SwiftP
     try { if let v = self._certificate {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
+    try { if let v = self._tls {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2630,6 +2821,7 @@ extension Opamp_Proto_TelemetryConnectionSettings: SwiftProtobuf.Message, SwiftP
     if lhs.destinationEndpoint != rhs.destinationEndpoint {return false}
     if lhs._headers != rhs._headers {return false}
     if lhs._certificate != rhs._certificate {return false}
+    if lhs._tls != rhs._tls {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2642,6 +2834,7 @@ extension Opamp_Proto_OtherConnectionSettings: SwiftProtobuf.Message, SwiftProto
     2: .same(proto: "headers"),
     3: .same(proto: "certificate"),
     4: .standard(proto: "other_settings"),
+    5: .same(proto: "tls"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2654,6 +2847,7 @@ extension Opamp_Proto_OtherConnectionSettings: SwiftProtobuf.Message, SwiftProto
       case 2: try { try decoder.decodeSingularMessageField(value: &self._headers) }()
       case 3: try { try decoder.decodeSingularMessageField(value: &self._certificate) }()
       case 4: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: &self.otherSettings) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._tls) }()
       default: break
       }
     }
@@ -2676,6 +2870,9 @@ extension Opamp_Proto_OtherConnectionSettings: SwiftProtobuf.Message, SwiftProto
     if !self.otherSettings.isEmpty {
       try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: self.otherSettings, fieldNumber: 4)
     }
+    try { if let v = self._tls {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2684,6 +2881,69 @@ extension Opamp_Proto_OtherConnectionSettings: SwiftProtobuf.Message, SwiftProto
     if lhs._headers != rhs._headers {return false}
     if lhs._certificate != rhs._certificate {return false}
     if lhs.otherSettings != rhs.otherSettings {return false}
+    if lhs._tls != rhs._tls {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Opamp_Proto_TLSConnectionSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".TLSConnectionSettings"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "ca_pem_contents"),
+    2: .standard(proto: "include_system_ca_certs_pool"),
+    3: .standard(proto: "insecure_skip_verify"),
+    4: .standard(proto: "min_version"),
+    5: .standard(proto: "max_version"),
+    6: .standard(proto: "cipher_suites"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.caPemContents) }()
+      case 2: try { try decoder.decodeSingularBoolField(value: &self.includeSystemCaCertsPool) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.insecureSkipVerify) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.minVersion) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.maxVersion) }()
+      case 6: try { try decoder.decodeRepeatedStringField(value: &self.cipherSuites) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.caPemContents.isEmpty {
+      try visitor.visitSingularStringField(value: self.caPemContents, fieldNumber: 1)
+    }
+    if self.includeSystemCaCertsPool != false {
+      try visitor.visitSingularBoolField(value: self.includeSystemCaCertsPool, fieldNumber: 2)
+    }
+    if self.insecureSkipVerify != false {
+      try visitor.visitSingularBoolField(value: self.insecureSkipVerify, fieldNumber: 3)
+    }
+    if !self.minVersion.isEmpty {
+      try visitor.visitSingularStringField(value: self.minVersion, fieldNumber: 4)
+    }
+    if !self.maxVersion.isEmpty {
+      try visitor.visitSingularStringField(value: self.maxVersion, fieldNumber: 5)
+    }
+    if !self.cipherSuites.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.cipherSuites, fieldNumber: 6)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Opamp_Proto_TLSConnectionSettings, rhs: Opamp_Proto_TLSConnectionSettings) -> Bool {
+    if lhs.caPemContents != rhs.caPemContents {return false}
+    if lhs.includeSystemCaCertsPool != rhs.includeSystemCaCertsPool {return false}
+    if lhs.insecureSkipVerify != rhs.insecureSkipVerify {return false}
+    if lhs.minVersion != rhs.minVersion {return false}
+    if lhs.maxVersion != rhs.maxVersion {return false}
+    if lhs.cipherSuites != rhs.cipherSuites {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -3362,6 +3622,50 @@ extension Opamp_Proto_RemoteConfigStatus: SwiftProtobuf.Message, SwiftProtobuf._
 
   public static func ==(lhs: Opamp_Proto_RemoteConfigStatus, rhs: Opamp_Proto_RemoteConfigStatus) -> Bool {
     if lhs.lastRemoteConfigHash != rhs.lastRemoteConfigHash {return false}
+    if lhs.status != rhs.status {return false}
+    if lhs.errorMessage != rhs.errorMessage {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Opamp_Proto_ConnectionSettingsStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ConnectionSettingsStatus"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "last_connection_settings_hash"),
+    2: .same(proto: "status"),
+    3: .standard(proto: "error_message"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.lastConnectionSettingsHash) }()
+      case 2: try { try decoder.decodeSingularEnumField(value: &self.status) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.errorMessage) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.lastConnectionSettingsHash.isEmpty {
+      try visitor.visitSingularBytesField(value: self.lastConnectionSettingsHash, fieldNumber: 1)
+    }
+    if self.status != .unset {
+      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 2)
+    }
+    if !self.errorMessage.isEmpty {
+      try visitor.visitSingularStringField(value: self.errorMessage, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Opamp_Proto_ConnectionSettingsStatus, rhs: Opamp_Proto_ConnectionSettingsStatus) -> Bool {
+    if lhs.lastConnectionSettingsHash != rhs.lastConnectionSettingsHash {return false}
     if lhs.status != rhs.status {return false}
     if lhs.errorMessage != rhs.errorMessage {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

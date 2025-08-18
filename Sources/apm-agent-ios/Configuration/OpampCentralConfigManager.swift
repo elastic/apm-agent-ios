@@ -17,16 +17,10 @@ import Foundation
 import OpenTelemetrySdk
 import Logging
 
-public class OpampCentralConfigManager: OpampClientCallback, CentralConfigManager {
+public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallback {
   public typealias Client = OpampClientImpl
-  public let agent: AgentConfiguration
-  public let central: CentralConfig
-  public let instrumentationConfig: InstrumentationConfiguration
-
   let client: Client
   let logger: Logger
-  let resource: Resource
-
 
   deinit {
     client.stop()
@@ -40,10 +34,6 @@ public class OpampCentralConfigManager: OpampClientCallback, CentralConfigManage
       SwiftLogNoOpLogHandler()
     }
   ) {
-
-    self.resource = resource
-    self.agent = agent
-    self.instrumentationConfig = instrumentationConfig
     self.logger = logger
 
     let builder = OpampClient.builder()
@@ -78,12 +68,14 @@ public class OpampCentralConfigManager: OpampClientCallback, CentralConfigManage
       break
     }
 
-    self.central = CentralConfig()
 
     let httpClient = {
 
       if let url = agent.managementUrlComponents().url {
-        return OpampHttpSender(url: url)
+        return OpampHttpSender(
+          url: url,
+          headers: OpenTelemetryHelper.generateExporterHeaders(agent.auth)
+        )
       } else
       {
         logger.error("Unable to parse manament url; using default: http://localhost:4320/v1/opamp")
@@ -96,11 +88,14 @@ public class OpampCentralConfigManager: OpampClientCallback, CentralConfigManage
     )
 
     self.client = builder.build(requestService: requestService)
+    super.init()
+
+    self.client.start(self)
     }
 
   // Opamp Callbacks
   public func onConnect(client: OpampClientImpl) {
-    // log
+    logger.info("OpAPM onConnect success.")
   }
 
   public func onConnectFailed(
@@ -108,7 +103,8 @@ public class OpampCentralConfigManager: OpampClientCallback, CentralConfigManage
     error: any Error,
     retryAfter: TimeInterval
   ) {
-    // log
+    logger.error("OpAMP connection failed: \"\(error.localizedDescription)\"")
+
   }
 
   public func onErrorResponse(
@@ -116,10 +112,12 @@ public class OpampCentralConfigManager: OpampClientCallback, CentralConfigManage
     error: any Error,
     retryAfter: TimeInterval
   ) {
-    // log
+    logger.error("OpAMP response error recieved: \"\(error.localizedDescription)\"")
+
   }
 
   public func onMessage(client: OpampClientImpl, message: OpampMessage) {
+    
   }
 
 

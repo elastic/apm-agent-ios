@@ -13,8 +13,8 @@ import FoundationNetworking
 final class OpampHttpSender: OpampSender {
   private let url: URL
   private let session: URLSession
-
-  convenience init(url: URL) {
+  private let headers: [(String, String)]?
+  convenience init(url: URL, headers: [(String, String)]? = nil) {
     let configuration: URLSessionConfiguration = .ephemeral
     // NOTE: RUMM-610 Default behaviour of `.ephemeral` session is to cache requests.
     // To not leak requests memory (including their `.httpBody` which may be significant)
@@ -22,12 +22,17 @@ final class OpampHttpSender: OpampSender {
     configuration.urlCache = nil
     // TODO: RUMM-123 Optimize `URLSessionConfiguration` for good traffic performance
     // and move session configuration constants to `PerformancePreset`.
-    self.init(session: URLSession(configuration: configuration), url: url)
+    self.init(
+      session: URLSession(configuration: configuration),
+      url: url,
+      headers: headers
+    )
   }
 
-  init(session: URLSession, url: URL) {
+  init(session: URLSession, url: URL, headers: [(String,String)]?) {
     self.url = url
     self.session = session
+    self.headers = headers
   }
 
   func send(opampRequest: OpampRequest,
@@ -36,8 +41,13 @@ final class OpampHttpSender: OpampSender {
     request.httpMethod = "POST"
     request.addValue("application/x-protobuf", forHTTPHeaderField: "Content-Type")
     do {
+      print("\(try opampRequest.agentToServer.jsonString())")
       request.httpBody = try opampRequest.agentToServer.serializedData()
-
+      if let headers = headers {
+        for (field, value) in headers {
+          request.setValue(value, forHTTPHeaderField: field)
+        }
+      }
       let task = session.dataTask(with: request) { data, response, error in
 
         completion(httpClientResult(for: (data, response, error)))

@@ -25,16 +25,12 @@ enum CentralConfigResponse: Int {
 }
 
 class ElasticAgentConfigManager: CentralConfigManager {
-  public let agent: AgentConfiguration
-  public let central: CentralConfig
-  public let instrumentation: InstrumentationConfiguration
 
   let serviceEnvironment: String
   let serviceName: String
   let logger: Logger
-  let resource: Resource
 
-  var fetcher: CentralConfigFetcher?
+  var fetcher: CentralConfigFetcher! = nil
 
   init(resource: Resource,
        config: AgentConfiguration,
@@ -42,9 +38,6 @@ class ElasticAgentConfigManager: CentralConfigManager {
        logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
     SwiftLogNoOpLogHandler()
   }) {
-    self.resource = resource
-    self.agent = config
-    self.instrumentation = instrumentationConfig
     self.logger = logger
     switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
     case let .string(value):
@@ -60,13 +53,11 @@ class ElasticAgentConfigManager: CentralConfigManager {
       serviceName = ""
     }
 
-    self.central = CentralConfig()
-
-    if agent.enableRemoteManagement {
+    if config.enableRemoteManagement {
       fetcher = CentralConfigFetcher(serviceName: serviceName,
                                      environment: serviceEnvironment,
-                                     agentConfig: config, { data in
-        self.central.config = String(data: data, encoding: .utf8)
+                                     agentConfig: config, {  data in
+        CentralConfig().config = String(data: data, encoding: .utf8)
       })
     }
   }

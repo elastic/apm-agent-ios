@@ -18,6 +18,9 @@ import Logging
 
 
 class AgentConfigManager {
+  public let agent: AgentConfiguration
+  public let central: CentralConfig
+  public let instrumentation: InstrumentationConfiguration
   let centralConfigManager: CentralConfigManager
   
   init(resource: Resource,
@@ -26,6 +29,10 @@ class AgentConfigManager {
        logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
     SwiftLogNoOpLogHandler()
   }) {
+    agent = config
+    instrumentation = instrumentationConfig
+    central = CentralConfig()
+
     if (config.enableOpAMP) {
       centralConfigManager = OpampCentralConfigManager(
         resource: resource,

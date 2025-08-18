@@ -7,6 +7,7 @@ import NIO
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import os.log
+import Logging
 
 public class ElasticApmAgent {
  public static let name = "apm-agent-ios"
@@ -65,8 +66,11 @@ public class ElasticApmAgent {
 
     _ = SessionManager.instance.session()  // initialize session
     agentConfigManager = AgentConfigManager(
-      resource: AgentResource.get().merging(other: AgentEnvResource.get()), config: configuration,
-      instrumentationConfig: instrumentationConfiguration)
+      resource: AgentResource.get().merging(other: AgentEnvResource.get()),
+ config: configuration,
+      instrumentationConfig: instrumentationConfiguration,
+      logger: Logging.Logger(label: "Elastic.ConfigManager")
+    )
 
     sessionSampler = SessionSampler({
       if let rate = CentralConfig().data.sampleRate {
