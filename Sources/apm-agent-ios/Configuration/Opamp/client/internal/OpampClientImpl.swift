@@ -101,6 +101,7 @@ object: nil
       )
       disableCompression()
       self.requestService.start(callback: self, request: self)
+      isRunning = true
       self.requestService.sendRequest()
     }
   }
@@ -184,6 +185,16 @@ object: nil
 
   public func onRequestSuccess(response: OpampResponse) {
     clientState.sequenceNumberState.increment()
+    if response.serverToAgent.hasRemoteConfig && response.serverToAgent.remoteConfig.configHash != clientState.remoteConfigStatusState.value.lastRemoteConfigHash {
+      let remoteConfig = response.serverToAgent.remoteConfig
+      var config = Opamp_Proto_EffectiveConfig()
+      config.configMap = remoteConfig.config
+      clientState.effectiveConfigState.value = config
+      var status = Opamp_Proto_RemoteConfigStatus()
+      status.status = .applied
+      status.lastRemoteConfigHash = remoteConfig.configHash
+      clientState.remoteConfigStatusState.value = status
+    }
     handleResponse(response: response.serverToAgent)
   }
 

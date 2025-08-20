@@ -26,4 +26,28 @@ class OpampStateTest: XCTestCase {
     })
     XCTAssertTrue(state == 1000)
   }
+
+  func testNotify() {
+
+    class StateNotification : OpampState<Int>, @unchecked Sendable {
+      var expectation : XCTestExpectation?
+      override func notify() {
+        expectation!.fulfill()
+      }
+    }
+
+    let expectation = expectation(description: "notify")
+
+    let state = StateNotification(0)
+    state.expectation = expectation
+
+    state.value += 1
+    waitForExpectations(timeout: 0) // state calls notify on state change
+  }
+
+  func testStateAsSupplier() {
+    let state = OpampState<Int>(0)
+    state.value += 1
+    XCTAssertEqual(1, state.get())
+  }
 }

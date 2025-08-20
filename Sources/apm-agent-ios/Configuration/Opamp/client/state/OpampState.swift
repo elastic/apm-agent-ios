@@ -39,9 +39,8 @@ public class OpampState<Value: Equatable> : Supplier, @unchecked Sendable, Equat
       defer {
         let err = pthread_rwlock_unlock(rwlock)
         precondition(err == 0, "pthread_rwlock_wrlock failed with error \(err)")
-
+        self.notify()
       }
-      self.notify()
       yield &_value
     }
   }

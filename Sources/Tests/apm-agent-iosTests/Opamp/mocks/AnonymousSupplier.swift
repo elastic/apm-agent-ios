@@ -14,18 +14,14 @@
 //   limitations under the License.
 
 import Foundation
+@testable import ElasticApm
 
-public enum FieldType : String, Comparable {
-  case INSTANCE_UID = "instance_uid"
-  case SEQUENCE_NUMBER = "sequence_number"
-  case AGENT_DESCRIPTION = "agent_description"
-  case CAPABILITIES = "capabilities"
-  case EFFECTIVE_CONFIG = "effective_config"
-  case REMOTE_CONFIG_STATUS = "remote_config_status"
-  case AGENT_DISCONNECT = "agent_disconnect"
-  case FLAGS = "flags"
-
-  public static func < (lhs: FieldType, rhs: FieldType) -> Bool {
-    lhs.rawValue < rhs.rawValue
+public class AnonymousSupplier<Supply>: Supplier {
+  private let closure: () -> Supply
+  init(_ closure: @escaping ()-> Supply ) {
+    self.closure = closure
+  }
+  public func get() -> Supply {
+    return closure()
   }
 }

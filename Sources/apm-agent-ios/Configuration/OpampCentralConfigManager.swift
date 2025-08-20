@@ -68,6 +68,8 @@ public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallbac
       break
     }
 
+    builder.enableRemoteConfig()
+    builder.enableEffectiveConfigReporting()
 
     let httpClient = {
 
@@ -117,7 +119,9 @@ public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallbac
   }
 
   public func onMessage(client: OpampClientImpl, message: OpampMessage) {
-    
+    if message.remoteConfig.hasConfig,   let elasticConfigMap = message.remoteConfig.config.configMap["elastic"]  {
+      CentralConfig().config = String(data: elasticConfigMap.body, encoding: .utf8)
+    }
   }
 
 

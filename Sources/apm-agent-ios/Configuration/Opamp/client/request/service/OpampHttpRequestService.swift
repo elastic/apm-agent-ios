@@ -29,7 +29,7 @@ public class OpampHttpRequestService: RequestService {
   private let requestTimer: DispatchSourceTimer
 
   private var callback: RequestServiceCallback?
-  private var request: Supplier<OpampRequest>?
+  private var request: (any Supplier<OpampRequest>)?
 
   public private(set) var isRunning = false
   public private(set) var isStopped = false

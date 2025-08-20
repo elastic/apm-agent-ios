@@ -49,7 +49,10 @@ public class OpampHttpRequestServiceTest : XCTestCase {
           cond.broadcast()
           cond.unlock()
         }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(
+          agentToServer: Opamp_Proto_AgentToServer()
+        )
+        }
       )
 
     XCTAssertTrue(requestService.isRunning)
@@ -58,7 +61,7 @@ public class OpampHttpRequestServiceTest : XCTestCase {
     requestService
       .start(
         callback: MockRequestServiceCallback(),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
       )
     // calling start twice makes no changes
     XCTAssertTrue(requestService.isRunning)
@@ -71,7 +74,7 @@ public class OpampHttpRequestServiceTest : XCTestCase {
     requestService
       .start(
         callback: MockRequestServiceCallback(),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
       )
 
     XCTAssertTrue(requestService.isStopped)
@@ -115,8 +118,9 @@ public class OpampHttpRequestServiceTest : XCTestCase {
           cond.broadcast()
           cond.unlock()
         }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
       )
+
       requestService.sendRequest()
 
     cond.lock()
@@ -158,8 +162,9 @@ public class OpampHttpRequestServiceTest : XCTestCase {
             cond.broadcast()
             cond.unlock()
           }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
       )
+
 
     cond.lock()
     while (isWaiting) {
@@ -205,8 +210,7 @@ public class OpampHttpRequestServiceTest : XCTestCase {
             cond.broadcast()
             cond.unlock()
           }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
-      )
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
 
     cond.lock()
     while (isWaiting) {
@@ -262,8 +266,8 @@ sender: {
               cond.unlock()
             }
           }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
-      )
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
+
 
     cond.lock()
     while (isWaiting) {
@@ -315,8 +319,8 @@ sender: {
              cond.unlock()
            }
           }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
-      )
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
+
     cond.lock()
     while (isWaiting) {
       cond.wait()
@@ -369,8 +373,8 @@ sender: {
               cond.unlock()
             }
           }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
-      )
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
+
     cond.lock()
     while (isWaiting && Date().timeIntervalSince1970 - start.timeIntervalSince1970 < 10.0) {
       cond.wait()
@@ -434,8 +438,9 @@ sender: {
               cond.unlock()
             }
           }),
-        request: OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
+        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
       )
+
     cond.lock()
     while (isWaiting && Date().timeIntervalSince1970 - start.timeIntervalSince1970 < 10.0) {
       cond.wait()
