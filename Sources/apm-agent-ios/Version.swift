@@ -1,4 +1,4 @@
-// Copyright © 2021 Elasticsearch BV
+// Copyright © 2025 Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -15,5 +15,5 @@
 import Foundation
 
 extension ElasticApmAgent {
-    public static let elasticSwiftAgentVersion: String = "1.2.1"
+  public static let elasticSwiftAgentVersion: String = "1.3.0"
 }
