@@ -17,7 +17,7 @@ jobs:
     - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
       with:
         xcode-version: 'latest-stable'
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Run build
       run: .ci/scripts/build.sh
