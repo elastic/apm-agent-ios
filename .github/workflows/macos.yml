@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   macos:
-    runs-on: macos-15
+    runs-on: macos-15-large
     steps:
     - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
       with:

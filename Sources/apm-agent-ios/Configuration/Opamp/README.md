@@ -1,0 +1,2 @@
+Implementation of the [OpAPM specification](https://github.com/open-telemetry/opamp-spec/blob/main/specification.md)
+Using [v0.12.0](https://github.com/open-telemetry/opamp-spec/releases/tag/v0.12.0) opamp protobuf spec

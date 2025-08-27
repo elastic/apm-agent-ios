@@ -12,6 +12,7 @@ public struct AgentConfiguration {
   init() {}
   public var enableAgent = true
   public var enableRemoteManagement = true
+  public var enableOpAMP = false
   public var managementUrl: URL?
   public var collectorHost = "127.0.0.1"
   public var collectorPath = ""
