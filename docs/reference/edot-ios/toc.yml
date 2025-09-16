@@ -4,3 +4,5 @@ toc:
   - file: supported-technologies.md
   - file: instrumentation.md
   - file: configuration.md
+  - title: Release notes
+    crosslink: apm-agent-ios://release-notes/index.md
