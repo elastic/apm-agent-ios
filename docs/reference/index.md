@@ -41,7 +41,7 @@ You can find examples in the [opentelemetry-swift/examples](https://github.com/o
 
 ## Additional components [additional-components]
 
-EDOT SDKs work with the [APM Server](docs-content://solutions/observability/apps/application-performance-monitoring-apm.md), [{{es}}](docs-content://get-started/index.md), and [{{kib}}](docs-content://get-started/the-stack.md). The [APM Guide](docs-content://solutions/observability/apps/application-performance-monitoring-apm.md) provides details on how these components work together, and provides a matrix outlining [Agent and Server compatibility](docs-content://solutions/observability/apps/apm-agent-compatibility.md).
+EDOT SDKs work with the [APM Server](docs-content://solutions/observability/apm/index.md), [{{es}}](docs-content://get-started/index.md), and [{{kib}}](docs-content://get-started/the-stack.md). The [APM Guide](docs-content://solutions/observability/apm/index.md) provides details on how these components work together, and provides a matrix outlining [Agent and Server compatibility](docs-content://solutions/observability/apm/apm-agent-compatibility.md).
 
 ## OpenTelemetry Components [_open_telemetry_components]
 
