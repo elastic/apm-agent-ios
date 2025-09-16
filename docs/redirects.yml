@@ -1,6 +1,6 @@
 redirects:
-  'reference/apm/agents/ios/index.md': 'reference/index.md'
-  'reference/apm/agents/ios/supported-technologies.md': 'reference/supported-technologies.md'
-  'reference/apm/agents/ios/set-up-apm-ios-agent.md': 'reference/set-up-apm-ios-agent.md'
-  'reference/apm/agents/ios/configuration.md': 'reference/configuration.md'
-  'reference/apm/agents/ios/instrumentation.md': 'reference/instrumentation.md'
+  'reference/apm/agents/ios/index.md': 'reference/edot-ios/index.md'
+  'reference/apm/agents/ios/supported-technologies.md': 'reference/edot-ios/supported-technologies.md'
+  'reference/apm/agents/ios/set-up-apm-ios-agent.md': 'reference/edot-ios/set-up-apm-ios-agent.md'
+  'reference/apm/agents/ios/configuration.md': 'reference/edot-ios/configuration.md'
+  'reference/apm/agents/ios/instrumentation.md': 'reference/edot-ios/instrumentation.md'

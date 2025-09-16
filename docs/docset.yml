@@ -7,7 +7,7 @@ cross_links:
   - elastic-agent
 toc:
   - toc: release-notes
-  - toc: reference
+  - toc: reference/edot-ios
 
 subs:
   motlp: Elastic Cloud Managed OTLP Endpoint
