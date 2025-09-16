@@ -1,9 +1,8 @@
 toc:
   - file: index.md
-    children:
-        - file: set-up-apm-ios-agent.md
-        - file: supported-technologies.md
-        - file: instrumentation.md
-        - file: configuration.md
-        - title: Troubleshooting
-          crosslink: docs-content://troubleshoot/ingest/opentelemetry/edot-sdks/ios/index.md
+  - file: set-up-apm-ios-agent.md
+  - file: supported-technologies.md
+  - file: instrumentation.md
+  - file: configuration.md
+  - title: Troubleshooting
+    crosslink: docs-content://troubleshoot/ingest/opentelemetry/edot-sdks/ios/index.md
