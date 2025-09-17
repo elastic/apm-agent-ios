@@ -4,5 +4,7 @@ toc:
   - file: supported-technologies.md
   - file: instrumentation.md
   - file: configuration.md
+  - title: Troubleshooting
+    crosslink: docs-content://troubleshoot/ingest/opentelemetry/edot-sdks/ios/index.md
   - title: Release notes
     crosslink: apm-agent-ios://release-notes/index.md
