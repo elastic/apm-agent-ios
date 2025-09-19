@@ -16,16 +16,13 @@ jobs:
     steps:
     - name: Get token
       id: get_token
-      uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+      uses: actions/create-github-app-token@v2
       with:
-        app_id: ${{ secrets.OBS_AUTOMATION_APP_ID }}
-        private_key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
-        permissions: >-
-          {
-            "members": "read",
-            "organization_projects": "write",
-            "issues": "read"
-          }
+        app-id: ${{ secrets.OBS_AUTOMATION_APP_ID }}
+        private-key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
+        permission-members: read
+        permission-organization-projects: write
+        permission-issues: read
     - name: Add agent-ios and agent-mobile labels
       uses: AlexanderWert/issue-labeler@32be4a3c3d8f009c2741af471994337c34b4cb6f  # v2.3
       with:
