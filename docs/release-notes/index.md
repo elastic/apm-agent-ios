@@ -47,5 +47,4 @@ To check for security updates, go to [Security announcements for the Elastic sta
 ### Features and enhancements [elastic-apm-ios-agent-100-features-enhancements]
 
 * Added network status to all signals [#202](https://github.com/elastic/apm-agent-ios/pull/202).
-* Added session.id to crash reports [#195].
-  % TBD Incorrect number?
+* Added session.id to crash reports [#197](https://github.com/elastic/apm-agent-ios/pull/197).
