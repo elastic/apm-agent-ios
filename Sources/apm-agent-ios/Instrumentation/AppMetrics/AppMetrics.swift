@@ -66,36 +66,31 @@ class AppMetrics: NSObject, MXMetricManagerSubscriber {
   }
 
   func recordTimeToFirstDraw(metric: MXMetricPayload) {
-//    if let timeToFirstDrawEnumerator = metric.applicationLaunchMetrics?.histogrammedTimeToFirstDraw.bucketEnumerator {
+    if let timeToFirstDrawEnumerator = metric.applicationLaunchMetrics?.histogrammedTimeToFirstDraw.bucketEnumerator {
+      var bounds = [Double]()
+      var counts = [Int]()
+      var values = [Double]()
+      // swiftlint:disable:next force_cast
+      for bucket in timeToFirstDrawEnumerator.allObjects as! [MXHistogramBucket] {
+        bounds.append(bucket.bucketStart.value)
+        bounds.append(bucket.bucketEnd.value)
+        counts.append(0)
+        counts.append(bucket.bucketCount)
+        values.append(bucket.bucketStart.value + bucket.bucketEnd.value / 2)
+      }
+      counts.append(0)
 
-//      meter.histogramBuilder(name: ElasticMetrics.appLaunchTime.rawValue).build()
-//      let rawHistogram = meter.createRawDoubleHistogram(name: ElasticMetrics.appLaunchTime.rawValue)
-//      var bounds = [Double]()
-//      var counts = [Int]()
-//      var sum = 0.0
-//      var count = 0
-//      // swiftlint:disable:next force_cast
-//      for bucket in timeToFirstDrawEnumerator.allObjects as! [MXHistogramBucket] {
-//        bounds.append(bucket.bucketStart.value)
-//        bounds.append(bucket.bucketEnd.value)
-//        counts.append(0)
-//        counts.append(bucket.bucketCount)
-//        let avg = (bucket.bucketStart.value + bucket.bucketEnd.value) / 2
-//        sum += avg * Double(bucket.bucketCount)
-//        count += bucket.bucketCount
-//      }
-//      counts.append(0)
-//
-//      //            SummaryData
-//      rawHistogram.record(explicitBoundaries: bounds,
-//                          counts: counts,
-//                          startDate: metric.timeStampBegin,
-//                          endDate: metric.timeStampEnd,
-//                          count: count,
-//                          sum: sum,
-//                          labels: [LaunchTimeValues.key.rawValue: LaunchTimeValues.firstDraw.rawValue])
+      var histogram = meter.histogramBuilder(
+        name: ElasticMetrics.appLaunchTime.rawValue
+      ).setExplicitBucketBoundariesAdvice(bounds)
+        .build()
 
-//    }
+      for (index, element) in counts.enumerated() {
+        for _ in 0..<element {
+          histogram.record(value: values[index])
+        }
+      }
+    }
   }
 
   func recordResumeTime(metric: MXMetricPayload) {
