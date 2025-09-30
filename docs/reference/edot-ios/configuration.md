@@ -52,9 +52,20 @@ The host endpoint handling OTLP exports. This configuration overrides `withServe
 * **Type:** URL
 * **Default:** ${exportUrl}/config/v1/agents
 
-The URL endpoint that handles Elastic Central Config. It must be set with the correct path, e.g.: `/config/v1/agents`. For backwards compatibility purposes, if this config is unset the SDK uses the value set by `withExportUrl` as the host.
+The URL endpoint that handles Elastic Central Config. It must be set with the correct path, e.g.: `/config/v1/agents`. For backwards compatibility purposes, if this config is unset the SDK uses the value set by `withExportUrl` as the host. 
 
 This config is intended to be used in conjunction with `withExportUrl`.
+
+note: If `useOpAMP` is enabled, this URL should be set with your OpAMP endpoint, such as `http://localhost:4320/v1/opamp`. E.g.: 
+```swift
+let config = AgentConfigBuilder()
+                .withServerUrl(URL(string: "http://localhost:8200")!)
+                .withManagementUrl(URL(string:"http://localhost:4320/v1/opamp")!)
+                .useOpAMP()
+                .build()
+
+ElasticApmAgent.start(with:config)
+```
 
 #### `withRemoteManagement` [withRemoteManagement]
 
@@ -83,41 +94,56 @@ Sets the API Token for connecting to an authenticated APM Server. If using the e
 
 This setting is mutually exclusive with `withSecretToken`
 
+#### `useConnectionType` [useConnectionType]
+
+* **Type:** `AgentConnectionType`
+* **Default:** `.grpc`
+
+- Selects the transport used to export OTLP data to the collector. `.grpc` uses the gRPC OTLP exporter (default). `.http` uses the OTLP/HTTP exporters and will send traces, metrics, and logs to the HTTP endpoints (e.g. `/v1/traces`, `/v1/metrics`, `/v1/logs`). 
+
+#### `useOpAMP` [useOpAMP]
+
+* **Type:** Call to enable OpAMP
+* **Default:** `false`
+
+Enable OpAMP-based central management. When enabled, the agent will assume the url provided to `withManagementUrl` is an OpAMP endpoint. Use this when your central configuration is delivered via OpAMP. see [withManagementUrl](#withmanagementurl).
+.
+
 #### `disableAgent() -> Self` [disableAgent]
 
 Turns off the Elastic SDK. This is useful for disabling the SDK during development without having to remove the Elastic SDK completely. A log reports `"Elastic APM Agent has been disabled."`
 
 #### `addSpanFilter` [addSpanFilter]
 
-* **Type:** @escaping (ReadableSpan) → Bool
+* **Type:** `@escaping (ReadableSpan) → Bool`
 * **Default:** nil
 
 Adds an anonymous function that will be executed on each span in the span processor to decide if that span should be sent to the back end.
 
 #### `addMetricFilter` [addMetricFilter]
 
-* **Type:** @escaping (Metric) → Bool
+* **Type:** `@escaping (Metric) → Bool`
 * **Default:** nil
 
 Adds an anonymous function that will be executed on each metric in the span processor to decide if that metric should be sent to the back end.
 
 #### `addLogFilter` [addLogFilter]
 
-* **Type:** @escaping (ReadableLogRecord) → Bool
+* **Type:** `@escaping (ReadableLogRecord) → Bool`
 * **Default:** nil
 
 Adds an anonymous function that will be executed on each log in the span processor to decide if that log should be sent to the back end.
 
 #### `addSpanAttributeInterceptor` [addSpanAttributeInterceptor]
 
-* **Type:** any Interceptor<[String:AttributeValue>]
+* **Type:** `any Interceptor<[String:AttributeValue>]`
 * **Default:** nil
 
 You can provide interceptors for all spans attributes, which will be executed on every span created, where you can read/modify them if needed.
 
 #### `addLogRecordAttributeInterceptor` [addLogRecordAttributeInterceptor]
 
-* **Type:** any Interceptor<[String:AttributeValue>]
+* **Type:** `any Interceptor<[String:AttributeValue>]`
 * **Default:** nil
 
 You can provide interceptors for all LogRecord attributes, which will be executed on every span created, where you can read or modify them if needed.
