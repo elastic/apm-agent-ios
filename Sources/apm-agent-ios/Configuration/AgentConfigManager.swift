@@ -14,17 +14,7 @@
 
 import Foundation
 import OpenTelemetrySdk
-import OpenTelemetryApi
 import Logging
-
-
-enum CentralConfigResponse: Int {
-  case okay = 200
-  case notModified = 304
-  case forbidden = 403
-  case notFound = 40
-  case unavailable = 503
-}
 
 class AgentConfigManager {
   public let agent: AgentConfiguration
