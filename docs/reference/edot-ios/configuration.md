@@ -253,3 +253,29 @@ You can set this value dynamically at runtime.
 | --- | --- | --- |
 | `1.0` | Double | true |
 
+
+### Central configuration
+
+Starting in version `v1.4.0`, you can remotely manage the EDOT iOS behavior through [Central configuration](https://www.elastic.co/docs/reference/opentelemetry/central-configuration) via [OpAPM](). 
+
+#### Activate central configuration
+
+Remote management is disabled by default. To enable it, provide your OpAMP endpoint when initializing the agent using the AgentConfigBuider [`withManagementUrl`](#withmanagementurl) API <1> and enabling OpAMP with the [`useOpAMP()`](#useopamp) API <2>.
+
+```swift
+let config = AgentConfigBuilder()
+                .withServerUrl(URL(string: "http://localhost:8200")!) 
+                .withManagementUrl(URL(string:"http://localhost:4320/v1/opamp")!) <1>
+                .useOpAMP() <2>
+                .build()
+
+ElasticApmAgent.start(with:config)
+```
+1: The central configuration endpoint
+2: enable OpAMP.
+
+ Note: By not enabling Opamp using [`useOpAMP()`](#useopamp) the default Elastic central configuration will be used. 
+
+#### Available settings
+
+ The same settings are available as provided above in the [Dynamic configuration](#dynamic-configuration) section above. 
