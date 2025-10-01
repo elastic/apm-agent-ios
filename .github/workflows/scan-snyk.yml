@@ -15,7 +15,9 @@ jobs:
       SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
     steps:
       - uses: actions/checkout@v5
-      - name: Scan for vulnerabilities with Snyk
-        if: github.event_name != 'pull_request' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot' )
-        run: | 
-          snyk monitor --file="Package.swift" --org="3308b36d-5e52-4d0f-b167-3bd1b5fb764f"    
+      - uses: snyk/actions/setup@master
+      - uses: snyk/actions/snyk@master
+        with:
+          org: "3308b36d-5e52-4d0f-b167-3bd1b5fb764f"
+          command: monitor
+          file: "Package.swift"
