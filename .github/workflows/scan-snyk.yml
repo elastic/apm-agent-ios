@@ -17,7 +17,7 @@ jobs:
       - name: Setup Swift
         uses: swift-actions/setup-swift@bb9d928d17930db5f808fa68520e2dc2e0ff1f2c
         with:
-          swift-version: "5.10.0" # Specify the desired Swift version
+          swift-version: "5.10" # Specify the desired Swift version
       - uses: actions/checkout@v5
       - uses: snyk/actions/setup@master
       - name: Snyk Monitor
