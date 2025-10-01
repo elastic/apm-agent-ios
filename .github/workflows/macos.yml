@@ -11,6 +11,9 @@ permissions:
   contents: read
 
 jobs:
+  scan-snyk:
+    uses: ./.github/workflows/scan-snyk.yml
+    secrets: inherit
   macos:
     runs-on: macos-15-large
     steps:
