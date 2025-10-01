@@ -260,8 +260,6 @@ You can set this value dynamically at runtime.
 ## Central configuration (EDOT)
 
 ```{applies_to}
-serverless: unavailable
-stack: preview 9.2
 product:
   edot_ios: preview 1.4.0
 ```
