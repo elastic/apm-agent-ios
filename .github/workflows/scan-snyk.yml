@@ -15,7 +15,7 @@ jobs:
       SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
     steps:
       - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
+        uses: swift-actions/setup-swift@bb9d928d17930db5f808fa68520e2dc2e0ff1f2c
         with:
           swift-version: "5.10.0" # Specify the desired Swift version
       - uses: actions/checkout@v5
