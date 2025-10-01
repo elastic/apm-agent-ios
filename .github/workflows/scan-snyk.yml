@@ -16,8 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: snyk/actions/setup@master
-      - uses: snyk/actions/snyk@master
-        with:
-          org: "3308b36d-5e52-4d0f-b167-3bd1b5fb764f"
-          command: monitor
-          file: "Package.swift"
+      - name: Snyk Monitor
+        run: |
+          snyk monitor --org "3308b36d-5e52-4d0f-b167-3bd1b5fb764f" --file="Package.swift"
