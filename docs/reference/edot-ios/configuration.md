@@ -52,11 +52,13 @@ The host endpoint handling OTLP exports. This configuration overrides `withServe
 * **Type:** URL
 * **Default:** ${exportUrl}/config/v1/agents
 
-The URL endpoint that handles Elastic Central Config. It must be set with the correct path, e.g.: `/config/v1/agents`. For backwards compatibility purposes, if this config is unset the SDK uses the value set by `withExportUrl` as the host. 
+The URL endpoint that handles Elastic Central Config. Set the correct path, for example: `/config/v1/agents`. For backwards compatibility purposes, if this config is unset, the SDK uses the value set by `withExportUrl` as the host. 
 
-This config is intended to be used in conjunction with `withExportUrl`.
+Use this config in conjunction with `withExportUrl`.
 
-note: If `useOpAMP` is enabled, this URL should be set with your OpAMP endpoint, such as `http://localhost:4320/v1/opamp`. E.g.: 
+:::{note}
+If `useOpAMP` is enabled, set the URL to your OpAMP endpoint, such as `http://localhost:4320/v1/opamp`. For example: 
+
 ```swift
 let config = AgentConfigBuilder()
                 .withServerUrl(URL(string: "http://localhost:8200")!)
@@ -66,6 +68,7 @@ let config = AgentConfigBuilder()
 
 ElasticApmAgent.start(with:config)
 ```
+:::
 
 #### `withRemoteManagement` [withRemoteManagement]
 
@@ -80,7 +83,7 @@ Controls whether the SDK attempts to contact Elastic Central Config for runtime 
 * **Default:** nil
 * **Env:** `OTEL_EXPORTER_OTLP_HEADERS`
 
-Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
+Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (for example: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
 
 This setting is mutually exclusive with `withApiKey`.
 
@@ -90,7 +93,7 @@ This setting is mutually exclusive with `withApiKey`.
 * **Default:** nil
 * **Env:** `OTEL_EXPORTER_OTLP_HEADERS`
 
-Sets the API Token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=ApiKey <key>"`)
+Sets the API Token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (for example: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=ApiKey <key>"`)
 
 This setting is mutually exclusive with `withSecretToken`
 
@@ -99,7 +102,7 @@ This setting is mutually exclusive with `withSecretToken`
 * **Type:** `AgentConnectionType`
 * **Default:** `.grpc`
 
-- Selects the transport used to export OTLP data to the collector. `.grpc` uses the gRPC OTLP exporter (default). `.http` uses the OTLP/HTTP exporters and will send traces, metrics, and logs to the HTTP endpoints (e.g. `/v1/traces`, `/v1/metrics`, `/v1/logs`). 
+Selects the transport used to export OTLP data to the collector. `.grpc` uses the gRPC OTLP exporter (default). `.http` uses the OTLP/HTTP exporters and will send traces, metrics, and logs to the HTTP endpoints (for example `/v1/traces`, `/v1/metrics`, `/v1/logs`). 
 
 #### `useOpAMP` [useOpAMP]
 
@@ -254,13 +257,20 @@ You can set this value dynamically at runtime.
 | `1.0` | Double | true |
 
 
-### Central configuration
+### Central configuration (EDOT)
 
-Starting in version `v1.4.0`, you can remotely manage the EDOT iOS behavior through [Central configuration](https://www.elastic.co/docs/reference/opentelemetry/central-configuration) via [OpAPM](). 
+```{applies_to}
+serverless: unavailable
+stack: preview 9.2
+product:
+  edot_ios: preview 1.4.0
+```
+
+You can remotely manage the EDOT iOS behavior through [Central configuration](opentelemetry://reference/central-configuration.md) and the EDOT Collector. 
 
 #### Activate central configuration
 
-Remote management is disabled by default. To enable it, provide your OpAMP endpoint when initializing the agent using the AgentConfigBuider [`withManagementUrl`](#withmanagementurl) API <1> and enabling OpAMP with the [`useOpAMP()`](#useopamp) API <2>.
+To activate central configuration, provide your OpAMP endpoint when initializing the agent using the AgentConfigBuider [`withManagementUrl`](#withmanagementurl) API and enabling OpAMP with the [`useOpAMP()`](#useopamp) API. For example:
 
 ```swift
 let config = AgentConfigBuilder()
@@ -271,11 +281,13 @@ let config = AgentConfigBuilder()
 
 ElasticApmAgent.start(with:config)
 ```
-1: The central configuration endpoint
-2: enable OpAMP.
+1: The central configuration endpoint.
+2: This enables OpAMP.
 
- Note: By not enabling Opamp using [`useOpAMP()`](#useopamp) the default Elastic central configuration will be used. 
+:::{note}
+If you don't use [`useOpAMP()`](#useopamp), the default Elastic central configuration through APM Server is used instead.
+:::
 
-#### Available settings
+#### Central configuration settings
 
- The same settings are available as provided above in the [Dynamic configuration](#dynamic-configuration) section above. 
+The same [Dynamic configuration](#dynamic-configuration) settings are available when using central configuration through the EDOT Collector.
