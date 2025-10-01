@@ -281,8 +281,9 @@ let config = AgentConfigBuilder()
 
 ElasticApmAgent.start(with:config)
 ```
-1: The central configuration endpoint.
-2: This enables OpAMP.
+
+1. The central configuration endpoint.
+2. This enables OpAMP.
 
 :::{note}
 If you don't use [`useOpAMP()`](#useopamp), the default Elastic central configuration through APM Server is used instead.
