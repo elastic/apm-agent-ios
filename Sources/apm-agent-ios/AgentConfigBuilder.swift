@@ -151,6 +151,8 @@ public class AgentConfigBuilder {
       }
       if let port = url.port {
         config.collectorPort = port
+      } else {
+        config.collectorPort = config.collectorTLS ? 443 : 80
       }
 
       config.collectorPath = url.path

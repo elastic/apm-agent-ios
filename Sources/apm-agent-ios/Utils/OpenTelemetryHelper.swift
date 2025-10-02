@@ -55,7 +55,9 @@ public class OpenTelemetryHelper {
       port = ""
     }
 
-    return URL(string: "\(config.collectorTLS ? "https://" : "http://")\(config.collectorHost)\( port.isEmpty ? "" : ":\(port)")")
+    return URL(
+      string: "\(config.collectorTLS ? "https://" : "http://")\(config.collectorHost)\( port.isEmpty ? "" : ":\(port)")\(config.collectorPath)"
+    )
 
   }
 
