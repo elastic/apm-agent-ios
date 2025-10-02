@@ -45,7 +45,7 @@ Details of adding dependencies to your Package.swift can be found on [*Add a Dep
 ```swift
 Package(
     dependencies:[
-         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "1.2.0"),
+         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "1.4.0"),
     ],
   targets:[
     .target(
@@ -71,7 +71,7 @@ import ElasticApm
 class AppDelegate : NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         var config = AgentConfigBuilder()
-            .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
+            .withExportUrl(URL(string:"http://127.0.0.1:8200")) <1>
             .withSecretToken("<SecretToken>") <2>
             .build()
 
@@ -107,7 +107,7 @@ import ElasticApm
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 var config = AgentConfigBuilder()
-                       .withServerUrl(URL(string:"http://127.0.0.1:8200")) <1>
+                       .withExportUrl(URL(string:"http://127.0.0.1:8200")) <1>
                        .withSecretToken("<SecretToken>") <2>
                        .build()
         ElasticApmAgent.start(with: config)

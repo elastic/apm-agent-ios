@@ -21,5 +21,5 @@ The Elastic Distribution of OpenTelemetry iOS automatically instruments various 
 
 | Framework | Version |
 | --- | --- |
-| OpenTelemetry-Swift | 1.12.1 |
+| OpenTelemetry-Swift | 1.17.0 |
 
