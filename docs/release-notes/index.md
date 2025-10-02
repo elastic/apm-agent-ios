@@ -30,6 +30,61 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-ios-agent-versionext-fixes]
 
+## 1.4.0 [elastic-apm-140-release-notes]
+
+### Features and enhancements [elastic-apm-ios-agent-140-features-enhancements]
+
+* OpAMP support [#290](https://github.com/elastic/apm-agent-ios/pull/290)
+
+### Fixes [elastic-apm-ios-agent-140-fixes]
+
+* Respect custom exportUrl path [#310](https://github.com/elastic/apm-agent-ios/pull/310)
+
+## 1.3.0 [elastic-apm-130-release-notes]
+
+### Features and enhancements [elastic-apm-ios-agent-130-features-enhancements]
+
+* Updated OpenTelemetry-Swift to version 1.17.0
+* Allow signal filters to be mutable [#266](https://github.com/elastic/apm-agent-ios/pull/266)
+* Added mutableLogRecord so attributes can be appended during filtering [#271](https://github.com/elastic/apm-agent-ios/pull/271)
+* Adds support for custom collector paths [#267](https://github.com/elastic/apm-agent-ios/pull/276)
+* Signal interceptors [#283](https://github.com/elastic/apm-agent-ios/pull/283)
+
+## 1.2.0 [elastic-apm-120-release-notes]
+
+### Features and enhancements [elastic-apm-ios-agent-120-features-enhancements]
+
+* Bumped Reachability to version 5.2.4 [#245](https://github.com/elastic/apm-agent-ios/pull/245)
+* Updated OpenTelemetry-Swift to version 1.12.1
+
+## 1.1.0 [elastic-apm-110-release-notes]
+
+### Features and enhancements [elastic-apm-ios-agent-110-features-enhancements]
+
+* Updated OpenTelemetry-Swift to version 1.11.0
+
+## 1.0.5 [elastic-apm-105-release-notes]
+
+### Fixes [elastic-apm-ios-agent-105-fixes]
+
+* Fixes HTTP connection type [#239](https://github.com/elastic/apm-agent-ios/pull/239)
+
+## 1.0.4 [elastic-apm-104-release-notes]
+
+### Fixes [elastic-apm-ios-agent-104-fixes]
+
+* Updated privacy manifest [#233](https://github.com/elastic/apm-agent-ios/pull/233)
+
+## 1.0.3 [elastic-apm-103-release-notes]
+
+### Features and enhancements [elastic-apm-ios-agent-103-features-enhancements]
+
+* Added options to use HTTP instead of GRPC for Exporters [#228](https://github.com/elastic/apm-agent-ios/pull/228)
+
+### Fixes [elastic-apm-ios-agent-103-fixes]
+
+* Fixed ntp clock logging to only occur once. [#229](https://github.com/elastic/apm-agent-ios/pull/229)
+
 ## 1.0.2 [elastic-apm-ios-agent-102-release-notes]
 
 ### Features and enhancements [elastic-apm-ios-agent-102-features-enhancements]
