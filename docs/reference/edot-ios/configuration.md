@@ -32,7 +32,7 @@ ElasticApmAgent.start(with:config)
 
 You can configure the `AgentConfigBuilder` with the following functions.
 
-#### `withServerUrl` [withServerUrl] **Deprecated**
+### `withServerUrl` [withServerUrl] **Deprecated**
 
 * **Type:** URL
 * **Default:** nil
@@ -52,72 +52,101 @@ The host endpoint handling OTLP exports. This configuration overrides `withServe
 * **Type:** URL
 * **Default:** ${exportUrl}/config/v1/agents
 
-The URL endpoint that handles Elastic Central Config. It must be set with the correct path, e.g.: `/config/v1/agents`. For backwards compatibility purposes, if this config is unset the SDK uses the value set by `withExportUrl` as the host.
+The URL endpoint that handles Elastic Central Config. Set the correct path, for example: `/config/v1/agents`. For backwards compatibility purposes, if this config is unset, the SDK uses the value set by `withExportUrl` as the host. 
 
-This config is intended to be used in conjunction with `withExportUrl`.
+Use this config in conjunction with `withExportUrl`.
 
-#### `withRemoteManagement` [withRemoteManagement]
+:::{note}
+If `useOpAMP` is enabled, set the URL to your OpAMP endpoint, such as `http://localhost:4320/v1/opamp`. For example: 
+
+```swift
+let config = AgentConfigBuilder()
+                .withServerUrl(URL(string: "http://localhost:8200")!)
+                .withManagementUrl(URL(string:"http://localhost:4320/v1/opamp")!)
+                .useOpAMP()
+                .build()
+
+ElasticApmAgent.start(with:config)
+```
+:::
+
+### `withRemoteManagement` [withRemoteManagement]
 
 * **Type:** Bool
 * **Default:** `true`
 
 Controls whether the SDK attempts to contact Elastic Central Config for runtime configuration updates.
 
-#### `withSecretToken` [secretToken]
+### `withSecretToken` [secretToken]
 
 * **Type:** String
 * **Default:** nil
 * **Env:** `OTEL_EXPORTER_OTLP_HEADERS`
 
-Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
+Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (for example: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
 
 This setting is mutually exclusive with `withApiKey`.
 
-#### `withApiKey` [withApiKey]
+### `withApiKey` [withApiKey]
 
 * **Type:** String
 * **Default:** nil
 * **Env:** `OTEL_EXPORTER_OTLP_HEADERS`
 
-Sets the API Token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (e.g.: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=ApiKey <key>"`)
+Sets the API Token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (for example: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=ApiKey <key>"`)
 
 This setting is mutually exclusive with `withSecretToken`
 
-#### `disableAgent() -> Self` [disableAgent]
+### `useConnectionType` [useConnectionType]
+
+* **Type:** `AgentConnectionType`
+* **Default:** `.grpc`
+
+Selects the transport used to export OTLP data to the collector. `.grpc` uses the gRPC OTLP exporter (default). `.http` uses the OTLP/HTTP exporters and will send traces, metrics, and logs to the HTTP endpoints (for example `/v1/traces`, `/v1/metrics`, `/v1/logs`). 
+
+### `useOpAMP` [useOpAMP]
+
+* **Type:** Call to enable OpAMP
+* **Default:** `false`
+
+Enable OpAMP-based central management. When enabled, the agent will assume the url provided to `withManagementUrl` is an OpAMP endpoint. Use this when your central configuration is delivered via OpAMP. see [withManagementUrl](#withmanagementurl).
+.
+
+### `disableAgent() -> Self` [disableAgent]
 
 Turns off the Elastic SDK. This is useful for disabling the SDK during development without having to remove the Elastic SDK completely. A log reports `"Elastic APM Agent has been disabled."`
 
-#### `addSpanFilter` [addSpanFilter]
+### `addSpanFilter` [addSpanFilter]
 
-* **Type:** @escaping (ReadableSpan) → Bool
+* **Type:** `@escaping (ReadableSpan) → Bool`
 * **Default:** nil
 
 Adds an anonymous function that will be executed on each span in the span processor to decide if that span should be sent to the back end.
 
-#### `addMetricFilter` [addMetricFilter]
+### `addMetricFilter` [addMetricFilter]
 
-* **Type:** @escaping (Metric) → Bool
+* **Type:** `@escaping (Metric) → Bool`
 * **Default:** nil
 
 Adds an anonymous function that will be executed on each metric in the span processor to decide if that metric should be sent to the back end.
 
-#### `addLogFilter` [addLogFilter]
+### `addLogFilter` [addLogFilter]
 
-* **Type:** @escaping (ReadableLogRecord) → Bool
+* **Type:** `@escaping (ReadableLogRecord) → Bool`
 * **Default:** nil
 
 Adds an anonymous function that will be executed on each log in the span processor to decide if that log should be sent to the back end.
 
-#### `addSpanAttributeInterceptor` [addSpanAttributeInterceptor]
+### `addSpanAttributeInterceptor` [addSpanAttributeInterceptor]
 
-* **Type:** any Interceptor<[String:AttributeValue>]
+* **Type:** `any Interceptor<[String:AttributeValue>]`
 * **Default:** nil
 
 You can provide interceptors for all spans attributes, which will be executed on every span created, where you can read/modify them if needed.
 
-#### `addLogRecordAttributeInterceptor` [addLogRecordAttributeInterceptor]
+### `addLogRecordAttributeInterceptor` [addLogRecordAttributeInterceptor]
 
-* **Type:** any Interceptor<[String:AttributeValue>]
+* **Type:** `any Interceptor<[String:AttributeValue>]`
 * **Default:** nil
 
 You can provide interceptors for all LogRecord attributes, which will be executed on every span created, where you can read or modify them if needed.
@@ -134,7 +163,7 @@ let instrumentationConfig = InstrumentationConfigBuilder().build()
 ElasticApmAgent.start(with:config, instrumentationConfig)
 ```
 
-### Instrumentation config options [instrumentationConfigOptions]
+### Instrumentation options [instrumentationConfigOptions]
 
 You can configure the `InstrumentationConfigBuilder` with the following functions.
 
@@ -192,15 +221,15 @@ Use this option to configure the behavior of the [persistent stores](https://git
 
 In v0.5.0, the SDK provides a means to set [resource attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable) using the `OTEL_RESOURCE_ATTRIBUTES` env-var. This env-var also works through the application plist. Any resource attribute  can be overridden using this method, so care should be taken, as some attributes are critical to the functioning of the kibana UI.
 
-#### `deployment.environment` [deployment-environment]
+### `deployment.environment` [deployment-environment]
 
 Deployment environment is set to `default`. This can be overridden using the `OTEL_RESOURCE_ATTRIBUTES` set in your deployment’s plist. Use the field key as `OTEL_RESOURCE_ATTRIBUTES` and the value as `deployment.environment=staging`
 
-### Dynamic configuration ![dynamic config](images/dynamic-config.svg "") [dynamic-configuration]
+## Dynamic configuration ![dynamic config](images/dynamic-config.svg "") [dynamic-configuration]
 
 Dynamic configurations are available through the {{kib}} UI and are read by the SDK remotely to apply configuration on all active agents deployed in the field. More info on dynamic configurations can be found in  [agent configurations](docs-content://solutions/observability/apps/apm-agent-central-configuration.md).
 
-#### Recording [recording]
+### Recording [recording]
 
 A boolean specifying if the SDK should be recording or not. When recording, the SDK instruments incoming HTTP requests, tracks errors and collects and sends metrics. When not recording, the SDK works as a noop, not collecting data and not communicating with the APM sever, except for polling the central configuration endpoint. As this is a reversible switch, SDK threads are not being killed when inactivated, but they will be mostly idle in this state, so the overhead should be negligible.
 
@@ -213,7 +242,7 @@ You can set this setting to dynamically disable Elastic APM at runtime.
 | `true` | Boolean | true |
 
 
-#### Session sample rate [session-sample-rate]
+### Session sample rate [session-sample-rate]
 
 A double specifying the likelihood all data generated during a session should be recorded on a specific device. Value may range between 0 and 1. 1 meaning 100% likely, and 0 meaning 0% likely. Every time a new session starts, this value will be checked against a random number between 0 and 1, and will sample all data recorded in that session of the random number is below the session sample rate set.
 
@@ -227,3 +256,37 @@ You can set this value dynamically at runtime.
 | --- | --- | --- |
 | `1.0` | Double | true |
 
+
+## Central configuration (EDOT)
+
+```{applies_to}
+product:
+  edot_ios: preview 1.4.0
+```
+
+You can remotely manage the EDOT iOS behavior through [Central configuration](opentelemetry://reference/central-configuration.md) and the EDOT Collector. 
+
+### Activate central configuration
+
+To activate central configuration, provide your OpAMP endpoint when initializing the agent using the AgentConfigBuider [`withManagementUrl`](#withmanagementurl) API and enabling OpAMP with the [`useOpAMP()`](#useopamp) API. For example:
+
+```swift
+let config = AgentConfigBuilder()
+                .withServerUrl(URL(string: "http://localhost:8200")!) 
+                .withManagementUrl(URL(string:"http://localhost:4320/v1/opamp")!) <1>
+                .useOpAMP() <2>
+                .build()
+
+ElasticApmAgent.start(with:config)
+```
+
+1. The central configuration endpoint.
+2. This enables OpAMP.
+
+:::{note}
+If you don't use [`useOpAMP()`](#useopamp), the default Elastic central configuration through APM Server is used instead.
+:::
+
+### Central configuration settings
+
+The same [Dynamic configuration](#dynamic-configuration) settings are available when using central configuration through the EDOT Collector.
