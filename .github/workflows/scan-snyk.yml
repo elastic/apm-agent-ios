@@ -14,9 +14,6 @@ jobs:
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
     steps:
-      - name: Setup Swift
-        with:
-          swift-version: "5.10" # Specify the desired Swift version
       - uses: actions/checkout@v5
       - name: Snyk Monitor
         run: |
