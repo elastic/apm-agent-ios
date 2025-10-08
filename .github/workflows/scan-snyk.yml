@@ -22,4 +22,5 @@ jobs:
       - uses: snyk/actions/setup@master
       - name: Snyk Monitor
         run: |
+          ls
           snyk monitor --org="3308b36d-5e52-4d0f-b167-3bd1b5fb764f"
