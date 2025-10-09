@@ -1,0 +1,21 @@
+--- 
+
+name: scan-snyk
+on:
+  workflow_dispatch: ~
+  workflow_call: ~
+permissions:
+  contents: read
+jobs:
+  scan-snyk:
+    name: scan-snyk
+    runs-on: macos-15-large
+    timeout-minutes: 5
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Snyk Monitor
+        run: |
+          brew install snyk-cli
+          snyk monitor --org="3308b36d-5e52-4d0f-b167-3bd1b5fb764f"
