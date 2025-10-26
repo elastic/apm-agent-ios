@@ -31,7 +31,7 @@ jobs:
     - name: Run package snapshots
       run: .ci/scripts/package.sh
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: packages
         path: |
