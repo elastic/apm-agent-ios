@@ -13,11 +13,14 @@ jobs:
     steps:
       - name: Check if merge is release branch
         id: check-release
+        env:
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          GITHUB_EVENT_PULL_REQUEST_MERGED: ${{ github.event.pull_request.merged }}
         run: |
-          if [[ ${{ github.head_ref }} =~ ^release/([0-9]+\.[0-9]+\.[0-9]+$) ]]; then
+          if [[ ${GITHUB_HEAD_REF} =~ ^release/([0-9]+\.[0-9]+\.[0-9]+$) ]]; then
             echo "match=true" >> $GITHUB_OUTPUT
             echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.pull_request.merged }} != "true" ]] ; then
+          elif [[ "${GITHUB_EVENT_PULL_REQUEST_MERGED} != "true" ]] ; then
             FAILURE_MESSAGE='Tag if release branch'
             echo "FAILURE_MESSAGE=${FAILURE_MESSAGE}" >> "$GITHUB_ENV"
             echo "::error::${FAILURE_MESSAGE}" ; exit 1
