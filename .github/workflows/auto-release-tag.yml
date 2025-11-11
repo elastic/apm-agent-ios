@@ -35,3 +35,4 @@ jobs:
           tag: ${{ steps.check-release.outputs.version }}
           prerelease: true
           generateReleaseNotes: true
+
