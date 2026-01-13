@@ -19,8 +19,7 @@ mapped_pages:
 
 The Elastic Distribution of OpenTelemetry iOS automatically instruments various APIs, frameworks, and application servers. This section lists all supported technologies.
 
-:::{note}
-**Understanding auto-instrumentation scope**
+:::{note} - Understanding auto-instrumentation scope
 
 Auto-instrumentation automatically captures telemetry for the frameworks and libraries listed on this page. However, it cannot instrument:
 
