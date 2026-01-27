@@ -26,9 +26,7 @@ jobs:
       run: .ci/scripts/build.sh
 
     - name: Run test
-      run: |
-        xcrun simctl list
-        xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' test
+      run: xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' test
 
     - name: Run package snapshots
       run: .ci/scripts/package.sh
