@@ -33,7 +33,9 @@ class SessionSpanProcessorTest: XCTestCase {
 
   @discardableResult private func createSampledHttpSpan(spanName: String) -> ReadableSpan {
     let span = tracer.spanBuilder(spanName: spanName).setNoParent()
-      .setAttribute(key: SemanticAttributes.httpUrl.rawValue, value: "http://localhost").startSpan()
+      .setAttribute(key: SemanticAttributes.httpUrl.rawValue, value: "http://localhost")
+      .setAttribute(key: SemanticConventions.Url.full.rawValue, value: "http://localhost")
+      .startSpan()
     span.end()
     return span as! ReadableSpan
   }
