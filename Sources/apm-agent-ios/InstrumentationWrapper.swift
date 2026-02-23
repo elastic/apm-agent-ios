@@ -21,111 +21,150 @@ import OpenTelemetryApi
 
 class InstrumentationWrapper {
 
-    var appMetrics: Any?
-
-    #if os(iOS)
-      var vcInstrumentation: ViewControllerInstrumentation?
-      var applicationLifecycleInstrumentation: ApplicationLifecycleInstrumentation?
-    #endif
-    #if os(iOS) && !targetEnvironment(macCatalyst)
-      var netstatInjector: NetworkStatusInjector?
-    #endif
-  
-    var urlSessionInstrumentation: URLSessionInstrumentation?
-    let config: AgentConfigManager
-
-    init(config: AgentConfigManager) {
-        self.config = config
+  var appMetrics: Any?
 
 #if os(iOS)
-        if config.instrumentation.enableLifecycleEvents {
-            applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
-        }
-        do {
-            if self.config.instrumentation.enableViewControllerInstrumentation {
-                vcInstrumentation = try ViewControllerInstrumentation()
-            }
-        } catch {
-            print("failed to initalize view controller instrumentation: \(error)")
-        }
-#endif // os(iOS)
-    }
+  var vcInstrumentation: ViewControllerInstrumentation?
+  var applicationLifecycleInstrumentation: ApplicationLifecycleInstrumentation?
+#endif
+#if os(iOS) && !targetEnvironment(macCatalyst)
+  var netstatInjector: NetworkStatusInjector?
+#endif
+  
+  var urlSessionInstrumentation: URLSessionInstrumentation?
+  let config: AgentConfigManager
 
-    func initalize() {
-      #if os(iOS)
-        if #available(iOS 13.0, *) {
-            if config.instrumentation.enableSystemMetrics {
-                _ = MemorySampler()
-                _ = CPUSampler()
-            }
-            if config.instrumentation.enableAppMetricInstrumentation {
-                appMetrics = AppMetrics()
-                if let metrics = appMetrics as? AppMetrics {
-                    metrics.receiveReports()
-                }
-            }
-        }
-      #endif
-      if config.instrumentation.enableURLSessionInstrumentation {
-          initializeNetworkInstrumentation()
+  init(config: AgentConfigManager) {
+    self.config = config
+
+#if os(iOS)
+    if config.instrumentation.enableLifecycleEvents {
+      applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
+    }
+    do {
+      if self.config.instrumentation.enableViewControllerInstrumentation {
+        vcInstrumentation = try ViewControllerInstrumentation()
       }
-      #if os(iOS)
-        vcInstrumentation?.swizzle()
-      #endif // os(iOS)
+    } catch {
+      print("failed to initalize view controller instrumentation: \(error)")
     }
+#endif // os(iOS)
+  }
 
-    private func initializeNetworkInstrumentation() {
-      #if os(iOS) && !targetEnvironment(macCatalyst)
-        do {
-            let netstats =  try NetworkStatus()
-            netstatInjector = NetworkStatusInjector(netstat: netstats)
-        } catch {
-            print("failed to initialize network connection status \(error)")
+  func initalize() {
+#if os(iOS)
+    if #available(iOS 13.0, *) {
+      if config.instrumentation.enableSystemMetrics {
+        _ = MemorySampler()
+        _ = CPUSampler()
+      }
+      if config.instrumentation.enableAppMetricInstrumentation {
+        appMetrics = AppMetrics()
+        if let metrics = appMetrics as? AppMetrics {
+          metrics.receiveReports()
         }
-      #endif
+      }
+    }
+#endif
+    if config.instrumentation.enableURLSessionInstrumentation {
+      initializeNetworkInstrumentation()
+    }
+#if os(iOS)
+    vcInstrumentation?.swizzle()
+#endif // os(iOS)
+  }
 
-      let config = URLSessionInstrumentationConfiguration(shouldRecordPayload: nil,
-                                                          shouldInstrument: nil,
-                                                          nameSpan: { request in
-          if let host = request.url?.host, let method = request.httpMethod {
-            return "\(method) \(host)"
-          }
-          return nil
+  private func initializeNetworkInstrumentation() {
+#if os(iOS) && !targetEnvironment(macCatalyst)
+    do {
+      let netstats =  try NetworkStatus()
+      netstatInjector = NetworkStatusInjector(netstat: netstats)
+    } catch {
+      print("failed to initialize network connection status \(error)")
+    }
+#endif
+
+    let config = URLSessionInstrumentationConfiguration(
+      shouldRecordPayload: nil,
+      shouldInstrument: nil,
+
+      nameSpan: { request in
+        if let host = request.url?.host,
+           let method = request.httpMethod {
+          return "\(method) \(host)"
+        }
+        return nil
       },
-                                                          shouldInjectTracingHeaders: nil,
-                                                          createdRequest: { _, span in
-      #if os(iOS) && !targetEnvironment(macCatalyst)
+      shouldInjectTracingHeaders: nil,
+      createdRequest: {
+ request,
+        span in
+        print(
+          "request to: ",
+          request.httpMethod ?? "n/a",
+          request.url?.absoluteString ?? "n/a"
+        )
+        print("span", span.context.traceId)
+        print("span", span.context.spanId)
+
+#if os(iOS) && !targetEnvironment(macCatalyst)
         if let injector = self.netstatInjector {
           injector.inject(span: span)
         }
-      #endif
-        },
-                                                            receivedResponse: { response, _, span in
-            if let httpResponse = response as? HTTPURLResponse {
+#endif
+      },
+      receivedResponse: {
+        response,
+        _,
+        span in
+        if let httpResponse = response as? HTTPURLResponse {
 
-                if httpResponse.statusCode >= 400 && httpResponse.statusCode <= 599 {
-                  // swiftlint:disable line_length
+          if httpResponse.statusCode >= 400 && httpResponse.statusCode <= 599 {
+            // swiftlint:disable line_length
 
-                    span.addEvent(name: SemanticAttributes.exception.rawValue,
-                                  attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string("\(httpResponse.statusCode)"),
-                                               SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
-                                               SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))
-                                              ])
-                  // swiftlint:enable line_length
+            span.addEvent(
+              name: SemanticConventions.Exception.exception.rawValue,
+              attributes: [
+                SemanticConventions.Exception.type.rawValue: AttributeValue
+                  .string(
+                    "\(httpResponse.statusCode)"
+                  ),
+                SemanticConventions.Exception.message.rawValue: AttributeValue
+                  .string(
+                    HTTPURLResponse
+                      .localizedString(
+                        forStatusCode: httpResponse.statusCode
+                      )
+                  )
+              ]
+            )
+            // swiftlint:enable line_length
 
-                }
-            }
+          }
+        }
 
-        },
-                                                            receivedError: { error, _, _, span in
-          // swiftlint:disable line_length
-            span.addEvent(name: SemanticAttributes.exception.rawValue,
-                          attributes: [SemanticAttributes.exceptionType.rawValue: AttributeValue.string(String(describing: type(of: error))),
-                                       SemanticAttributes.exceptionEscaped.rawValue: AttributeValue.bool(false),
-                                       SemanticAttributes.exceptionMessage.rawValue: AttributeValue.string(error.localizedDescription)])
-          // swiftlint:enable line_length
-        })
+      },
+      receivedError: {
+ error,
+ _,
+ _,
+ span in
+        // swiftlint:disable line_length
+        span
+          .addEvent(
+            name: SemanticConventions.Exception.exception.rawValue,
+            attributes: [
+              SemanticConventions.Exception.type.rawValue: AttributeValue
+                .string(
+                  String(describing: type(of: error))
+                ),
+              SemanticConventions.Exception.message.rawValue: AttributeValue
+                .string(error.localizedDescription)
+            ]
+          )
+        // swiftlint:enable line_length
+      })
 
-        urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
-    }
+    urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
+  }
 }
