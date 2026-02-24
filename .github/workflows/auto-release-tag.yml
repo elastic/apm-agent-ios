@@ -17,7 +17,7 @@ jobs:
           if [[ ${{ github.head_ref }} =~ ^release/([0-9]+\.[0-9]+\.[0-9]+$) ]]; then
             echo "match=true" >> $GITHUB_OUTPUT
             echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.pull_request.merged }} != "true" ]] ; then
+          elif [[ "${{ github.event.pull_request.merged }}" != "true" ]] ; then
             FAILURE_MESSAGE='Tag if release branch'
             echo "FAILURE_MESSAGE=${FAILURE_MESSAGE}" >> "$GITHUB_ENV"
             echo "::error::${FAILURE_MESSAGE}" ; exit 1
@@ -35,3 +35,4 @@ jobs:
           tag: ${{ steps.check-release.outputs.version }}
           prerelease: true
           generateReleaseNotes: true
+
