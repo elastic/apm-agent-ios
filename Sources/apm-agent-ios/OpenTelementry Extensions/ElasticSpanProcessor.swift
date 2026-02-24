@@ -84,7 +84,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
       networkStatusInjector.inject(span: span)
     } else {
       span
-        .setAttribute(key: SemanticAttributes.networkConnectionType.rawValue,
+        .setAttribute(key: SemanticConventions.Network.connectionType.rawValue,
                       value: .string(NetworkStatusManager().status()))
     }
     #endif
@@ -99,7 +99,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
 
     if span.isHttpSpan() {
       var spanData = span.toSpanData()
-      if spanData.parentSpanId == nil, let transactionSpan = span as? RecordEventsReadableSpan {
+      if spanData.parentSpanId == nil, let transactionSpan = span as? SpanSdk {
 
         var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
         newAttributes.updateValue(value: .string("mobile"), forKey: "type")
@@ -110,7 +110,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
           traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(),
           traceState: TraceState())
 
-        let parentSpan = RecordEventsReadableSpan.startSpan(
+        let parentSpan = SpanSdk.startSpan(
           context: parentSpanContext,
           name: spanData.name,
           instrumentationScopeInfo: span.instrumentationScopeInfo,

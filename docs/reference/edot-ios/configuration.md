@@ -104,6 +104,14 @@ This setting is mutually exclusive with `withSecretToken`
 
 Selects the transport used to export OTLP data to the collector. `.grpc` uses the gRPC OTLP exporter (default). `.http` uses the OTLP/HTTP exporters and will send traces, metrics, and logs to the HTTP endpoints (for example `/v1/traces`, `/v1/metrics`, `/v1/logs`). 
 
+### TLS connections [tls-connections]
+
+EDOT iOS supports TLS connections to OTLP endpoints and OpAMP (central configuration) endpoints when the server uses a TLS certificate signed by a trusted Certificate Authority (CA).
+
+:::{warning}
+Self-signed certificates are **not supported**. If your endpoint uses a self-signed certificate, EDOT iOS will not be able to establish a secure connection. Ensure your server uses a certificate issued by a publicly trusted CA or an internal CA that is trusted by the device.
+:::
+
 ### `useOpAMP` [useOpAMP]
 
 * **Type:** Call to enable OpAMP

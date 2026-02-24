@@ -24,7 +24,6 @@ public struct AgentConfiguration {
 
   var spanFilters = [SignalFilter<ReadableSpan>]()
   var logFilters = [SignalFilter<ReadableLogRecord>]()
-  var metricFilters = [SignalFilter<Metric>]()
 
   var spanAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
   var logRecordAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
