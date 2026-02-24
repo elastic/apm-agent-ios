@@ -14,7 +14,7 @@ jobs:
       - name: Check if merge is release branch
         id: check-release
         run: |
-          if [[ ${{ github.head_ref }} =~ ^release/([0-9]+\.[0-9]+\.[0-9]+$) ]]; then
+          if [[ ${{ github.head_ref }} =~ ^rel/([0-9]+\.[0-9]+\.[0-9]+$) ]]; then
             echo "match=true" >> $GITHUB_OUTPUT
             echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event.pull_request.merged }}" != "true" ]] ; then
