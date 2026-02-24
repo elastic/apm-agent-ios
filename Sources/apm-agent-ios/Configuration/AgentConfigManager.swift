@@ -16,7 +16,6 @@ import Foundation
 import OpenTelemetrySdk
 import Logging
 
-
 class AgentConfigManager {
   public let agent: AgentConfiguration
   public let central: CentralConfig
