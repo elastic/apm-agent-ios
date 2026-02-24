@@ -33,7 +33,7 @@ jobs:
           echo "Invalid version format. Expected format: X.Y.Z"
           exit 1
         fi
-        sed -e 's/<NEW_VERSION>/${NEW_VERSION}/' .github/workflows/Version.template > Sources/apm-agent-ios/Version.swift
+        sed -e 's/<NEW_VERSION>/'"${NEW_VERSION}"'/' .github/workflows/Version.template > Sources/apm-agent-ios/Version.swift
     - uses: actions/create-github-app-token@v2
       id: app-token
       with:
