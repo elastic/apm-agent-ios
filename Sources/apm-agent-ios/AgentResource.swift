@@ -28,33 +28,39 @@ public class AgentResource {
   public static func get() -> Resource {
     let defaultResource = DefaultResources().get()
     var overridingAttributes = [
-      ResourceAttributes.telemetrySdkName.rawValue: AttributeValue.string("iOS")
+      SemanticConventions.Telemetry.sdkName.rawValue: AttributeValue
+        .string("iOS")
     ]
 
     let osDataSource = OperatingSystemDataSource()
-    overridingAttributes[ResourceAttributes.telemetrySdkVersion.rawValue] =
+    overridingAttributes[SemanticConventions.Telemetry.sdkVersion.rawValue] =
       AttributeValue.string("semver:\(ElasticApmAgent.elasticSwiftAgentVersion)")
-    overridingAttributes[ResourceAttributes.processRuntimeName.rawValue] = AttributeValue.string(osDataSource.name)
-    overridingAttributes[ResourceAttributes.processRuntimeVersion.rawValue] =
+    overridingAttributes[SemanticConventions.Process.runtimeName.rawValue] = AttributeValue
+      .string(osDataSource.name)
+    overridingAttributes[SemanticConventions.Process.runtimeVersion.rawValue] =
       AttributeValue.string(osDataSource.version)
     if let deviceId = AgentResource.identifier() {
-      overridingAttributes[ElasticAttributes.deviceIdentifier.rawValue] = AttributeValue.string(deviceId)
+      overridingAttributes[SemanticConventions.Device.id.rawValue] = AttributeValue
+        .string(deviceId)
     }
     let appDataSource = ApplicationDataSource()
 
     if let build = appDataSource.build {
       if let version = appDataSource.version {
-        overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(version)
+        overridingAttributes[SemanticConventions.Service.version.rawValue] = AttributeValue
+          .string(version)
         overridingAttributes[ElasticAttributes.serviceBuild.rawValue] = AttributeValue.string(build)
       } else {
-        overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(build)
+        overridingAttributes[SemanticConventions.Service.version.rawValue] = AttributeValue
+          .string(build)
       }
     } else if let version = appDataSource.version {
-      overridingAttributes[ResourceAttributes.serviceVersion.rawValue] = AttributeValue.string(version)
+      overridingAttributes[SemanticConventions.Service.version.rawValue] = AttributeValue.string(version)
 
     }
 
-    overridingAttributes[ResourceAttributes.deploymentEnvironment.rawValue] = AttributeValue.string("default")
+    overridingAttributes[SemanticConventions.Deployment.environmentName.rawValue] = AttributeValue
+      .string("default")
 
     return defaultResource.merging(other: Resource.init(attributes: overridingAttributes))
   }

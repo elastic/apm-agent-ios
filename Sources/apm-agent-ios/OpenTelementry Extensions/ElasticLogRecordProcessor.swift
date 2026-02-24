@@ -40,7 +40,7 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
       .join { attributes in
           var newAttributes = attributes
           #if os(iOS) && !targetEnvironment(macCatalyst)
-          newAttributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue
+        newAttributes[SemanticConventions.Network.connectionType.rawValue] = AttributeValue
             .string(NetworkStatusManager().status())
           #endif // os(iOS) && !targetEnvironment(macCatalyst)
           return newAttributes

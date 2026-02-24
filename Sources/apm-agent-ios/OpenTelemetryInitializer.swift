@@ -65,15 +65,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var metricSampleFilter: [SignalFilter<Metric>] = [
-      SignalFilter<Metric>({ [self] _ in
-        self.sessionSampler.shouldSample
-      })
-    ]
-
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
-    metricSampleFilter.append(contentsOf: configuration.agent.metricFilters)
 
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
@@ -125,12 +118,19 @@ class OpenTelemetryInitializer {
     }()
 
     // initialize meter provider
-
     OpenTelemetry.registerMeterProvider(
-      meterProvider: MeterProviderBuilder()
-        .with(processor: ElasticMetricProcessor(metricSampleFilter))
-        .with(resource: resources)
-        .with(exporter: metricExporter)
+      meterProvider: MeterProviderSdk.builder()
+        .registerView(
+          selector: InstrumentSelector
+            .builder()
+            .setInstrument(name: ".*")
+            .build(),
+          view: View.builder().build()
+        )
+        .registerMetricReader(
+          reader: PeriodicMetricReaderBuilder(
+            exporter: metricExporter
+          ).build())
         .build())
 
     // initialize trace provider
@@ -178,15 +178,8 @@ class OpenTelemetryInitializer {
       })
     ]
 
-    var metricSampleFilter: [SignalFilter<Metric>] = [
-      SignalFilter<Metric>({ [self] _ in
-        self.sessionSampler.shouldSample
-      })
-    ]
-
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
-    metricSampleFilter.append(contentsOf: configuration.agent.metricFilters)
 
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
@@ -195,7 +188,7 @@ class OpenTelemetryInitializer {
     let resources = AgentResource.get().merging(other: AgentEnvResource.get())
     let metricExporter = {
       let metricEndpoint = URL(string: endpoint.absoluteString + "/v1/metrics")
-      let defaultExporter = OtlpHttpMetricExporter(endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration, useSession: URLSession.shared)
+      let defaultExporter = OtlpHttpMetricExporter(endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceMetricExporterDecorator(
@@ -208,7 +201,7 @@ class OpenTelemetryInitializer {
 
     let traceExporter = {
       let traceEndpoint = URL(string: endpoint.absoluteString + "/v1/traces")
-      let defaultExporter = OtlpHttpTraceExporter(endpoint: traceEndpoint ?? endpoint, config:otlpConfiguration, useSession: URLSession.shared)
+      let defaultExporter = OtlpHttpTraceExporter(endpoint: traceEndpoint ?? endpoint, config:otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceSpanExporterDecorator(
@@ -222,7 +215,7 @@ class OpenTelemetryInitializer {
 
     let logExporter = {
       let logsEndpoint = URL(string: endpoint.absoluteString + "/v1/logs")
-      let defaultExporter = OtlpHttpLogExporter(endpoint: logsEndpoint ?? endpoint, config: otlpConfiguration,useSession: URLSession.shared)
+      let defaultExporter = OtlpHttpLogExporter(endpoint: logsEndpoint ?? endpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceLogExporterDecorator(
@@ -235,12 +228,20 @@ class OpenTelemetryInitializer {
       return defaultExporter as LogRecordExporter
     }()
 
-    OpenTelemetry.registerMeterProvider(
-      meterProvider: MeterProviderBuilder()
-        .with(processor: ElasticMetricProcessor(metricSampleFilter))
-        .with(resource: resources)
-        .with(exporter: metricExporter)
-        .build())
+OpenTelemetry.registerMeterProvider(
+    meterProvider: MeterProviderSdk.builder()
+      .registerView(
+        selector: InstrumentSelector
+          .builder()
+          .setInstrument(name: ".*")
+          .build(),
+        view: View.builder().build()
+      )
+      .registerMetricReader(
+        reader: PeriodicMetricReaderBuilder(
+          exporter: metricExporter
+        ).build()
+      ).build())
 
     // initialize trace provider
     OpenTelemetry.registerTracerProvider(

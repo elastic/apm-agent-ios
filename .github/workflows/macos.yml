@@ -20,18 +20,18 @@ jobs:
     - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
       with:
         xcode-version: 'latest-stable'
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Run build
       run: .ci/scripts/build.sh
 
     - name: Run test
-      run: xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.0.1' test
+      run: xcodebuild -scheme apm-agent-ios-Package -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17' test
 
     - name: Run package snapshots
       run: .ci/scripts/package.sh
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: packages
         path: |

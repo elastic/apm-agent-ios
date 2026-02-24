@@ -19,7 +19,8 @@ import OpenTelemetryApi
 extension ReadableSpan {
     func isHttpSpan() -> Bool {
         self.toSpanData().attributes.contains { key, _ in
-            key == SemanticAttributes.httpUrl.rawValue
+          key == SemanticConventions.Url.full.rawValue ||
+          key == SemanticAttributes.httpUrl.rawValue
         }
     }
 }

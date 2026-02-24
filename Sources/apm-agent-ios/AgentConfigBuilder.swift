@@ -32,7 +32,6 @@ public class AgentConfigBuilder {
 
   private var spanFilters = [SignalFilter<ReadableSpan>]()
   private var logFilters = [SignalFilter<ReadableLogRecord>]()
-  private var metricFilters = [SignalFilter<Metric>]()
 
   private var spanAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
   private var logRecordAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
@@ -94,10 +93,6 @@ public class AgentConfigBuilder {
     spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
     return self
   }
-  public func addMetricFilter(_ shouldInclude: @escaping (Metric) -> Bool) -> Self {
-    metricFilters.append(SignalFilter<Metric>(shouldInclude))
-    return self
-  }
 
   public func addLogFilter(_ shouldInclude: @escaping (ReadableLogRecord) -> Bool) -> Self {
     logFilters.append(SignalFilter<ReadableLogRecord>(shouldInclude))
@@ -120,7 +115,6 @@ public class AgentConfigBuilder {
     config.sampleRate = sampleRate
     config.logFilters = logFilters
     config.spanFilters = spanFilters
-    config.metricFilters = metricFilters
     config.connectionType = connectionType
     config.managementUrl = self.managementUrl
     config.enableRemoteManagement = enableRemoteManagement

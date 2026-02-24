@@ -106,20 +106,24 @@ struct CrashManager {
           // notes : branching code needed for signal vs mach vs nsexception for event generation
           //
           var attributes = [
-            SemanticAttributes.exceptionType.rawValue: AttributeValue.string(report.signalInfo.name),
-            SemanticAttributes.exceptionStacktrace.rawValue: AttributeValue.string(text)
+            SemanticConventions.Exception.type.rawValue: AttributeValue
+              .string(report.signalInfo.name),
+            SemanticConventions.Exception.stacktrace.rawValue: AttributeValue.string(text)
           ]
 
           if let lastSessionId = configuration.sessionId {
-            attributes[ElasticAttributes.sessionId.rawValue] = AttributeValue.string(lastSessionId)
+            attributes[SemanticConventions.Session.id.rawValue] = AttributeValue
+              .string(lastSessionId)
           }
 
           if let lastNetworkStatus = configuration.networkStatus {
-            attributes[SemanticAttributes.networkConnectionType.rawValue] = AttributeValue.string(lastNetworkStatus)
+            attributes[SemanticConventions.Network.connectionType.rawValue] = AttributeValue
+              .string(lastNetworkStatus)
           }
 
           if let code = report.signalInfo.code {
-              attributes[SemanticAttributes.exceptionMessage.rawValue] = AttributeValue.string(
+            attributes[SemanticConventions.Exception.message.rawValue] = AttributeValue
+              .string(
               "\(code) at \(report.signalInfo.address)")
           }
 
