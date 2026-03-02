@@ -26,14 +26,6 @@ permissions:
   contents: read
 
 jobs:
-  validate-trigger:
-    name: Validate workflow trigger source
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Log manual trigger
-        run: echo "Manual workflow_dispatch trigger - proceeding with secret access"
-
   scan-snyk:
     name: scan-snyk
     runs-on: macos-15-large
