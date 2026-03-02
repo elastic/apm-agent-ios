@@ -18,6 +18,9 @@ on:
     workflows: [macos]
     types: [completed]
     branches: [main]
+  pull_request_target:
+    types: [labeled]
+    branches: [main]
 
 permissions:
   contents: read
@@ -41,12 +44,16 @@ jobs:
     #   1. The triggering workflow completed successfully
     #   2. The PR originates from the main repository (not a fork)
     #   3. We use immutable commit SHA to prevent TOCTOU attacks
+    # - pull_request with 'safe-to-run' label: reviewer approves PR for scanning
     if: |
       github.event_name == 'workflow_dispatch' || (
         github.event_name == 'workflow_run' &&
         github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.head_repository != null &&
         github.event.workflow_run.head_repository.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe-to-run')
       )
     steps:
       - name: Validate security context
@@ -60,15 +67,25 @@ jobs:
             fi
             echo "Security: Using immutable commit SHA from workflow_run context"
             echo "Commit: ${{ github.event.workflow_run.head_commit.sha }}"
+          elif [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+            # For pull_request_target: verify safe-to-run label is present
+            if ! grep -q "safe-to-run" <<< "${{ join(github.event.pull_request.labels.*.name) }}"; then
+              echo "Security Error: Pull request does not have 'safe-to-run' label"
+              exit 1
+            fi
+            echo "Security: Pull request labeled 'safe-to-run' - using immutable commit SHA"
+            echo "Commit: ${{ github.event.pull_request.head.sha }}"
           else
             echo "Security: Manual trigger - proceeding with secret access"
           fi
 
       - uses: actions/checkout@v6
         with:
-          # Use immutable commit SHA for workflow_run to prevent TOCTOU attacks
-          # For workflow_dispatch, use default ref (main)
-          ref: ${{ github.event.workflow_run.head_commit.sha || github.ref }}
+          # Use immutable commit SHA to prevent TOCTOU attacks
+          # For workflow_run: use head_commit.sha
+          # For pull_request: use pull_request.head.sha
+          # For workflow_dispatch: use default ref (main)
+          ref: ${{ github.event.workflow_run.head_commit.sha || github.event.pull_request.head.sha || github.ref }}
 
       - name: Snyk Monitor
         run: |
