@@ -1,0 +1,17 @@
+--indent 2
+--allman false
+--disable wrapMultilineStatementBraces
+--commas inline
+--disable redundantReturn
+--disable preferForLoop
+--disable sortImports
+--hexgrouping ignore
+--octalgrouping ignore
+--decimalgrouping ignore
+--binarygrouping ignore
+--disable numberFormatting
+--stripunusedargs closure-only
+--trailingclosures	
+--wrapparameters after-first
+--disable todos
+--disable wrapLoopBodies
