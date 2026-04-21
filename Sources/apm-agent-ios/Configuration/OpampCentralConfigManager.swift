@@ -14,13 +14,14 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetryApi
 import OpenTelemetrySdk
 import Logging
 
 public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallback {
   public typealias Client = OpampClientImpl
   let client: Client
-  let logger: Logger
+    let logger: Logging.Logger
 
   deinit {
     client.stop()
@@ -38,28 +39,28 @@ public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallbac
 
     let builder = OpampClient.builder()
 
-    switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
+      switch resource.attributes[SemanticConventions.Deployment.environmentName.rawValue] {
     case let .string(value):
       builder.setServiceEnvironment(value)
     default:
       break
     }
 
-    switch resource.attributes[ResourceAttributes.serviceName.rawValue] {
+      switch resource.attributes[SemanticConventions.Service.name.rawValue] {
     case let .string(value):
       builder.setServiceName(value)
     default:
       break
     }
 
-    switch resource.attributes[ResourceAttributes.serviceVersion.rawValue] {
+      switch resource.attributes[SemanticConventions.Service.version.rawValue] {
     case let .string(value):
       builder.setServiceVersion(value)
     default:
       break
     }
 
-    switch resource.attributes[ResourceAttributes.deviceId.rawValue] {
+      switch resource.attributes[SemanticConventions.Device.id.rawValue] {
     case let .string(value):
       if let uuid = UUID(uuidString: value) {
         builder.setInstsanceUid(uuid)

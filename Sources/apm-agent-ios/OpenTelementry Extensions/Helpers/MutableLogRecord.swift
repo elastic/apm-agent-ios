@@ -76,6 +76,7 @@ public struct MutableLogRecord {
                              spanContext: logRecord.spanContext,
                              severity: logRecord.severity,
                              body: logRecord.body,
-                             attributes: attributes)
+                             attributes: attributes,
+                             eventName: logRecord.eventName)
   }
 }

@@ -51,14 +51,14 @@ public extension OpampClientImpl {
     @discardableResult
     public func setServiceName(_ serviceName: String) -> Self {
       return addIdentifyingAttribute(
-        key: ResourceAttributes.serviceName.rawValue,
+        key: SemanticConventions.Service.name,
         value: .string(serviceName))
     }
 
     @discardableResult
     public func setServiceNamespace(_ serviceNamespace: String) -> Self {
       return addIdentifyingAttribute(
-        key: ResourceAttributes.serviceNamespace.rawValue,
+        key: SemanticConventions.Service.namespace,
         value: .string(serviceNamespace)
       )
     }
@@ -66,14 +66,14 @@ public extension OpampClientImpl {
     @discardableResult
     public func setServiceVersion(_ serviceVersion: String) -> Self {
       return addIdentifyingAttribute(
-        key: ResourceAttributes.serviceVersion.rawValue,
+        key: SemanticConventions.Service.version,
         value: .string(serviceVersion))
     }
 
     @discardableResult
     public func setServiceEnvironment(_ serviceEnvironment: String) -> Self {
       return addIdentifyingAttribute(
-        key: "deployment.environment.name" ,
+        key: SemanticConventions.Deployment.environmentName,
         value: .string(serviceEnvironment)
       )
     }
@@ -97,6 +97,10 @@ public extension OpampClientImpl {
       return self
     }
 
+  public func addIdentifyingAttribute<RawValue: RawRepresentable>( key : RawValue, value: AttributeValue) -> Self where RawValue.RawValue == String {
+      return addIdentifyingAttribute(key: key.rawValue, value: value)
+  }
+      
     public func addIdentifyingAttribute(key: String, value: AttributeValue) -> Self {
       agentDescriptionState.value.identifyingAttributes
         .append(OpampClientImpl.Builder.createKeyValue(key:key, attributeValue:value))
