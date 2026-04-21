@@ -93,7 +93,6 @@ struct CrashManager {
         let data = try crashReporter.loadPendingCrashReportDataAndReturnError()
         let logger = loggerProvider.loggerBuilder(instrumentationScopeName: Self.instrumentationName)
           .setInstrumentationVersion(Self.crashManagerVersion)
-          .setEventDomain(SemanticAttributes.EventDomainValues.device.description)
           .build()
 
         // Retrieving crash reporter data.
@@ -127,11 +126,12 @@ struct CrashManager {
               "\(code) at \(report.signalInfo.address)")
           }
 
-          logger.eventBuilder(name: Self.crashEventName)
-            .setSeverity(.fatal)
-            .setObservedTimestamp(report.systemInfo.timestamp)
-            .setAttributes(attributes)
-            .emit()
+            logger.logRecordBuilder()
+                .setEventName(Self.crashEventName)
+                .setSeverity(.fatal)
+                .setObservedTimestamp(report.systemInfo.timestamp)
+                .setAttributes(attributes)
+                .emit()
 
         } else {
           os_log("CrashReporter: can't convert report to text",log: self.logger, type: .error)
