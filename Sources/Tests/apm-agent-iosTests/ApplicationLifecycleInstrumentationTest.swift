@@ -36,11 +36,8 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
         let exported = waitingExporter.waitForExport()
 
         XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["event.name"])
-        XCTAssertNotNil(exported?[0].attributes["event.domain"])
         XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
+        XCTAssertEqual(exported?[0].eventName, "lifecycle")
         XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "active")
     }
 
@@ -62,11 +59,8 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
         let exported = waitingExporter.waitForExport()
 
         XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["event.name"])
-        XCTAssertNotNil(exported?[0].attributes["event.domain"])
         XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
+        XCTAssertEqual(exported?[0].eventName, "lifecycle")
         XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "inactive")
     }
 
@@ -87,11 +81,8 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
         let exported = waitingExporter.waitForExport()
 
         XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["event.name"])
-        XCTAssertNotNil(exported?[0].attributes["event.domain"])
         XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
+        XCTAssertEqual(exported?[0].eventName, "lifecycle")
         XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "background")
     }
     func testLifecycleForeground() {
@@ -111,11 +102,8 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
         let exported = waitingExporter.waitForExport()
 
         XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["event.name"])
-        XCTAssertNotNil(exported?[0].attributes["event.domain"])
         XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
+        XCTAssertEqual(exported?[0].eventName, "lifecycle")
         XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "foreground")
     }
 
@@ -136,11 +124,8 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
         let exported = waitingExporter.waitForExport()
 
         XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["event.name"])
-        XCTAssertNotNil(exported?[0].attributes["event.domain"])
         XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
+        XCTAssertEqual(exported?[0].eventName, "lifecycle")
         XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "terminate")
     }
 }

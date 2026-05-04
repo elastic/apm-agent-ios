@@ -24,7 +24,11 @@
 
 // OpAMP: Open Agent Management Protocol (https://github.com/open-telemetry/opamp-spec)
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -651,7 +655,7 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// unchanged for the lifetime of the Agent process.
   /// MUST be 16 bytes long and SHOULD be generated using the UUID v7 spec.
   public var instanceUid: Data {
-    get {return _storage._instanceUid}
+    get {_storage._instanceUid}
     set {_uniqueStorage()._instanceUid = newValue}
   }
 
@@ -660,18 +664,18 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// it notices that the sequence_num is not exactly by 1 greater than the previously
   /// received one.
   public var sequenceNum: UInt64 {
-    get {return _storage._sequenceNum}
+    get {_storage._sequenceNum}
     set {_uniqueStorage()._sequenceNum = newValue}
   }
 
   /// Data that describes the Agent, its type, where it runs, etc.
   /// May be omitted if nothing changed since last AgentToServer message.
   public var agentDescription: Opamp_Proto_AgentDescription {
-    get {return _storage._agentDescription ?? Opamp_Proto_AgentDescription()}
+    get {_storage._agentDescription ?? Opamp_Proto_AgentDescription()}
     set {_uniqueStorage()._agentDescription = newValue}
   }
   /// Returns true if `agentDescription` has been explicitly set.
-  public var hasAgentDescription: Bool {return _storage._agentDescription != nil}
+  public var hasAgentDescription: Bool {_storage._agentDescription != nil}
   /// Clears the value of `agentDescription`. Subsequent reads from it will return its default value.
   public mutating func clearAgentDescription() {_uniqueStorage()._agentDescription = nil}
 
@@ -682,7 +686,7 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// support the new capability.
   /// This field MUST be always set.
   public var capabilities: UInt64 {
-    get {return _storage._capabilities}
+    get {_storage._capabilities}
     set {_uniqueStorage()._capabilities = newValue}
   }
 
@@ -691,11 +695,11 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// message.
   /// Status: [Beta]
   public var health: Opamp_Proto_ComponentHealth {
-    get {return _storage._health ?? Opamp_Proto_ComponentHealth()}
+    get {_storage._health ?? Opamp_Proto_ComponentHealth()}
     set {_uniqueStorage()._health = newValue}
   }
   /// Returns true if `health` has been explicitly set.
-  public var hasHealth: Bool {return _storage._health != nil}
+  public var hasHealth: Bool {_storage._health != nil}
   /// Clears the value of `health`. Subsequent reads from it will return its default value.
   public mutating func clearHealth() {_uniqueStorage()._health = nil}
 
@@ -707,11 +711,11 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// This field SHOULD be unset if the effective config is unchanged since the last
   /// AgentToServer message.
   public var effectiveConfig: Opamp_Proto_EffectiveConfig {
-    get {return _storage._effectiveConfig ?? Opamp_Proto_EffectiveConfig()}
+    get {_storage._effectiveConfig ?? Opamp_Proto_EffectiveConfig()}
     set {_uniqueStorage()._effectiveConfig = newValue}
   }
   /// Returns true if `effectiveConfig` has been explicitly set.
-  public var hasEffectiveConfig: Bool {return _storage._effectiveConfig != nil}
+  public var hasEffectiveConfig: Bool {_storage._effectiveConfig != nil}
   /// Clears the value of `effectiveConfig`. Subsequent reads from it will return its default value.
   public mutating func clearEffectiveConfig() {_uniqueStorage()._effectiveConfig = nil}
 
@@ -719,11 +723,11 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// This field SHOULD be unset if the remote config status is unchanged since the
   /// last AgentToServer message.
   public var remoteConfigStatus: Opamp_Proto_RemoteConfigStatus {
-    get {return _storage._remoteConfigStatus ?? Opamp_Proto_RemoteConfigStatus()}
+    get {_storage._remoteConfigStatus ?? Opamp_Proto_RemoteConfigStatus()}
     set {_uniqueStorage()._remoteConfigStatus = newValue}
   }
   /// Returns true if `remoteConfigStatus` has been explicitly set.
-  public var hasRemoteConfigStatus: Bool {return _storage._remoteConfigStatus != nil}
+  public var hasRemoteConfigStatus: Bool {_storage._remoteConfigStatus != nil}
   /// Clears the value of `remoteConfigStatus`. Subsequent reads from it will return its default value.
   public mutating func clearRemoteConfigStatus() {_uniqueStorage()._remoteConfigStatus = nil}
 
@@ -732,28 +736,28 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// this Agent was sent in the stream.
   /// Status: [Beta]
   public var packageStatuses: Opamp_Proto_PackageStatuses {
-    get {return _storage._packageStatuses ?? Opamp_Proto_PackageStatuses()}
+    get {_storage._packageStatuses ?? Opamp_Proto_PackageStatuses()}
     set {_uniqueStorage()._packageStatuses = newValue}
   }
   /// Returns true if `packageStatuses` has been explicitly set.
-  public var hasPackageStatuses: Bool {return _storage._packageStatuses != nil}
+  public var hasPackageStatuses: Bool {_storage._packageStatuses != nil}
   /// Clears the value of `packageStatuses`. Subsequent reads from it will return its default value.
   public mutating func clearPackageStatuses() {_uniqueStorage()._packageStatuses = nil}
 
   /// AgentDisconnect MUST be set in the last AgentToServer message sent from the
   /// Agent to the Server.
   public var agentDisconnect: Opamp_Proto_AgentDisconnect {
-    get {return _storage._agentDisconnect ?? Opamp_Proto_AgentDisconnect()}
+    get {_storage._agentDisconnect ?? Opamp_Proto_AgentDisconnect()}
     set {_uniqueStorage()._agentDisconnect = newValue}
   }
   /// Returns true if `agentDisconnect` has been explicitly set.
-  public var hasAgentDisconnect: Bool {return _storage._agentDisconnect != nil}
+  public var hasAgentDisconnect: Bool {_storage._agentDisconnect != nil}
   /// Clears the value of `agentDisconnect`. Subsequent reads from it will return its default value.
   public mutating func clearAgentDisconnect() {_uniqueStorage()._agentDisconnect = nil}
 
   /// Bit flags as defined by AgentToServerFlags bit masks.
   public var flags: UInt64 {
-    get {return _storage._flags}
+    get {_storage._flags}
     set {_uniqueStorage()._flags = newValue}
   }
 
@@ -761,44 +765,44 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// the Agent initiates the creation of connection settings.
   /// Status: [Development]
   public var connectionSettingsRequest: Opamp_Proto_ConnectionSettingsRequest {
-    get {return _storage._connectionSettingsRequest ?? Opamp_Proto_ConnectionSettingsRequest()}
+    get {_storage._connectionSettingsRequest ?? Opamp_Proto_ConnectionSettingsRequest()}
     set {_uniqueStorage()._connectionSettingsRequest = newValue}
   }
   /// Returns true if `connectionSettingsRequest` has been explicitly set.
-  public var hasConnectionSettingsRequest: Bool {return _storage._connectionSettingsRequest != nil}
+  public var hasConnectionSettingsRequest: Bool {_storage._connectionSettingsRequest != nil}
   /// Clears the value of `connectionSettingsRequest`. Subsequent reads from it will return its default value.
   public mutating func clearConnectionSettingsRequest() {_uniqueStorage()._connectionSettingsRequest = nil}
 
   /// A message indicating custom capabilities supported by the Agent.
   /// Status: [Development]
   public var customCapabilities: Opamp_Proto_CustomCapabilities {
-    get {return _storage._customCapabilities ?? Opamp_Proto_CustomCapabilities()}
+    get {_storage._customCapabilities ?? Opamp_Proto_CustomCapabilities()}
     set {_uniqueStorage()._customCapabilities = newValue}
   }
   /// Returns true if `customCapabilities` has been explicitly set.
-  public var hasCustomCapabilities: Bool {return _storage._customCapabilities != nil}
+  public var hasCustomCapabilities: Bool {_storage._customCapabilities != nil}
   /// Clears the value of `customCapabilities`. Subsequent reads from it will return its default value.
   public mutating func clearCustomCapabilities() {_uniqueStorage()._customCapabilities = nil}
 
   /// A custom message sent from an Agent to the Server.
   /// Status: [Development]
   public var customMessage: Opamp_Proto_CustomMessage {
-    get {return _storage._customMessage ?? Opamp_Proto_CustomMessage()}
+    get {_storage._customMessage ?? Opamp_Proto_CustomMessage()}
     set {_uniqueStorage()._customMessage = newValue}
   }
   /// Returns true if `customMessage` has been explicitly set.
-  public var hasCustomMessage: Bool {return _storage._customMessage != nil}
+  public var hasCustomMessage: Bool {_storage._customMessage != nil}
   /// Clears the value of `customMessage`. Subsequent reads from it will return its default value.
   public mutating func clearCustomMessage() {_uniqueStorage()._customMessage = nil}
 
   /// A message indicating the components that are available for configuration on the agent.
   /// Status: [Development]
   public var availableComponents: Opamp_Proto_AvailableComponents {
-    get {return _storage._availableComponents ?? Opamp_Proto_AvailableComponents()}
+    get {_storage._availableComponents ?? Opamp_Proto_AvailableComponents()}
     set {_uniqueStorage()._availableComponents = newValue}
   }
   /// Returns true if `availableComponents` has been explicitly set.
-  public var hasAvailableComponents: Bool {return _storage._availableComponents != nil}
+  public var hasAvailableComponents: Bool {_storage._availableComponents != nil}
   /// Clears the value of `availableComponents`. Subsequent reads from it will return its default value.
   public mutating func clearAvailableComponents() {_uniqueStorage()._availableComponents = nil}
 
@@ -807,11 +811,11 @@ public struct Opamp_Proto_AgentToServer: @unchecked Sendable {
   /// settings status is unchanged since the last AgentToServer message.
   /// Status: [Development]
   public var connectionSettingsStatus: Opamp_Proto_ConnectionSettingsStatus {
-    get {return _storage._connectionSettingsStatus ?? Opamp_Proto_ConnectionSettingsStatus()}
+    get {_storage._connectionSettingsStatus ?? Opamp_Proto_ConnectionSettingsStatus()}
     set {_uniqueStorage()._connectionSettingsStatus = newValue}
   }
   /// Returns true if `connectionSettingsStatus` has been explicitly set.
-  public var hasConnectionSettingsStatus: Bool {return _storage._connectionSettingsStatus != nil}
+  public var hasConnectionSettingsStatus: Bool {_storage._connectionSettingsStatus != nil}
   /// Clears the value of `connectionSettingsStatus`. Subsequent reads from it will return its default value.
   public mutating func clearConnectionSettingsStatus() {_uniqueStorage()._connectionSettingsStatus = nil}
 
@@ -851,11 +855,11 @@ public struct Opamp_Proto_ConnectionSettingsRequest: Sendable {
   /// then the ConnectionSettingsRequest message is empty and is not actionable
   /// for the Server.
   public var opamp: Opamp_Proto_OpAMPConnectionSettingsRequest {
-    get {return _opamp ?? Opamp_Proto_OpAMPConnectionSettingsRequest()}
+    get {_opamp ?? Opamp_Proto_OpAMPConnectionSettingsRequest()}
     set {_opamp = newValue}
   }
   /// Returns true if `opamp` has been explicitly set.
-  public var hasOpamp: Bool {return self._opamp != nil}
+  public var hasOpamp: Bool {self._opamp != nil}
   /// Clears the value of `opamp`. Subsequent reads from it will return its default value.
   public mutating func clearOpamp() {self._opamp = nil}
 
@@ -878,11 +882,11 @@ public struct Opamp_Proto_OpAMPConnectionSettingsRequest: Sendable {
   /// Client Signing Request (CSR) flow.
   /// Required.
   public var certificateRequest: Opamp_Proto_CertificateRequest {
-    get {return _certificateRequest ?? Opamp_Proto_CertificateRequest()}
+    get {_certificateRequest ?? Opamp_Proto_CertificateRequest()}
     set {_certificateRequest = newValue}
   }
   /// Returns true if `certificateRequest` has been explicitly set.
-  public var hasCertificateRequest: Bool {return self._certificateRequest != nil}
+  public var hasCertificateRequest: Bool {self._certificateRequest != nil}
   /// Clears the value of `certificateRequest`. Subsequent reads from it will return its default value.
   public mutating func clearCertificateRequest() {self._certificateRequest = nil}
 
@@ -894,7 +898,7 @@ public struct Opamp_Proto_OpAMPConnectionSettingsRequest: Sendable {
 }
 
 /// Status: [Development]
-public struct Opamp_Proto_CertificateRequest: @unchecked Sendable {
+public struct Opamp_Proto_CertificateRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -913,7 +917,7 @@ public struct Opamp_Proto_CertificateRequest: @unchecked Sendable {
 /// AvailableComponents contains metadata relating to the components included
 /// within the agent.
 /// status: [Development]
-public struct Opamp_Proto_AvailableComponents: @unchecked Sendable {
+public struct Opamp_Proto_AvailableComponents: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -968,7 +972,7 @@ public struct Opamp_Proto_ServerToAgent: @unchecked Sendable {
   /// Agent instance uid. MUST match the instance_uid field in AgentToServer message.
   /// Used for multiplexing messages from/to multiple agents using one message stream.
   public var instanceUid: Data {
-    get {return _storage._instanceUid}
+    get {_storage._instanceUid}
     set {_uniqueStorage()._instanceUid = newValue}
   }
 
@@ -977,21 +981,21 @@ public struct Opamp_Proto_ServerToAgent: @unchecked Sendable {
   /// all other fields below must be unset and vice versa, if any of the fields below is
   /// set then error_response must be unset.
   public var errorResponse: Opamp_Proto_ServerErrorResponse {
-    get {return _storage._errorResponse ?? Opamp_Proto_ServerErrorResponse()}
+    get {_storage._errorResponse ?? Opamp_Proto_ServerErrorResponse()}
     set {_uniqueStorage()._errorResponse = newValue}
   }
   /// Returns true if `errorResponse` has been explicitly set.
-  public var hasErrorResponse: Bool {return _storage._errorResponse != nil}
+  public var hasErrorResponse: Bool {_storage._errorResponse != nil}
   /// Clears the value of `errorResponse`. Subsequent reads from it will return its default value.
   public mutating func clearErrorResponse() {_uniqueStorage()._errorResponse = nil}
 
   /// remote_config field is set when the Server has a remote config offer for the Agent.
   public var remoteConfig: Opamp_Proto_AgentRemoteConfig {
-    get {return _storage._remoteConfig ?? Opamp_Proto_AgentRemoteConfig()}
+    get {_storage._remoteConfig ?? Opamp_Proto_AgentRemoteConfig()}
     set {_uniqueStorage()._remoteConfig = newValue}
   }
   /// Returns true if `remoteConfig` has been explicitly set.
-  public var hasRemoteConfig: Bool {return _storage._remoteConfig != nil}
+  public var hasRemoteConfig: Bool {_storage._remoteConfig != nil}
   /// Clears the value of `remoteConfig`. Subsequent reads from it will return its default value.
   public mutating func clearRemoteConfig() {_uniqueStorage()._remoteConfig = nil}
 
@@ -999,28 +1003,28 @@ public struct Opamp_Proto_ServerToAgent: @unchecked Sendable {
   /// of its client connection settings (destination, headers, certificate, etc).
   /// Status: [Beta]
   public var connectionSettings: Opamp_Proto_ConnectionSettingsOffers {
-    get {return _storage._connectionSettings ?? Opamp_Proto_ConnectionSettingsOffers()}
+    get {_storage._connectionSettings ?? Opamp_Proto_ConnectionSettingsOffers()}
     set {_uniqueStorage()._connectionSettings = newValue}
   }
   /// Returns true if `connectionSettings` has been explicitly set.
-  public var hasConnectionSettings: Bool {return _storage._connectionSettings != nil}
+  public var hasConnectionSettings: Bool {_storage._connectionSettings != nil}
   /// Clears the value of `connectionSettings`. Subsequent reads from it will return its default value.
   public mutating func clearConnectionSettings() {_uniqueStorage()._connectionSettings = nil}
 
   /// This field is set when the Server has packages to offer to the Agent.
   /// Status: [Beta]
   public var packagesAvailable: Opamp_Proto_PackagesAvailable {
-    get {return _storage._packagesAvailable ?? Opamp_Proto_PackagesAvailable()}
+    get {_storage._packagesAvailable ?? Opamp_Proto_PackagesAvailable()}
     set {_uniqueStorage()._packagesAvailable = newValue}
   }
   /// Returns true if `packagesAvailable` has been explicitly set.
-  public var hasPackagesAvailable: Bool {return _storage._packagesAvailable != nil}
+  public var hasPackagesAvailable: Bool {_storage._packagesAvailable != nil}
   /// Clears the value of `packagesAvailable`. Subsequent reads from it will return its default value.
   public mutating func clearPackagesAvailable() {_uniqueStorage()._packagesAvailable = nil}
 
   /// Bit flags as defined by ServerToAgentFlags bit masks.
   public var flags: UInt64 {
-    get {return _storage._flags}
+    get {_storage._flags}
     set {_uniqueStorage()._flags = newValue}
   }
 
@@ -1033,18 +1037,18 @@ public struct Opamp_Proto_ServerToAgent: @unchecked Sendable {
   /// be omitted in subsequent ServerToAgent messages by setting it to
   /// UnspecifiedServerCapability value.
   public var capabilities: UInt64 {
-    get {return _storage._capabilities}
+    get {_storage._capabilities}
     set {_uniqueStorage()._capabilities = newValue}
   }
 
   /// Properties related to identification of the Agent, which can be overridden
   /// by the Server if needed.
   public var agentIdentification: Opamp_Proto_AgentIdentification {
-    get {return _storage._agentIdentification ?? Opamp_Proto_AgentIdentification()}
+    get {_storage._agentIdentification ?? Opamp_Proto_AgentIdentification()}
     set {_uniqueStorage()._agentIdentification = newValue}
   }
   /// Returns true if `agentIdentification` has been explicitly set.
-  public var hasAgentIdentification: Bool {return _storage._agentIdentification != nil}
+  public var hasAgentIdentification: Bool {_storage._agentIdentification != nil}
   /// Clears the value of `agentIdentification`. Subsequent reads from it will return its default value.
   public mutating func clearAgentIdentification() {_uniqueStorage()._agentIdentification = nil}
 
@@ -1053,33 +1057,33 @@ public struct Opamp_Proto_ServerToAgent: @unchecked Sendable {
   /// will be performed.
   /// Status: [Beta]
   public var command: Opamp_Proto_ServerToAgentCommand {
-    get {return _storage._command ?? Opamp_Proto_ServerToAgentCommand()}
+    get {_storage._command ?? Opamp_Proto_ServerToAgentCommand()}
     set {_uniqueStorage()._command = newValue}
   }
   /// Returns true if `command` has been explicitly set.
-  public var hasCommand: Bool {return _storage._command != nil}
+  public var hasCommand: Bool {_storage._command != nil}
   /// Clears the value of `command`. Subsequent reads from it will return its default value.
   public mutating func clearCommand() {_uniqueStorage()._command = nil}
 
   /// A message indicating custom capabilities supported by the Server.
   /// Status: [Development]
   public var customCapabilities: Opamp_Proto_CustomCapabilities {
-    get {return _storage._customCapabilities ?? Opamp_Proto_CustomCapabilities()}
+    get {_storage._customCapabilities ?? Opamp_Proto_CustomCapabilities()}
     set {_uniqueStorage()._customCapabilities = newValue}
   }
   /// Returns true if `customCapabilities` has been explicitly set.
-  public var hasCustomCapabilities: Bool {return _storage._customCapabilities != nil}
+  public var hasCustomCapabilities: Bool {_storage._customCapabilities != nil}
   /// Clears the value of `customCapabilities`. Subsequent reads from it will return its default value.
   public mutating func clearCustomCapabilities() {_uniqueStorage()._customCapabilities = nil}
 
   /// A custom message sent from the Server to an Agent.
   /// Status: [Development]
   public var customMessage: Opamp_Proto_CustomMessage {
-    get {return _storage._customMessage ?? Opamp_Proto_CustomMessage()}
+    get {_storage._customMessage ?? Opamp_Proto_CustomMessage()}
     set {_uniqueStorage()._customMessage = newValue}
   }
   /// Returns true if `customMessage` has been explicitly set.
-  public var hasCustomMessage: Bool {return _storage._customMessage != nil}
+  public var hasCustomMessage: Bool {_storage._customMessage != nil}
   /// Clears the value of `customMessage`. Subsequent reads from it will return its default value.
   public mutating func clearCustomMessage() {_uniqueStorage()._customMessage = nil}
 
@@ -1109,11 +1113,11 @@ public struct Opamp_Proto_OpAMPConnectionSettings: Sendable {
   /// For example:
   /// key="Authorization", Value="Basic YWxhZGRpbjpvcGVuc2VzYW1l".
   public var headers: Opamp_Proto_Headers {
-    get {return _headers ?? Opamp_Proto_Headers()}
+    get {_headers ?? Opamp_Proto_Headers()}
     set {_headers = newValue}
   }
   /// Returns true if `headers` has been explicitly set.
-  public var hasHeaders: Bool {return self._headers != nil}
+  public var hasHeaders: Bool {self._headers != nil}
   /// Clears the value of `headers`. Subsequent reads from it will return its default value.
   public mutating func clearHeaders() {self._headers = nil}
 
@@ -1124,11 +1128,11 @@ public struct Opamp_Proto_OpAMPConnectionSettings: Sendable {
   /// This field is optional: if omitted the client SHOULD NOT use a client-side certificate.
   /// This field can be used to perform a client certificate revocation/rotation.
   public var certificate: Opamp_Proto_TLSCertificate {
-    get {return _certificate ?? Opamp_Proto_TLSCertificate()}
+    get {_certificate ?? Opamp_Proto_TLSCertificate()}
     set {_certificate = newValue}
   }
   /// Returns true if `certificate` has been explicitly set.
-  public var hasCertificate: Bool {return self._certificate != nil}
+  public var hasCertificate: Bool {self._certificate != nil}
   /// Clears the value of `certificate`. Subsequent reads from it will return its default value.
   public mutating func clearCertificate() {self._certificate = nil}
 
@@ -1148,11 +1152,11 @@ public struct Opamp_Proto_OpAMPConnectionSettings: Sendable {
   /// Optional connection specific TLS settings.
   /// Status: [Development]
   public var tls: Opamp_Proto_TLSConnectionSettings {
-    get {return _tls ?? Opamp_Proto_TLSConnectionSettings()}
+    get {_tls ?? Opamp_Proto_TLSConnectionSettings()}
     set {_tls = newValue}
   }
   /// Returns true if `tls` has been explicitly set.
-  public var hasTls: Bool {return self._tls != nil}
+  public var hasTls: Bool {self._tls != nil}
   /// Clears the value of `tls`. Subsequent reads from it will return its default value.
   public mutating func clearTls() {self._tls = nil}
 
@@ -1185,11 +1189,11 @@ public struct Opamp_Proto_TelemetryConnectionSettings: Sendable {
   /// For example:
   /// key="Authorization", Value="Basic YWxhZGRpbjpvcGVuc2VzYW1l".
   public var headers: Opamp_Proto_Headers {
-    get {return _headers ?? Opamp_Proto_Headers()}
+    get {_headers ?? Opamp_Proto_Headers()}
     set {_headers = newValue}
   }
   /// Returns true if `headers` has been explicitly set.
-  public var hasHeaders: Bool {return self._headers != nil}
+  public var hasHeaders: Bool {self._headers != nil}
   /// Clears the value of `headers`. Subsequent reads from it will return its default value.
   public mutating func clearHeaders() {self._headers = nil}
 
@@ -1200,22 +1204,22 @@ public struct Opamp_Proto_TelemetryConnectionSettings: Sendable {
   /// This field is optional: if omitted the client SHOULD NOT use a client-side certificate.
   /// This field can be used to perform a client certificate revocation/rotation.
   public var certificate: Opamp_Proto_TLSCertificate {
-    get {return _certificate ?? Opamp_Proto_TLSCertificate()}
+    get {_certificate ?? Opamp_Proto_TLSCertificate()}
     set {_certificate = newValue}
   }
   /// Returns true if `certificate` has been explicitly set.
-  public var hasCertificate: Bool {return self._certificate != nil}
+  public var hasCertificate: Bool {self._certificate != nil}
   /// Clears the value of `certificate`. Subsequent reads from it will return its default value.
   public mutating func clearCertificate() {self._certificate = nil}
 
   /// Optional connection specific TLS settings.
   /// Status: [Development]
   public var tls: Opamp_Proto_TLSConnectionSettings {
-    get {return _tls ?? Opamp_Proto_TLSConnectionSettings()}
+    get {_tls ?? Opamp_Proto_TLSConnectionSettings()}
     set {_tls = newValue}
   }
   /// Returns true if `tls` has been explicitly set.
-  public var hasTls: Bool {return self._tls != nil}
+  public var hasTls: Bool {self._tls != nil}
   /// Clears the value of `tls`. Subsequent reads from it will return its default value.
   public mutating func clearTls() {self._tls = nil}
 
@@ -1263,11 +1267,11 @@ public struct Opamp_Proto_OtherConnectionSettings: Sendable {
   /// For example:
   /// key="Authorization", Value="Basic YWxhZGRpbjpvcGVuc2VzYW1l".
   public var headers: Opamp_Proto_Headers {
-    get {return _headers ?? Opamp_Proto_Headers()}
+    get {_headers ?? Opamp_Proto_Headers()}
     set {_headers = newValue}
   }
   /// Returns true if `headers` has been explicitly set.
-  public var hasHeaders: Bool {return self._headers != nil}
+  public var hasHeaders: Bool {self._headers != nil}
   /// Clears the value of `headers`. Subsequent reads from it will return its default value.
   public mutating func clearHeaders() {self._headers = nil}
 
@@ -1278,11 +1282,11 @@ public struct Opamp_Proto_OtherConnectionSettings: Sendable {
   /// This field is optional: if omitted the client SHOULD NOT use a client-side certificate.
   /// This field can be used to perform a client certificate revocation/rotation.
   public var certificate: Opamp_Proto_TLSCertificate {
-    get {return _certificate ?? Opamp_Proto_TLSCertificate()}
+    get {_certificate ?? Opamp_Proto_TLSCertificate()}
     set {_certificate = newValue}
   }
   /// Returns true if `certificate` has been explicitly set.
-  public var hasCertificate: Bool {return self._certificate != nil}
+  public var hasCertificate: Bool {self._certificate != nil}
   /// Clears the value of `certificate`. Subsequent reads from it will return its default value.
   public mutating func clearCertificate() {self._certificate = nil}
 
@@ -1293,11 +1297,11 @@ public struct Opamp_Proto_OtherConnectionSettings: Sendable {
   /// Optional connection specific TLS settings.
   /// Status: [Development]
   public var tls: Opamp_Proto_TLSConnectionSettings {
-    get {return _tls ?? Opamp_Proto_TLSConnectionSettings()}
+    get {_tls ?? Opamp_Proto_TLSConnectionSettings()}
     set {_tls = newValue}
   }
   /// Returns true if `tls` has been explicitly set.
-  public var hasTls: Bool {return self._tls != nil}
+  public var hasTls: Bool {self._tls != nil}
   /// Clears the value of `tls`. Subsequent reads from it will return its default value.
   public mutating func clearTls() {self._tls = nil}
 
@@ -1370,7 +1374,7 @@ public struct Opamp_Proto_Header: Sendable {
 }
 
 /// Status: [Beta]
-public struct Opamp_Proto_TLSCertificate: @unchecked Sendable {
+public struct Opamp_Proto_TLSCertificate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1403,7 +1407,7 @@ public struct Opamp_Proto_ConnectionSettingsOffers: @unchecked Sendable {
   /// Hash of all settings, including settings that may be omitted from this message
   /// because they are unchanged.
   public var hash: Data {
-    get {return _storage._hash}
+    get {_storage._hash}
     set {_uniqueStorage()._hash = newValue}
   }
 
@@ -1414,11 +1418,11 @@ public struct Opamp_Proto_ConnectionSettingsOffers: @unchecked Sendable {
   /// before accepting the setting to ensure it does not loose access to the OpAMP
   /// Server due to invalid settings.
   public var opamp: Opamp_Proto_OpAMPConnectionSettings {
-    get {return _storage._opamp ?? Opamp_Proto_OpAMPConnectionSettings()}
+    get {_storage._opamp ?? Opamp_Proto_OpAMPConnectionSettings()}
     set {_uniqueStorage()._opamp = newValue}
   }
   /// Returns true if `opamp` has been explicitly set.
-  public var hasOpamp: Bool {return _storage._opamp != nil}
+  public var hasOpamp: Bool {_storage._opamp != nil}
   /// Clears the value of `opamp`. Subsequent reads from it will return its default value.
   public mutating func clearOpamp() {_uniqueStorage()._opamp = nil}
 
@@ -1440,31 +1444,31 @@ public struct Opamp_Proto_ConnectionSettingsOffers: @unchecked Sendable {
   /// Process metrics MUST follow the conventions for processes:
   /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/process-metrics.md
   public var ownMetrics: Opamp_Proto_TelemetryConnectionSettings {
-    get {return _storage._ownMetrics ?? Opamp_Proto_TelemetryConnectionSettings()}
+    get {_storage._ownMetrics ?? Opamp_Proto_TelemetryConnectionSettings()}
     set {_uniqueStorage()._ownMetrics = newValue}
   }
   /// Returns true if `ownMetrics` has been explicitly set.
-  public var hasOwnMetrics: Bool {return _storage._ownMetrics != nil}
+  public var hasOwnMetrics: Bool {_storage._ownMetrics != nil}
   /// Clears the value of `ownMetrics`. Subsequent reads from it will return its default value.
   public mutating func clearOwnMetrics() {_uniqueStorage()._ownMetrics = nil}
 
   /// Similar to own_metrics, but for traces.
   public var ownTraces: Opamp_Proto_TelemetryConnectionSettings {
-    get {return _storage._ownTraces ?? Opamp_Proto_TelemetryConnectionSettings()}
+    get {_storage._ownTraces ?? Opamp_Proto_TelemetryConnectionSettings()}
     set {_uniqueStorage()._ownTraces = newValue}
   }
   /// Returns true if `ownTraces` has been explicitly set.
-  public var hasOwnTraces: Bool {return _storage._ownTraces != nil}
+  public var hasOwnTraces: Bool {_storage._ownTraces != nil}
   /// Clears the value of `ownTraces`. Subsequent reads from it will return its default value.
   public mutating func clearOwnTraces() {_uniqueStorage()._ownTraces = nil}
 
   /// Similar to own_metrics, but for logs.
   public var ownLogs: Opamp_Proto_TelemetryConnectionSettings {
-    get {return _storage._ownLogs ?? Opamp_Proto_TelemetryConnectionSettings()}
+    get {_storage._ownLogs ?? Opamp_Proto_TelemetryConnectionSettings()}
     set {_uniqueStorage()._ownLogs = newValue}
   }
   /// Returns true if `ownLogs` has been explicitly set.
-  public var hasOwnLogs: Bool {return _storage._ownLogs != nil}
+  public var hasOwnLogs: Bool {_storage._ownLogs != nil}
   /// Clears the value of `ownLogs`. Subsequent reads from it will return its default value.
   public mutating func clearOwnLogs() {_uniqueStorage()._ownLogs = nil}
 
@@ -1474,7 +1478,7 @@ public struct Opamp_Proto_ConnectionSettingsOffers: @unchecked Sendable {
   /// If this field is not set then the Agent should assume that the other_connections
   /// settings are unchanged.
   public var otherConnections: Dictionary<String,Opamp_Proto_OtherConnectionSettings> {
-    get {return _storage._otherConnections}
+    get {_storage._otherConnections}
     set {_uniqueStorage()._otherConnections = newValue}
   }
 
@@ -1487,7 +1491,7 @@ public struct Opamp_Proto_ConnectionSettingsOffers: @unchecked Sendable {
 
 /// List of packages that the Server offers to the Agent.
 /// Status: [Beta]
-public struct Opamp_Proto_PackagesAvailable: @unchecked Sendable {
+public struct Opamp_Proto_PackagesAvailable: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1527,7 +1531,7 @@ public struct Opamp_Proto_PackagesAvailable: @unchecked Sendable {
 /// hash then the Agent does not need to do anything, it already
 /// has the right version of the package.
 /// Status: [Beta]
-public struct Opamp_Proto_PackageAvailable: @unchecked Sendable {
+public struct Opamp_Proto_PackageAvailable: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1541,11 +1545,11 @@ public struct Opamp_Proto_PackageAvailable: @unchecked Sendable {
 
   /// The downloadable file of the package.
   public var file: Opamp_Proto_DownloadableFile {
-    get {return _file ?? Opamp_Proto_DownloadableFile()}
+    get {_file ?? Opamp_Proto_DownloadableFile()}
     set {_file = newValue}
   }
   /// Returns true if `file` has been explicitly set.
-  public var hasFile: Bool {return self._file != nil}
+  public var hasFile: Bool {self._file != nil}
   /// Clears the value of `file`. Subsequent reads from it will return its default value.
   public mutating func clearFile() {self._file = nil}
 
@@ -1563,7 +1567,7 @@ public struct Opamp_Proto_PackageAvailable: @unchecked Sendable {
 }
 
 /// Status: [Beta]
-public struct Opamp_Proto_DownloadableFile: @unchecked Sendable {
+public struct Opamp_Proto_DownloadableFile: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1592,11 +1596,11 @@ public struct Opamp_Proto_DownloadableFile: @unchecked Sendable {
   /// key="Authorization", Value="Basic YWxhZGRpbjpvcGVuc2VzYW1l".
   /// Status: [Development]
   public var headers: Opamp_Proto_Headers {
-    get {return _headers ?? Opamp_Proto_Headers()}
+    get {_headers ?? Opamp_Proto_Headers()}
     set {_headers = newValue}
   }
   /// Returns true if `headers` has been explicitly set.
-  public var hasHeaders: Bool {return self._headers != nil}
+  public var hasHeaders: Bool {self._headers != nil}
   /// Clears the value of `headers`. Subsequent reads from it will return its default value.
   public mutating func clearHeaders() {self._headers = nil}
 
@@ -1753,11 +1757,11 @@ public struct Opamp_Proto_EffectiveConfig: Sendable {
 
   /// The effective config of the Agent.
   public var configMap: Opamp_Proto_AgentConfigMap {
-    get {return _configMap ?? Opamp_Proto_AgentConfigMap()}
+    get {_configMap ?? Opamp_Proto_AgentConfigMap()}
     set {_configMap = newValue}
   }
   /// Returns true if `configMap` has been explicitly set.
-  public var hasConfigMap: Bool {return self._configMap != nil}
+  public var hasConfigMap: Bool {self._configMap != nil}
   /// Clears the value of `configMap`. Subsequent reads from it will return its default value.
   public mutating func clearConfigMap() {self._configMap = nil}
 
@@ -1768,7 +1772,7 @@ public struct Opamp_Proto_EffectiveConfig: Sendable {
   fileprivate var _configMap: Opamp_Proto_AgentConfigMap? = nil
 }
 
-public struct Opamp_Proto_RemoteConfigStatus: @unchecked Sendable {
+public struct Opamp_Proto_RemoteConfigStatus: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1791,7 +1795,7 @@ public struct Opamp_Proto_RemoteConfigStatus: @unchecked Sendable {
 }
 
 /// Status: [Development]
-public struct Opamp_Proto_ConnectionSettingsStatus: @unchecked Sendable {
+public struct Opamp_Proto_ConnectionSettingsStatus: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1816,7 +1820,7 @@ public struct Opamp_Proto_ConnectionSettingsStatus: @unchecked Sendable {
 /// The PackageStatuses message describes the status of all packages that the Agent
 /// has or was offered.
 /// Status: [Beta]
-public struct Opamp_Proto_PackageStatuses: @unchecked Sendable {
+public struct Opamp_Proto_PackageStatuses: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1846,7 +1850,7 @@ public struct Opamp_Proto_PackageStatuses: @unchecked Sendable {
 
 /// The status of a single package.
 /// Status: [Beta]
-public struct Opamp_Proto_PackageStatus: @unchecked Sendable {
+public struct Opamp_Proto_PackageStatus: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1904,11 +1908,11 @@ public struct Opamp_Proto_PackageStatus: @unchecked Sendable {
   /// Should only be set if status is Downloading.
   /// Status: [Development]
   public var downloadDetails: Opamp_Proto_PackageDownloadDetails {
-    get {return _downloadDetails ?? Opamp_Proto_PackageDownloadDetails()}
+    get {_downloadDetails ?? Opamp_Proto_PackageDownloadDetails()}
     set {_downloadDetails = newValue}
   }
   /// Returns true if `downloadDetails` has been explicitly set.
-  public var hasDownloadDetails: Bool {return self._downloadDetails != nil}
+  public var hasDownloadDetails: Bool {self._downloadDetails != nil}
   /// Clears the value of `downloadDetails`. Subsequent reads from it will return its default value.
   public mutating func clearDownloadDetails() {self._downloadDetails = nil}
 
@@ -1939,7 +1943,7 @@ public struct Opamp_Proto_PackageDownloadDetails: Sendable {
 
 /// Properties related to identification of the Agent, which can be overridden
 /// by the Server if needed
-public struct Opamp_Proto_AgentIdentification: @unchecked Sendable {
+public struct Opamp_Proto_AgentIdentification: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1954,7 +1958,7 @@ public struct Opamp_Proto_AgentIdentification: @unchecked Sendable {
   public init() {}
 }
 
-public struct Opamp_Proto_AgentRemoteConfig: @unchecked Sendable {
+public struct Opamp_Proto_AgentRemoteConfig: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1964,11 +1968,11 @@ public struct Opamp_Proto_AgentRemoteConfig: @unchecked Sendable {
   /// AgentConfigRequest.last_remote_config_hash field is equal to
   /// AgentConfigResponse.config_hash field).
   public var config: Opamp_Proto_AgentConfigMap {
-    get {return _config ?? Opamp_Proto_AgentConfigMap()}
+    get {_config ?? Opamp_Proto_AgentConfigMap()}
     set {_config = newValue}
   }
   /// Returns true if `config` has been explicitly set.
-  public var hasConfig: Bool {return self._config != nil}
+  public var hasConfig: Bool {self._config != nil}
   /// Clears the value of `config`. Subsequent reads from it will return its default value.
   public mutating func clearConfig() {self._config = nil}
 
@@ -2007,7 +2011,7 @@ public struct Opamp_Proto_AgentConfigMap: Sendable {
   public init() {}
 }
 
-public struct Opamp_Proto_AgentConfigFile: @unchecked Sendable {
+public struct Opamp_Proto_AgentConfigFile: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -2041,7 +2045,7 @@ public struct Opamp_Proto_CustomCapabilities: Sendable {
   public init() {}
 }
 
-public struct Opamp_Proto_CustomMessage: @unchecked Sendable {
+public struct Opamp_Proto_CustomMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -2072,123 +2076,48 @@ public struct Opamp_Proto_CustomMessage: @unchecked Sendable {
 fileprivate let _protobuf_package = "opamp.proto"
 
 extension Opamp_Proto_AgentToServerFlags: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "AgentToServerFlags_Unspecified"),
-    1: .same(proto: "AgentToServerFlags_RequestInstanceUid"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0AgentToServerFlags_Unspecified\0\u{1}AgentToServerFlags_RequestInstanceUid\0")
 }
 
 extension Opamp_Proto_ServerToAgentFlags: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ServerToAgentFlags_Unspecified"),
-    1: .same(proto: "ServerToAgentFlags_ReportFullState"),
-    2: .same(proto: "ServerToAgentFlags_ReportAvailableComponents"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ServerToAgentFlags_Unspecified\0\u{1}ServerToAgentFlags_ReportFullState\0\u{1}ServerToAgentFlags_ReportAvailableComponents\0")
 }
 
 extension Opamp_Proto_ServerCapabilities: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ServerCapabilities_Unspecified"),
-    1: .same(proto: "ServerCapabilities_AcceptsStatus"),
-    2: .same(proto: "ServerCapabilities_OffersRemoteConfig"),
-    4: .same(proto: "ServerCapabilities_AcceptsEffectiveConfig"),
-    8: .same(proto: "ServerCapabilities_OffersPackages"),
-    16: .same(proto: "ServerCapabilities_AcceptsPackagesStatus"),
-    32: .same(proto: "ServerCapabilities_OffersConnectionSettings"),
-    64: .same(proto: "ServerCapabilities_AcceptsConnectionSettingsRequest"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ServerCapabilities_Unspecified\0\u{1}ServerCapabilities_AcceptsStatus\0\u{1}ServerCapabilities_OffersRemoteConfig\0\u{2}\u{2}ServerCapabilities_AcceptsEffectiveConfig\0\u{2}\u{4}ServerCapabilities_OffersPackages\0\u{2}\u{8}ServerCapabilities_AcceptsPackagesStatus\0\u{2}\u{10}ServerCapabilities_OffersConnectionSettings\0\u{2} ServerCapabilities_AcceptsConnectionSettingsRequest\0")
 }
 
 extension Opamp_Proto_PackageType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "PackageType_TopLevel"),
-    1: .same(proto: "PackageType_Addon"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0PackageType_TopLevel\0\u{1}PackageType_Addon\0")
 }
 
 extension Opamp_Proto_ServerErrorResponseType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ServerErrorResponseType_Unknown"),
-    1: .same(proto: "ServerErrorResponseType_BadRequest"),
-    2: .same(proto: "ServerErrorResponseType_Unavailable"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ServerErrorResponseType_Unknown\0\u{1}ServerErrorResponseType_BadRequest\0\u{1}ServerErrorResponseType_Unavailable\0")
 }
 
 extension Opamp_Proto_CommandType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "CommandType_Restart"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0CommandType_Restart\0")
 }
 
 extension Opamp_Proto_AgentCapabilities: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "AgentCapabilities_Unspecified"),
-    1: .same(proto: "AgentCapabilities_ReportsStatus"),
-    2: .same(proto: "AgentCapabilities_AcceptsRemoteConfig"),
-    4: .same(proto: "AgentCapabilities_ReportsEffectiveConfig"),
-    8: .same(proto: "AgentCapabilities_AcceptsPackages"),
-    16: .same(proto: "AgentCapabilities_ReportsPackageStatuses"),
-    32: .same(proto: "AgentCapabilities_ReportsOwnTraces"),
-    64: .same(proto: "AgentCapabilities_ReportsOwnMetrics"),
-    128: .same(proto: "AgentCapabilities_ReportsOwnLogs"),
-    256: .same(proto: "AgentCapabilities_AcceptsOpAMPConnectionSettings"),
-    512: .same(proto: "AgentCapabilities_AcceptsOtherConnectionSettings"),
-    1024: .same(proto: "AgentCapabilities_AcceptsRestartCommand"),
-    2048: .same(proto: "AgentCapabilities_ReportsHealth"),
-    4096: .same(proto: "AgentCapabilities_ReportsRemoteConfig"),
-    8192: .same(proto: "AgentCapabilities_ReportsHeartbeat"),
-    16384: .same(proto: "AgentCapabilities_ReportsAvailableComponents"),
-    32768: .same(proto: "AgentCapabilities_ReportsConnectionSettingsStatus"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0AgentCapabilities_Unspecified\0\u{1}AgentCapabilities_ReportsStatus\0\u{1}AgentCapabilities_AcceptsRemoteConfig\0\u{2}\u{2}AgentCapabilities_ReportsEffectiveConfig\0\u{2}\u{4}AgentCapabilities_AcceptsPackages\0\u{2}\u{8}AgentCapabilities_ReportsPackageStatuses\0\u{2}\u{10}AgentCapabilities_ReportsOwnTraces\0\u{2} AgentCapabilities_ReportsOwnMetrics\0\u{2}@\u{1}AgentCapabilities_ReportsOwnLogs\0\u{2}@\u{2}AgentCapabilities_AcceptsOpAMPConnectionSettings\0\u{2}@\u{4}AgentCapabilities_AcceptsOtherConnectionSettings\0\u{2}@\u{8}AgentCapabilities_AcceptsRestartCommand\0\u{2}@\u{10}AgentCapabilities_ReportsHealth\0\u{2}@ AgentCapabilities_ReportsRemoteConfig\0\u{2}@@\u{1}AgentCapabilities_ReportsHeartbeat\0\u{2}@@\u{2}AgentCapabilities_ReportsAvailableComponents\0\u{2}@@\u{4}AgentCapabilities_ReportsConnectionSettingsStatus\0")
 }
 
 extension Opamp_Proto_ConnectionSettingsStatuses: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ConnectionSettingsStatuses_UNSET"),
-    1: .same(proto: "ConnectionSettingsStatuses_APPLIED"),
-    2: .same(proto: "ConnectionSettingsStatuses_APPLYING"),
-    3: .same(proto: "ConnectionSettingsStatuses_FAILED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ConnectionSettingsStatuses_UNSET\0\u{1}ConnectionSettingsStatuses_APPLIED\0\u{1}ConnectionSettingsStatuses_APPLYING\0\u{1}ConnectionSettingsStatuses_FAILED\0")
 }
 
 extension Opamp_Proto_RemoteConfigStatuses: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "RemoteConfigStatuses_UNSET"),
-    1: .same(proto: "RemoteConfigStatuses_APPLIED"),
-    2: .same(proto: "RemoteConfigStatuses_APPLYING"),
-    3: .same(proto: "RemoteConfigStatuses_FAILED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0RemoteConfigStatuses_UNSET\0\u{1}RemoteConfigStatuses_APPLIED\0\u{1}RemoteConfigStatuses_APPLYING\0\u{1}RemoteConfigStatuses_FAILED\0")
 }
 
 extension Opamp_Proto_PackageStatusEnum: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "PackageStatusEnum_Installed"),
-    1: .same(proto: "PackageStatusEnum_InstallPending"),
-    2: .same(proto: "PackageStatusEnum_Installing"),
-    3: .same(proto: "PackageStatusEnum_InstallFailed"),
-    4: .same(proto: "PackageStatusEnum_Downloading"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0PackageStatusEnum_Installed\0\u{1}PackageStatusEnum_InstallPending\0\u{1}PackageStatusEnum_Installing\0\u{1}PackageStatusEnum_InstallFailed\0\u{1}PackageStatusEnum_Downloading\0")
 }
 
 extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AgentToServer"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "instance_uid"),
-    2: .standard(proto: "sequence_num"),
-    3: .standard(proto: "agent_description"),
-    4: .same(proto: "capabilities"),
-    5: .same(proto: "health"),
-    6: .standard(proto: "effective_config"),
-    7: .standard(proto: "remote_config_status"),
-    8: .standard(proto: "package_statuses"),
-    9: .standard(proto: "agent_disconnect"),
-    10: .same(proto: "flags"),
-    11: .standard(proto: "connection_settings_request"),
-    12: .standard(proto: "custom_capabilities"),
-    13: .standard(proto: "custom_message"),
-    14: .standard(proto: "available_components"),
-    15: .standard(proto: "connection_settings_status"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}instance_uid\0\u{3}sequence_num\0\u{3}agent_description\0\u{1}capabilities\0\u{1}health\0\u{3}effective_config\0\u{3}remote_config_status\0\u{3}package_statuses\0\u{3}agent_disconnect\0\u{1}flags\0\u{3}connection_settings_request\0\u{3}custom_capabilities\0\u{3}custom_message\0\u{3}available_components\0\u{3}connection_settings_status\0")
 
   fileprivate class _StorageClass {
     var _instanceUid: Data = Data()
@@ -2207,15 +2136,11 @@ extension Opamp_Proto_AgentToServer: SwiftProtobuf.Message, SwiftProtobuf._Messa
     var _availableComponents: Opamp_Proto_AvailableComponents? = nil
     var _connectionSettingsStatus: Opamp_Proto_ConnectionSettingsStatus? = nil
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -2379,9 +2304,7 @@ extension Opamp_Proto_AgentDisconnect: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 extension Opamp_Proto_ConnectionSettingsRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ConnectionSettingsRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "opamp"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}opamp\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2415,9 +2338,7 @@ extension Opamp_Proto_ConnectionSettingsRequest: SwiftProtobuf.Message, SwiftPro
 
 extension Opamp_Proto_OpAMPConnectionSettingsRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OpAMPConnectionSettingsRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "certificate_request"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}certificate_request\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2451,9 +2372,7 @@ extension Opamp_Proto_OpAMPConnectionSettingsRequest: SwiftProtobuf.Message, Swi
 
 extension Opamp_Proto_CertificateRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CertificateRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "csr"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}csr\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2483,10 +2402,7 @@ extension Opamp_Proto_CertificateRequest: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Opamp_Proto_AvailableComponents: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AvailableComponents"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "components"),
-    2: .same(proto: "hash"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}components\0\u{1}hash\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2521,10 +2437,7 @@ extension Opamp_Proto_AvailableComponents: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension Opamp_Proto_ComponentDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ComponentDetails"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "metadata"),
-    2: .standard(proto: "sub_component_map"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}metadata\0\u{3}sub_component_map\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2559,19 +2472,7 @@ extension Opamp_Proto_ComponentDetails: SwiftProtobuf.Message, SwiftProtobuf._Me
 
 extension Opamp_Proto_ServerToAgent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ServerToAgent"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "instance_uid"),
-    2: .standard(proto: "error_response"),
-    3: .standard(proto: "remote_config"),
-    4: .standard(proto: "connection_settings"),
-    5: .standard(proto: "packages_available"),
-    6: .same(proto: "flags"),
-    7: .same(proto: "capabilities"),
-    8: .standard(proto: "agent_identification"),
-    9: .same(proto: "command"),
-    10: .standard(proto: "custom_capabilities"),
-    11: .standard(proto: "custom_message"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}instance_uid\0\u{3}error_response\0\u{3}remote_config\0\u{3}connection_settings\0\u{3}packages_available\0\u{1}flags\0\u{1}capabilities\0\u{3}agent_identification\0\u{1}command\0\u{3}custom_capabilities\0\u{3}custom_message\0")
 
   fileprivate class _StorageClass {
     var _instanceUid: Data = Data()
@@ -2586,15 +2487,11 @@ extension Opamp_Proto_ServerToAgent: SwiftProtobuf.Message, SwiftProtobuf._Messa
     var _customCapabilities: Opamp_Proto_CustomCapabilities? = nil
     var _customMessage: Opamp_Proto_CustomMessage? = nil
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -2715,13 +2612,7 @@ extension Opamp_Proto_ServerToAgent: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 extension Opamp_Proto_OpAMPConnectionSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OpAMPConnectionSettings"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "destination_endpoint"),
-    2: .same(proto: "headers"),
-    3: .same(proto: "certificate"),
-    4: .standard(proto: "heartbeat_interval_seconds"),
-    5: .same(proto: "tls"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}destination_endpoint\0\u{1}headers\0\u{1}certificate\0\u{3}heartbeat_interval_seconds\0\u{1}tls\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2775,12 +2666,7 @@ extension Opamp_Proto_OpAMPConnectionSettings: SwiftProtobuf.Message, SwiftProto
 
 extension Opamp_Proto_TelemetryConnectionSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TelemetryConnectionSettings"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "destination_endpoint"),
-    2: .same(proto: "headers"),
-    3: .same(proto: "certificate"),
-    4: .same(proto: "tls"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}destination_endpoint\0\u{1}headers\0\u{1}certificate\0\u{1}tls\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2829,13 +2715,7 @@ extension Opamp_Proto_TelemetryConnectionSettings: SwiftProtobuf.Message, SwiftP
 
 extension Opamp_Proto_OtherConnectionSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OtherConnectionSettings"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "destination_endpoint"),
-    2: .same(proto: "headers"),
-    3: .same(proto: "certificate"),
-    4: .standard(proto: "other_settings"),
-    5: .same(proto: "tls"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}destination_endpoint\0\u{1}headers\0\u{1}certificate\0\u{3}other_settings\0\u{1}tls\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2889,14 +2769,7 @@ extension Opamp_Proto_OtherConnectionSettings: SwiftProtobuf.Message, SwiftProto
 
 extension Opamp_Proto_TLSConnectionSettings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TLSConnectionSettings"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "ca_pem_contents"),
-    2: .standard(proto: "include_system_ca_certs_pool"),
-    3: .standard(proto: "insecure_skip_verify"),
-    4: .standard(proto: "min_version"),
-    5: .standard(proto: "max_version"),
-    6: .standard(proto: "cipher_suites"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}ca_pem_contents\0\u{3}include_system_ca_certs_pool\0\u{3}insecure_skip_verify\0\u{3}min_version\0\u{3}max_version\0\u{3}cipher_suites\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2951,9 +2824,7 @@ extension Opamp_Proto_TLSConnectionSettings: SwiftProtobuf.Message, SwiftProtobu
 
 extension Opamp_Proto_Headers: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Headers"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "headers"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}headers\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2983,10 +2854,7 @@ extension Opamp_Proto_Headers: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 
 extension Opamp_Proto_Header: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Header"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "key"),
-    2: .same(proto: "value"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}key\0\u{1}value\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3021,11 +2889,7 @@ extension Opamp_Proto_Header: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
 extension Opamp_Proto_TLSCertificate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TLSCertificate"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "cert"),
-    2: .standard(proto: "private_key"),
-    3: .standard(proto: "ca_cert"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}cert\0\u{3}private_key\0\u{3}ca_cert\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3065,14 +2929,7 @@ extension Opamp_Proto_TLSCertificate: SwiftProtobuf.Message, SwiftProtobuf._Mess
 
 extension Opamp_Proto_ConnectionSettingsOffers: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ConnectionSettingsOffers"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "hash"),
-    2: .same(proto: "opamp"),
-    3: .standard(proto: "own_metrics"),
-    4: .standard(proto: "own_traces"),
-    5: .standard(proto: "own_logs"),
-    6: .standard(proto: "other_connections"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}hash\0\u{1}opamp\0\u{3}own_metrics\0\u{3}own_traces\0\u{3}own_logs\0\u{3}other_connections\0")
 
   fileprivate class _StorageClass {
     var _hash: Data = Data()
@@ -3082,15 +2939,11 @@ extension Opamp_Proto_ConnectionSettingsOffers: SwiftProtobuf.Message, SwiftProt
     var _ownLogs: Opamp_Proto_TelemetryConnectionSettings? = nil
     var _otherConnections: Dictionary<String,Opamp_Proto_OtherConnectionSettings> = [:]
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -3181,10 +3034,7 @@ extension Opamp_Proto_ConnectionSettingsOffers: SwiftProtobuf.Message, SwiftProt
 
 extension Opamp_Proto_PackagesAvailable: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PackagesAvailable"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "packages"),
-    2: .standard(proto: "all_packages_hash"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}packages\0\u{3}all_packages_hash\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3219,12 +3069,7 @@ extension Opamp_Proto_PackagesAvailable: SwiftProtobuf.Message, SwiftProtobuf._M
 
 extension Opamp_Proto_PackageAvailable: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PackageAvailable"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "type"),
-    2: .same(proto: "version"),
-    3: .same(proto: "file"),
-    4: .same(proto: "hash"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}type\0\u{1}version\0\u{1}file\0\u{1}hash\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3273,12 +3118,7 @@ extension Opamp_Proto_PackageAvailable: SwiftProtobuf.Message, SwiftProtobuf._Me
 
 extension Opamp_Proto_DownloadableFile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DownloadableFile"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "download_url"),
-    2: .standard(proto: "content_hash"),
-    3: .same(proto: "signature"),
-    4: .same(proto: "headers"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}download_url\0\u{3}content_hash\0\u{1}signature\0\u{1}headers\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3327,11 +3167,7 @@ extension Opamp_Proto_DownloadableFile: SwiftProtobuf.Message, SwiftProtobuf._Me
 
 extension Opamp_Proto_ServerErrorResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ServerErrorResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "type"),
-    2: .standard(proto: "error_message"),
-    3: .standard(proto: "retry_info"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}type\0\u{3}error_message\0\u{3}retry_info\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3387,9 +3223,7 @@ extension Opamp_Proto_ServerErrorResponse: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension Opamp_Proto_RetryInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RetryInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "retry_after_nanoseconds"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}retry_after_nanoseconds\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3419,9 +3253,7 @@ extension Opamp_Proto_RetryInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
 
 extension Opamp_Proto_ServerToAgentCommand: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ServerToAgentCommand"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "type"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}type\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3451,10 +3283,7 @@ extension Opamp_Proto_ServerToAgentCommand: SwiftProtobuf.Message, SwiftProtobuf
 
 extension Opamp_Proto_AgentDescription: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AgentDescription"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "identifying_attributes"),
-    2: .standard(proto: "non_identifying_attributes"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}identifying_attributes\0\u{3}non_identifying_attributes\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3489,14 +3318,7 @@ extension Opamp_Proto_AgentDescription: SwiftProtobuf.Message, SwiftProtobuf._Me
 
 extension Opamp_Proto_ComponentHealth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ComponentHealth"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "healthy"),
-    2: .standard(proto: "start_time_unix_nano"),
-    3: .standard(proto: "last_error"),
-    4: .same(proto: "status"),
-    5: .standard(proto: "status_time_unix_nano"),
-    6: .standard(proto: "component_health_map"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}healthy\0\u{3}start_time_unix_nano\0\u{3}last_error\0\u{1}status\0\u{3}status_time_unix_nano\0\u{3}component_health_map\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3551,9 +3373,7 @@ extension Opamp_Proto_ComponentHealth: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 extension Opamp_Proto_EffectiveConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EffectiveConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "config_map"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}config_map\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3587,11 +3407,7 @@ extension Opamp_Proto_EffectiveConfig: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 extension Opamp_Proto_RemoteConfigStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RemoteConfigStatus"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "last_remote_config_hash"),
-    2: .same(proto: "status"),
-    3: .standard(proto: "error_message"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}last_remote_config_hash\0\u{1}status\0\u{3}error_message\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3631,11 +3447,7 @@ extension Opamp_Proto_RemoteConfigStatus: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Opamp_Proto_ConnectionSettingsStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ConnectionSettingsStatus"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "last_connection_settings_hash"),
-    2: .same(proto: "status"),
-    3: .standard(proto: "error_message"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}last_connection_settings_hash\0\u{1}status\0\u{3}error_message\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3675,11 +3487,7 @@ extension Opamp_Proto_ConnectionSettingsStatus: SwiftProtobuf.Message, SwiftProt
 
 extension Opamp_Proto_PackageStatuses: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PackageStatuses"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "packages"),
-    2: .standard(proto: "server_provided_all_packages_hash"),
-    3: .standard(proto: "error_message"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}packages\0\u{3}server_provided_all_packages_hash\0\u{3}error_message\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3719,16 +3527,7 @@ extension Opamp_Proto_PackageStatuses: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 extension Opamp_Proto_PackageStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PackageStatus"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "name"),
-    2: .standard(proto: "agent_has_version"),
-    3: .standard(proto: "agent_has_hash"),
-    4: .standard(proto: "server_offered_version"),
-    5: .standard(proto: "server_offered_hash"),
-    6: .same(proto: "status"),
-    7: .standard(proto: "error_message"),
-    8: .standard(proto: "download_details"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{3}agent_has_version\0\u{3}agent_has_hash\0\u{3}server_offered_version\0\u{3}server_offered_hash\0\u{1}status\0\u{3}error_message\0\u{3}download_details\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3797,10 +3596,7 @@ extension Opamp_Proto_PackageStatus: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 extension Opamp_Proto_PackageDownloadDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PackageDownloadDetails"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "download_percent"),
-    2: .standard(proto: "download_bytes_per_second"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}download_percent\0\u{3}download_bytes_per_second\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3835,9 +3631,7 @@ extension Opamp_Proto_PackageDownloadDetails: SwiftProtobuf.Message, SwiftProtob
 
 extension Opamp_Proto_AgentIdentification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AgentIdentification"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "new_instance_uid"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}new_instance_uid\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3867,10 +3661,7 @@ extension Opamp_Proto_AgentIdentification: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension Opamp_Proto_AgentRemoteConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AgentRemoteConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "config"),
-    2: .standard(proto: "config_hash"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}config\0\u{3}config_hash\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3909,9 +3700,7 @@ extension Opamp_Proto_AgentRemoteConfig: SwiftProtobuf.Message, SwiftProtobuf._M
 
 extension Opamp_Proto_AgentConfigMap: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AgentConfigMap"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "config_map"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}config_map\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3941,10 +3730,7 @@ extension Opamp_Proto_AgentConfigMap: SwiftProtobuf.Message, SwiftProtobuf._Mess
 
 extension Opamp_Proto_AgentConfigFile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AgentConfigFile"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "body"),
-    2: .standard(proto: "content_type"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}body\0\u{3}content_type\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3979,9 +3765,7 @@ extension Opamp_Proto_AgentConfigFile: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 extension Opamp_Proto_CustomCapabilities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CustomCapabilities"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "capabilities"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}capabilities\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4011,11 +3795,7 @@ extension Opamp_Proto_CustomCapabilities: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Opamp_Proto_CustomMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CustomMessage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "capability"),
-    2: .same(proto: "type"),
-    3: .same(proto: "data"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}capability\0\u{1}type\0\u{1}data\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
