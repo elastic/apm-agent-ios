@@ -25,10 +25,11 @@ class ElasticLogRecordProcessorTest: XCTestCase {
     let  factory = LoggerProviderSdk(
       logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: AgentConfiguration(), scheduleDelay: 0.5)]
     )
-    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
+    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").build()
     let observedDate = Date()
 
-    let eventBuilder = logger.eventBuilder(name: "myEvent")
+    let eventBuilder = logger.logRecordBuilder()
+      .setEventName("myEvent")
     eventBuilder.setBody(AttributeValue.string("hello, world"))
       .setSeverity(.fatal)
       .setObservedTimestamp(observedDate)
@@ -37,8 +38,7 @@ class ElasticLogRecordProcessorTest: XCTestCase {
     XCTAssertEqual(exported?.count, 1)
     XCTAssertNotNil(exported?[0].attributes["session.id"])
     XCTAssertEqual(exported?[0].attributes["session.id"]?.description, SessionManager.instance.session())
-    XCTAssertEqual(exported?[0].attributes["event.domain"]?.description, "device")
-    XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "myEvent")
+    XCTAssertEqual(exported?[0].eventName, "myEvent")
     XCTAssertEqual(exported?[0].body, AttributeValue.string("hello, world"))
     XCTAssertEqual(exported?[0].severity, .fatal)
     XCTAssertEqual(exported?[0].observedTimestamp, observedDate)
@@ -49,7 +49,7 @@ class ElasticLogRecordProcessorTest: XCTestCase {
 
     var agentConfiguration: AgentConfiguration = .init()
     agentConfiguration.logFilters = [SignalFilter<ReadableLogRecord> { logRecord in
-      logRecord.attributes["event.name"]?.description == "myEvent"
+        logRecord.eventName == "myEvent"
     }]
 
     let  factory = LoggerProviderSdk(
@@ -57,16 +57,18 @@ class ElasticLogRecordProcessorTest: XCTestCase {
                                                       configuration: agentConfiguration,
                                                       scheduleDelay: 0.5)]
     )
-    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
+    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").build()
     let observedDate = Date()
 
-    let eventBuilder = logger.eventBuilder(name: "myEvent")
+    let eventBuilder = logger.logRecordBuilder()
+      .setEventName("myEvent")
     eventBuilder.setBody(AttributeValue.string("hello, world"))
       .setSeverity(.fatal)
       .setObservedTimestamp(observedDate)
       .emit()
 
-    let anotherEventBuilder = logger.eventBuilder(name: "NOTmyEvent")
+    let anotherEventBuilder = logger.logRecordBuilder()
+      .setEventName("NOTmyEvent")
     anotherEventBuilder.setBody(AttributeValue.string("hello, world"))
       .setSeverity(.fatal)
       .setObservedTimestamp(observedDate)
@@ -75,7 +77,7 @@ class ElasticLogRecordProcessorTest: XCTestCase {
 
     let exported = waitingExporter.waitForExport()
     XCTAssertEqual(exported?.count, 1)
-    XCTAssertEqual(exported?[0].attributes["event.name"]?.description, "myEvent")
+    XCTAssertEqual(exported?[0].eventName, "myEvent")
 
   }
 
@@ -84,7 +86,7 @@ class ElasticLogRecordProcessorTest: XCTestCase {
     let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
    var agentConfiguration: AgentConfiguration = .init()
    agentConfiguration.logFilters = [SignalFilter<ReadableLogRecord> { logRecord in
-     logRecord.attributes["event.name"]?.description == "myEvent"
+     logRecord.eventName == "myEvent"
    }]
    agentConfiguration.logRecordAttributeInterceptor =  ClosureInterceptor<[String:AttributeValue]> { attributes in
      var newAttributes = attributes
@@ -98,10 +100,11 @@ class ElasticLogRecordProcessorTest: XCTestCase {
                                                       scheduleDelay: 0.5)]
     )
 
-    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").setEventDomain("device").build()
+    let logger = factory.loggerBuilder(instrumentationScopeName: "SessionLogRecordProcessorTests").build()
     let observedDate = Date()
 
-    let eventBuilder = logger.eventBuilder(name: "myEvent")
+    let eventBuilder = logger.logRecordBuilder()
+      .setEventName("myEvent")
     eventBuilder.setBody(AttributeValue.string("hello, world"))
       .setSeverity(.fatal)
       .setObservedTimestamp(observedDate)
