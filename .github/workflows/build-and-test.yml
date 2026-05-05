@@ -42,7 +42,7 @@ jobs:
 
           echo "should-run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
 
-  SwiftLint:
+  swift-lint:
     needs: should-run
     if: ${{ needs.should-run.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
