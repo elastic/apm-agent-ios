@@ -101,7 +101,7 @@ jobs:
   watchos:
     needs: should-run
     if: ${{ needs.should-run.outputs.should-run == 'true' }}
-    runs-on: macos-latest
+    runs-on: macos-26-intel
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
