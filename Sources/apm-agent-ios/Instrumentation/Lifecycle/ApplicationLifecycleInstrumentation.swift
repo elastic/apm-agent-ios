@@ -34,7 +34,6 @@ public class ApplicationLifecycleInstrumentation: NSObject {
             .instance
             .loggerProvider
             .loggerBuilder(instrumentationScopeName: "ApplicationLifecycle")
-            .setEventDomain("device")
             .build()
     }
 
@@ -68,31 +67,36 @@ public class ApplicationLifecycleInstrumentation: NSObject {
     }
 
     @objc func active(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: Self.eventName)
+        Self.getLogger().logRecordBuilder()
+            .setEventName(Self.eventName)
             .setAttributes(["lifecycle.state": AttributeValue.string(State.active.rawValue)])
             .emit()
     }
 
     @objc func inactive(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: Self.eventName)
+        Self.getLogger().logRecordBuilder()
+            .setEventName(Self.eventName)
             .setAttributes(["lifecycle.state": AttributeValue.string(State.inactive.rawValue)])
             .emit()
     }
 
     @objc func background(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: Self.eventName)
+        Self.getLogger().logRecordBuilder()
+            .setEventName(Self.eventName)
             .setAttributes(["lifecycle.state": AttributeValue.string(State.background.rawValue)])
             .emit()
     }
 
     @objc func foreground(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: Self.eventName)
+        Self.getLogger().logRecordBuilder()
+            .setEventName(Self.eventName)
             .setAttributes(["lifecycle.state": AttributeValue.string(State.foreground.rawValue)])
             .emit()
     }
 
     @objc func terminate(_ notification: Notification) {
-        Self.getLogger().eventBuilder(name: Self.eventName)
+        Self.getLogger().logRecordBuilder()
+            .setEventName(Self.eventName)
             .setAttributes(["lifecycle.state": AttributeValue.string(State.terminate.rawValue)])
             .emit()}
 }

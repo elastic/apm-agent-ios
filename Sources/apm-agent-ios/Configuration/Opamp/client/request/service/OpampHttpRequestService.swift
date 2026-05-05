@@ -61,7 +61,7 @@ public class OpampHttpRequestService: RequestService {
       )
   }
 
-  public func start(callback: RequestServiceCallback, request: Supplier<OpampRequest>) {
+  public func start(callback: RequestServiceCallback, request: any Supplier<OpampRequest>) {
     lock.lock()
     defer { lock.unlock() }
     if (isStopped) {

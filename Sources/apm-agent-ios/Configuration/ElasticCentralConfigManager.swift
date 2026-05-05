@@ -13,8 +13,10 @@
 //   limitations under the License.
 
 import Foundation
+import OpenTelemetryApi
 import OpenTelemetrySdk
 import Logging
+
 
 enum CentralConfigResponse: Int {
   case okay = 200
@@ -28,7 +30,7 @@ class ElasticAgentConfigManager: CentralConfigManager {
 
   let serviceEnvironment: String
   let serviceName: String
-  let logger: Logger
+    let logger: Logging.Logger
 
   var fetcher: CentralConfigFetcher! = nil
 
@@ -39,14 +41,14 @@ class ElasticAgentConfigManager: CentralConfigManager {
     SwiftLogNoOpLogHandler()
   }) {
     self.logger = logger
-    switch resource.attributes[ResourceAttributes.deploymentEnvironment.rawValue] {
+      switch resource.attributes[SemanticConventions.Deployment.environmentName.rawValue] {
     case let .string(value):
       serviceEnvironment = value
     default:
       serviceEnvironment = ""
     }
 
-    switch resource.attributes[ResourceAttributes.serviceName.rawValue] {
+      switch resource.attributes[SemanticConventions.Service.name.rawValue] {
     case let .string(value):
       serviceName = value
     default:

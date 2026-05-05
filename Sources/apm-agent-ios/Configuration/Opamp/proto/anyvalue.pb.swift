@@ -28,7 +28,11 @@
 //  - Change of go_package to reference a package in this repo.
 //  - Removal of gogoproto usage.
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -44,7 +48,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// AnyValue is used to represent any type of attribute value. AnyValue may contain a
 /// primitive value such as a string or integer or it may contain an arbitrary nested
 /// object containing arrays, key-value lists and primitives.
-public struct Opamp_Proto_AnyValue: @unchecked Sendable {
+public struct Opamp_Proto_AnyValue: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -113,7 +117,7 @@ public struct Opamp_Proto_AnyValue: @unchecked Sendable {
 
   /// The value is one of the listed fields. It is valid for all values to be unspecified
   /// in which case this AnyValue is considered to be "null".
-  public enum OneOf_Value: Equatable, @unchecked Sendable {
+  public enum OneOf_Value: Equatable, Sendable {
     case stringValue(String)
     case boolValue(Bool)
     case intValue(Int64)
@@ -171,11 +175,11 @@ public struct Opamp_Proto_KeyValue: Sendable {
   public var key: String = String()
 
   public var value: Opamp_Proto_AnyValue {
-    get {return _value ?? Opamp_Proto_AnyValue()}
+    get {_value ?? Opamp_Proto_AnyValue()}
     set {_value = newValue}
   }
   /// Returns true if `value` has been explicitly set.
-  public var hasValue: Bool {return self._value != nil}
+  public var hasValue: Bool {self._value != nil}
   /// Clears the value of `value`. Subsequent reads from it will return its default value.
   public mutating func clearValue() {self._value = nil}
 
@@ -192,15 +196,7 @@ fileprivate let _protobuf_package = "opamp.proto"
 
 extension Opamp_Proto_AnyValue: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AnyValue"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "string_value"),
-    2: .standard(proto: "bool_value"),
-    3: .standard(proto: "int_value"),
-    4: .standard(proto: "double_value"),
-    5: .standard(proto: "array_value"),
-    6: .standard(proto: "kvlist_value"),
-    7: .standard(proto: "bytes_value"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}string_value\0\u{3}bool_value\0\u{3}int_value\0\u{3}double_value\0\u{3}array_value\0\u{3}kvlist_value\0\u{3}bytes_value\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -327,9 +323,7 @@ extension Opamp_Proto_AnyValue: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
 extension Opamp_Proto_ArrayValue: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ArrayValue"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "values"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}values\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -359,9 +353,7 @@ extension Opamp_Proto_ArrayValue: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension Opamp_Proto_KeyValueList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".KeyValueList"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "values"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}values\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -391,10 +383,7 @@ extension Opamp_Proto_KeyValueList: SwiftProtobuf.Message, SwiftProtobuf._Messag
 
 extension Opamp_Proto_KeyValue: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".KeyValue"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "key"),
-    2: .same(proto: "value"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}key\0\u{1}value\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

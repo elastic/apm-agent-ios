@@ -20,7 +20,7 @@ extension ReadableSpan {
     func isHttpSpan() -> Bool {
         self.toSpanData().attributes.contains { key, _ in
           key == SemanticConventions.Url.full.rawValue ||
-          key == SemanticAttributes.httpUrl.rawValue
+          key == "http.url" // explicit use of SemanticAttributes.httpUrl.rawValue (deprecated)
         }
     }
 }
