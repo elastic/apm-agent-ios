@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: SwiftLint (changed files in PR)
+      - name: swift-lint (changed files in PR)
         uses: norio-nomura/action-swiftlint@9f4dcd7fd46b4e75d7935cf2f4df406d5cae3684 # 3.2.1
         env:
           args: --strict
@@ -128,7 +128,7 @@ jobs:
 
   required-status-checks:
     needs:
-      - SwiftLint
+      - swift-lint
       - macos-swiftpm
       - ios
       - tvos
@@ -139,7 +139,7 @@ jobs:
     steps:
       - name: Check required jobs
         run: |
-          if [[ ${{ needs.SwiftLint.result }} == 'failure' || \
+          if [[ ${{ needs.swift-lint.result }} == 'failure' || \
                 ${{ needs.macos-swiftpm.result }} == 'failure' || \
                 ${{ needs.ios.result }} == 'failure' || \
                 ${{ needs.tvos.result }} == 'failure' || \
