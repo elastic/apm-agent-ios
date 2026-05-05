@@ -18,6 +18,7 @@ import OpenTelemetrySdk
 @testable import ElasticApm
 import XCTest
 
+#if canImport(UIKit) && !os(watchOS)
 class ApplicationLifecycleInstrumentationTest: XCTestCase {
     func testLifecycleActive() {
         let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
@@ -129,3 +130,6 @@ class ApplicationLifecycleInstrumentationTest: XCTestCase {
         XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "terminate")
     }
 }
+#else
+class ApplicationLifecycleInstrumentationTest: XCTestCase {}
+#endif
