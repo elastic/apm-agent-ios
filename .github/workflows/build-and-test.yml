@@ -1,0 +1,169 @@
+name: Build and Test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  should-run:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Check if the workflow should run
+        id: check
+        run: |
+          SHOULD_RUN=false
+
+          # github.base_ref is empty for push and workflow_dispatch; run all jobs.
+          if [ -z "${{ github.base_ref }}" ]; then
+            SHOULD_RUN=true
+          else
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+
+            echo "$CHANGED_FILES" | grep -qE '^Sources/|^\.ci/' && SHOULD_RUN=true
+
+            if echo "$CHANGED_FILES" | grep -q '^Package\.swift$'; then
+              git diff origin/${{ github.base_ref }} HEAD -- Package.swift | grep -q . && SHOULD_RUN=true
+            fi
+
+            echo "$CHANGED_FILES" | grep -qE '^\.github/workflows/' && SHOULD_RUN=true
+          fi
+
+          echo "should-run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+
+  SwiftLint:
+    needs: should-run
+    if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: SwiftLint (changed files in PR)
+        uses: norio-nomura/action-swiftlint@9f4dcd7fd46b4e75d7935cf2f4df406d5cae3684 # 3.2.1
+        env:
+          args: --strict
+          # base_ref is set for pull_request; on push, diff against the default branch.
+          DIFF_BASE: ${{ github.base_ref || github.event.repository.default_branch }}
+
+  macos-swiftpm:
+    needs: should-run
+    if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: SwiftPM tests (macOS)
+        run: swift test
+
+  ios:
+    needs: should-run
+    if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: Install Homebrew tools
+        run: make setup-brew
+      - name: Build for testing (iOS Simulator)
+        run: make build-for-testing-ios
+      - name: Test (iOS Simulator)
+        run: make test-without-building-ios
+
+  tvos:
+    needs: should-run
+    if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: Install Homebrew tools
+        run: make setup-brew
+      - name: Build for testing (tvOS Simulator)
+        run: make build-for-testing-tvos
+      - name: Test (tvOS Simulator)
+        run: make test-without-building-tvos
+
+  watchos:
+    needs: should-run
+    if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: Install Homebrew tools
+        run: make setup-brew
+      - name: Build for testing (watchOS Simulator)
+        run: make build-for-testing-watchos
+      - name: Test (watchOS Simulator)
+        run: make test-without-building-watchos
+
+  iphoneos-build:
+    needs: should-run
+    if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: Device build (iOS / ElasticApm scheme)
+        run: .ci/scripts/build.sh
+
+  required-status-checks:
+    needs:
+      - SwiftLint
+      - macos-swiftpm
+      - ios
+      - tvos
+      - watchos
+      - iphoneos-build
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check required jobs
+        run: |
+          if [[ ${{ needs.SwiftLint.result }} == 'failure' || \
+                ${{ needs.macos-swiftpm.result }} == 'failure' || \
+                ${{ needs.ios.result }} == 'failure' || \
+                ${{ needs.tvos.result }} == 'failure' || \
+                ${{ needs.watchos.result }} == 'failure' || \
+                ${{ needs.iphoneos-build.result }} == 'failure' ]]; then
+            echo "One or more required jobs failed."
+            exit 1
+          fi
+          echo "All required jobs passed or were skipped."
+
+  package:
+    needs: [should-run, required-status-checks]
+    if: ${{ needs.should-run.outputs.should-run == 'true' && needs.required-status-checks.result == 'success' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: Package workspace snapshot
+        run: .ci/scripts/package.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: |
+            dist/**
