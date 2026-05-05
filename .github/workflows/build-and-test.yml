@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   should-run:
-    runs-on: ubuntu-latest
+    runs-on: macos-15-large
     outputs:
       should-run: ${{ steps.check.outputs.should-run }}
     steps:
