@@ -5,7 +5,6 @@ PROJECT_NAME := apm-agent-ios-Package
 
 XCODEBUILD_OPTIONS_IOS := \
 	-configuration Debug \
-	-arch x86_64 \
 	-sdk iphonesimulator \
 	-destination 'platform=iOS Simulator,name=iPhone 17' \
 	-scheme $(PROJECT_NAME)
