@@ -53,100 +53,68 @@ jobs:
           args: --strict
           # base_ref is set for pull_request; on push, diff against the default branch.
           DIFF_BASE: ${{ github.base_ref || github.event.repository.default_branch }}
-
-  macos-swiftpm:
+  xcode-matrix:
+    name: xcode (${{ matrix.label }})
     needs: should-run
     if: ${{ needs.should-run.outputs.should-run == 'true' }}
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: swiftpm
+            runner: macos-latest
+            setup-brew: false
+          - label: ios
+            runner: macos-26-intel
+            setup-brew: true
+          - label: tvos
+            runner: macos-latest
+            setup-brew: true
+          - label: watchos
+            runner: macos-26-intel
+            setup-brew: true
+          - label: iphoneos-build
+            runner: macos-latest
+            setup-brew: false
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: latest-stable
+      - name: Install Homebrew tools
+        if: ${{ matrix.setup-brew }}
+        run: make setup-brew
       - name: SwiftPM tests (macOS)
+        if: ${{ matrix.label == 'swiftpm' }}
         run: swift test
-
-  ios:
-    needs: should-run
-    if: ${{ needs.should-run.outputs.should-run == 'true' }}
-    runs-on: macos-26-intel
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
-        with:
-          xcode-version: latest-stable
-      - name: Install Homebrew tools
-        run: make setup-brew
-      - name: Build for testing (iOS Simulator)
-        run: make build-for-testing-ios
-      - name: Test (iOS Simulator)
-        run: make test-without-building-ios
-
-  tvos:
-    needs: should-run
-    if: ${{ needs.should-run.outputs.should-run == 'true' }}
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
-        with:
-          xcode-version: latest-stable
-      - name: Install Homebrew tools
-        run: make setup-brew
-      - name: Build for testing (tvOS Simulator)
-        run: make build-for-testing-tvos
-      - name: Test (tvOS Simulator)
-        run: make test-without-building-tvos
-
-  watchos:
-    needs: should-run
-    if: ${{ needs.should-run.outputs.should-run == 'true' }}
-    runs-on: macos-26-intel
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
-        with:
-          xcode-version: latest-stable
-      - name: Install Homebrew tools
-        run: make setup-brew
-      - name: Build for testing (watchOS Simulator)
-        run: make build-for-testing-watchos
-      - name: Test (watchOS Simulator)
-        run: make test-without-building-watchos
-
-  iphoneos-build:
-    needs: should-run
-    if: ${{ needs.should-run.outputs.should-run == 'true' }}
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
-        with:
-          xcode-version: latest-stable
+      - name: Build and test (iOS Simulator)
+        if: ${{ matrix.label == 'ios' }}
+        run: |
+          make build-for-testing-ios
+          make test-without-building-ios
+      - name: Build and test (tvOS Simulator)
+        if: ${{ matrix.label == 'tvos' }}
+        run: |
+          make build-for-testing-tvos
+          make test-without-building-tvos
+      - name: Build and test (watchOS Simulator)
+        if: ${{ matrix.label == 'watchos' }}
+        run: |
+          make build-for-testing-watchos
+          make test-without-building-watchos
       - name: Device build (iOS / ElasticApm scheme)
+        if: ${{ matrix.label == 'iphoneos-build' }}
         run: .ci/scripts/build.sh
 
   required-status-checks:
     needs:
       - swift-lint
-      - macos-swiftpm
-      - ios
-      - tvos
-      - watchos
-      - iphoneos-build
+      - xcode-matrix
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Check required jobs
-<<<<<<< Updated upstream
-        run: |
-          if [[ ${{ needs.swift-lint.result }} == 'failure' || \
-                ${{ needs.macos-swiftpm.result }} == 'failure' || \
-                ${{ needs.ios.result }} == 'failure' || \
-                ${{ needs.tvos.result }} == 'failure' || \
-                ${{ needs.watchos.result }} == 'failure' || \
-                ${{ needs.iphoneos-build.result }} == 'failure' ]]; then
-=======
         id: check
         uses: elastic/oblt-actions/check-dependent-jobs@v1
         with:
@@ -154,7 +122,6 @@ jobs:
           skipped-as-success: true
       - run: |
           if [[ steps.check.outputs.is-success ]]; then
->>>>>>> Stashed changes
             echo "One or more required jobs failed."
             exit 1
           fi
@@ -170,7 +137,6 @@ jobs:
         with:
           xcode-version: latest-stable
       - name: Package workspace snapshot
-      
         run: .ci/scripts/package.sh
       - uses: actions/upload-artifact@v7
         with:
