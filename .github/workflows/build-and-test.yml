@@ -138,6 +138,7 @@ jobs:
     if: always()
     steps:
       - name: Check required jobs
+<<<<<<< Updated upstream
         run: |
           if [[ ${{ needs.swift-lint.result }} == 'failure' || \
                 ${{ needs.macos-swiftpm.result }} == 'failure' || \
@@ -145,6 +146,15 @@ jobs:
                 ${{ needs.tvos.result }} == 'failure' || \
                 ${{ needs.watchos.result }} == 'failure' || \
                 ${{ needs.iphoneos-build.result }} == 'failure' ]]; then
+=======
+        id: check
+        uses: elastic/oblt-actions/check-dependent-jobs@v1
+        with:
+          jobs: ${{ toJSON(needs) }}
+          skipped-as-success: true
+      - run: |
+          if [[ steps.check.outputs.is-success ]]; then
+>>>>>>> Stashed changes
             echo "One or more required jobs failed."
             exit 1
           fi
@@ -160,6 +170,7 @@ jobs:
         with:
           xcode-version: latest-stable
       - name: Package workspace snapshot
+      
         run: .ci/scripts/package.sh
       - uses: actions/upload-artifact@v7
         with:
