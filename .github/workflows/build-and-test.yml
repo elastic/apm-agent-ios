@@ -68,7 +68,7 @@ jobs:
             runner: macos-latest-large
             setup-brew: true
           - label: tvos
-            runner: macos-latest
+            runner: macos-latest-large
             setup-brew: true
           - label: watchos
             runner: macos-latest-large
