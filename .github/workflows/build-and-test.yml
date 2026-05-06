@@ -121,7 +121,7 @@ jobs:
           jobs: ${{ toJSON(needs) }}
           skipped-as-success: true
       - run: |
-          if [[ steps.check.outputs.is-success ]]; then
+          if [[ !steps.check.outputs.is-success ]]; then
             echo "One or more required jobs failed."
             exit 1
           fi
