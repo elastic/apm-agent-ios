@@ -65,13 +65,13 @@ jobs:
             runner: macos-latest
             setup-brew: false
           - label: ios
-            runner: macos-26-intel
+            runner: macos-latest-large
             setup-brew: true
           - label: tvos
             runner: macos-latest
             setup-brew: true
           - label: watchos
-            runner: macos-26-intel
+            runner: macos-latest-large
             setup-brew: true
           - label: iphoneos-build
             runner: macos-latest
