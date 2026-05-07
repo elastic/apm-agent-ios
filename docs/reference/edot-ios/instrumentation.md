@@ -91,7 +91,26 @@ System-metric instrumentation records CPU and memory usage minutely as metrics. 
 
 ```{applies_to}
 product:
-  edot_ios: deprecated 2.0+
+  edot_ios: 2.1+
+
+MetricKit metrics require additional EDOT Collector processors and ECS routing so `application.launch.time` and related metrics appear in `metrics-apm.app.*` data streams.
+
+```edot-collector.yml
+processors:
+  # Elasticsearch otel exporter requires delta histograms; converts cumulative OTLP if needed.
+  cumulativetodelta:
+    initial_value: keep
+  ...
+  transform/apm-app-ecs:
+    error_mode: ignore
+    metric_statements:
+      - context: scope
+        conditions:
+          - scope.name == "ApplicationMetrics"
+        statements:
+          - set(scope.attributes["elastic.mapping.mode"], "ecs")
+          - set(resource.attributes["data_stream.dataset"], Concat(["apm.app.", resource.attributes["service.name"]], ""))
+
 ```
 
 Available for iOS 13 and higher, the SDK provides instrumentation of key MetricKit data points:

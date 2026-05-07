@@ -46,19 +46,3 @@ struct MainView : View {
 
 The default suffix, ` - view appearing` will not be automatically applied when using the `reportName` API.
 
-
-## Tap instrumentation
-The tap instrumentation uses the UIApplicationDelegate's `sendEvent:` API to capture interactions with the UI. 
-
-Default instrumentation starts spans for all `touch` event types, but can be configured using `UIApplicationInstrumentationConfiguration.swift`.
-
-Spans will only be created at the `.ended` touch phase, and are terminated after half a second, or another tap occurs.
-
-Touch spans will be named using the following format: 
-
-`Tapped {view} in {viewController}`
-
-The name of the view will use the accessibilty label of the touch's view, or the nearest superview with an accessibility label, or the class name of the view, `type(of: view)`.
-The view controller name is captured similarly to the view controller instrumentation (described above), but the `reportName` api provided for SwiftUI will not work for tap instrumentation due to timing issues.
-
-Due to limitations of SwiftUI there is not yet a way to set a custom name for taps. 

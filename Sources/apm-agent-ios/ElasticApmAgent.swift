@@ -55,6 +55,9 @@ public class ElasticApmAgent {
   let sessionSampler: SessionSampler
 
   let crashConfig = CrashManagerConfiguration()
+  
+  var appMetrics: Any?
+
 
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
@@ -84,11 +87,21 @@ public class ElasticApmAgent {
     group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     openTelemetry = OpenTelemetryInitializer(group: group, sessionSampler: sessionSampler)
 
-      if agentConfigManager.agent.connectionType == .grpc {
-        crashLogExporter = openTelemetry.initialize(agentConfigManager)
-      } else {
-        crashLogExporter = openTelemetry.initializeWithHttp(agentConfigManager)
+    if agentConfigManager.agent.connectionType == .grpc {
+      crashLogExporter = openTelemetry.initialize(agentConfigManager)
+    } else {
+      crashLogExporter = openTelemetry.initializeWithHttp(agentConfigManager)
+    }
+
+    
+    if agentConfigManager.instrumentation.enableAppMetricInstrumentation,
+       let metricExporter = openTelemetry.metricExporter,
+       let resource = openTelemetry.resource {
+      appMetrics = AppMetrics(exporter: metricExporter, resource: resource)
+      if let metrics = appMetrics as? AppMetrics {
+        metrics.receiveReports()
       }
+    }
 
     #if !os(watchOS)
     if instrumentationConfiguration.enableCrashReporting {
