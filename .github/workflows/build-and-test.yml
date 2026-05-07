@@ -120,12 +120,7 @@ jobs:
         with:
           jobs: ${{ toJSON(needs) }}
           skipped-as-success: true
-      - run: |
-          if [[ !steps.check.outputs.is-success ]]; then
-            echo "One or more required jobs failed."
-            exit 1
-          fi
-          echo "All required jobs passed or were skipped."
+      - run: ${{ steps.check.outputs.is-success }}
 
   package:
     needs: [should-run, required-status-checks]
