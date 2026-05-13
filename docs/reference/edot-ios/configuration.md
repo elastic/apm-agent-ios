@@ -197,6 +197,13 @@ Use this option to turn on or turn off the network tracing instrumentation.
 
 Use this option to turn on or turn off the view controller tracing instrumentation.
 
+####  ~~`withAppMetricInstrumentation(_ enable: Bool) -> Self` [withAppMetricInstrumentation]~~ (deprecated)
+
+* **Type:** Bool
+* **Default:** `true`
+
+Use this option to turn on or turn off [MetricKit](https://developer.apple.com/documentation/metrickit) instrumentation.
+
 #### `withSystemMetrics(_ enable: Bool) -> Self` [withSystemMetrics]
 
 * **Type:** Bool
