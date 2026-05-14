@@ -87,7 +87,12 @@ You must insert the entire string `All Products - view appearing` to match the d
 
 System-metric instrumentation records CPU and memory usage minutely as metrics. CPU metrics are recorded as `system.cpu.usage` and memory usage is recorded as `system.memory.usage`.
 
-## MetricKit instrumentation [metrickit-instrumentation] (deprecated)
+## MetricKit instrumentation [metrickit-instrumentation]
+
+```{applies_to}
+product:
+  edot_ios: deprecated 2.0+
+```
 
 Available for iOS 13 and higher, the SDK provides instrumentation of key MetricKit data points:
 
