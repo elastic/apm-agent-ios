@@ -199,6 +199,11 @@ Use this option to turn on or turn off the view controller tracing instrumentati
 
 #### `withAppMetricInstrumentation(_ enable: Bool) -> Self` [withAppMetricInstrumentation]
 
+```{applies_to}
+product:
+  edot_ios: deprecated 2.0+
+```
+
 * **Type:** Bool
 * **Default:** `true`
 

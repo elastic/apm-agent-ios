@@ -12,77 +12,68 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-import Foundation
-import URLSessionInstrumentation
-import MemorySampler
 import CPUSampler
+import Foundation
+import MemorySampler
 import NetworkStatus
 import OpenTelemetryApi
+import URLSessionInstrumentation
 
 class InstrumentationWrapper {
+  #if os(iOS)
+    var vcInstrumentation: ViewControllerInstrumentation?
+    var applicationLifecycleInstrumentation: ApplicationLifecycleInstrumentation?
+  #endif
+  #if os(iOS) && !targetEnvironment(macCatalyst)
+    var netstatInjector: NetworkStatusInjector?
+  #endif
 
-  var appMetrics: Any?
-
-#if os(iOS)
-  var vcInstrumentation: ViewControllerInstrumentation?
-  var applicationLifecycleInstrumentation: ApplicationLifecycleInstrumentation?
-#endif
-#if os(iOS) && !targetEnvironment(macCatalyst)
-  var netstatInjector: NetworkStatusInjector?
-#endif
-  
   var urlSessionInstrumentation: URLSessionInstrumentation?
   let config: AgentConfigManager
 
   init(config: AgentConfigManager) {
     self.config = config
 
-#if os(iOS)
-    if config.instrumentation.enableLifecycleEvents {
-      applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
-    }
-    do {
-      if self.config.instrumentation.enableViewControllerInstrumentation {
-        vcInstrumentation = try ViewControllerInstrumentation()
+    #if os(iOS)
+      if config.instrumentation.enableLifecycleEvents {
+        applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
       }
-    } catch {
-      print("failed to initalize view controller instrumentation: \(error)")
-    }
-#endif // os(iOS)
+      do {
+        if self.config.instrumentation.enableViewControllerInstrumentation {
+          vcInstrumentation = try ViewControllerInstrumentation()
+        }
+      } catch {
+        print("failed to initalize view controller instrumentation: \(error)")
+      }
+    #endif // os(iOS)
   }
 
   func initalize() {
-#if os(iOS)
-    if #available(iOS 13.0, *) {
-      if config.instrumentation.enableSystemMetrics {
-        _ = MemorySampler()
-        _ = CPUSampler()
-      }
-      if config.instrumentation.enableAppMetricInstrumentation {
-        appMetrics = AppMetrics()
-        if let metrics = appMetrics as? AppMetrics {
-          metrics.receiveReports()
+    #if os(iOS)
+      if #available(iOS 13.0, *) {
+        if config.instrumentation.enableSystemMetrics {
+          _ = MemorySampler()
+          _ = CPUSampler()
         }
       }
-    }
-#endif
+    #endif
     if config.instrumentation.enableURLSessionInstrumentation {
       initializeNetworkInstrumentation()
     }
-#if os(iOS)
-    vcInstrumentation?.swizzle()
-#endif // os(iOS)
+    #if os(iOS)
+      vcInstrumentation?.swizzle()
+    #endif // os(iOS)
   }
 
   private func initializeNetworkInstrumentation() {
-#if os(iOS) && !targetEnvironment(macCatalyst)
-    do {
-      let netstats =  try NetworkStatus()
-      netstatInjector = NetworkStatusInjector(netstat: netstats)
-    } catch {
-      print("failed to initialize network connection status \(error)")
-    }
-#endif
+    #if os(iOS) && !targetEnvironment(macCatalyst)
+      do {
+        let netstats = try NetworkStatus()
+        netstatInjector = NetworkStatusInjector(netstat: netstats)
+      } catch {
+        print("failed to initialize network connection status \(error)")
+      }
+    #endif
 
     let config = URLSessionInstrumentationConfiguration(
       shouldRecordPayload: nil,
@@ -96,9 +87,7 @@ class InstrumentationWrapper {
         return nil
       },
       shouldInjectTracingHeaders: nil,
-      createdRequest: {
- request,
-        span in
+      createdRequest: { request, span in
         print(
           "request to: ",
           request.httpMethod ?? "n/a",
@@ -107,19 +96,15 @@ class InstrumentationWrapper {
         print("span", span.context.traceId)
         print("span", span.context.spanId)
 
-#if os(iOS) && !targetEnvironment(macCatalyst)
-        if let injector = self.netstatInjector {
-          injector.inject(span: span)
-        }
-#endif
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+          if let injector = self.netstatInjector {
+            injector.inject(span: span)
+          }
+        #endif
       },
-      receivedResponse: {
-        response,
-        _,
-        span in
+      receivedResponse: { response, _, span in
         if let httpResponse = response as? HTTPURLResponse {
-
-          if httpResponse.statusCode >= 400 && httpResponse.statusCode <= 599 {
+          if httpResponse.statusCode >= 400, httpResponse.statusCode <= 599 {
             // swiftlint:disable line_length
 
             span.addEvent(
@@ -139,16 +124,11 @@ class InstrumentationWrapper {
               ]
             )
             // swiftlint:enable line_length
-
           }
         }
 
       },
-      receivedError: {
- error,
- _,
- _,
- span in
+      receivedError: { error, _, _, span in
         // swiftlint:disable line_length
         span
           .addEvent(
@@ -163,7 +143,8 @@ class InstrumentationWrapper {
             ]
           )
         // swiftlint:enable line_length
-      })
+      }
+    )
 
     urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
   }

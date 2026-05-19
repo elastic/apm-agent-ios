@@ -27,67 +27,68 @@ public class InstrumentationConfigBuilder {
   public init() {}
 
   public func withCrashReporting(_ enable: Bool) -> Self {
-    self.enableCrashReporting = enable
+    enableCrashReporting = enable
     return self
   }
 
   public func withURLSessionInstrumentation(_ enable: Bool) -> Self {
-    self.enableURLSessionInstrumentation = enable
+    enableURLSessionInstrumentation = enable
     return self
   }
 
   public func withViewControllerInstrumentation(_ enable: Bool) -> Self {
-    self.enableViewControllerInstrumentation = enable
-    return self
-  }
-  public func withAppMetricInstrumentation(_ enable: Bool) -> Self {
-    self.enableAppMetricInstrumentation = enable
+    enableViewControllerInstrumentation = enable
     return self
   }
 
+  @available(*, deprecated, message: "App Metrics instrumentation temporarily deprecated. New version coming soon.")
+  public func withAppMetricInstrumentation(_: Bool) -> Self {
+    self
+  }
+
   public func withSystemMetrics(_ enable: Bool) -> Self {
-    self.enableSystemMetrics = enable
+    enableSystemMetrics = enable
     return self
   }
 
   public func withLifecycleEvents(_ enable: Bool) -> Self {
-    self.enableLifecycleEvents = enable
+    enableLifecycleEvents = enable
     return self
   }
 
   public func withPersistentStorageConfiguration(_ config: PersistencePerformancePreset) -> Self {
-    self.persistentStorageConfig = config
+    persistentStorageConfig = config
     return self
   }
 
   public func build() -> InstrumentationConfiguration {
     var config = InstrumentationConfiguration()
 
-    if let enableCrashReporting = self.enableCrashReporting {
+    if let enableCrashReporting {
       config.enableCrashReporting = enableCrashReporting
     }
 
-    if let enableURLSessionInstrumentation = self.enableURLSessionInstrumentation {
+    if let enableURLSessionInstrumentation {
       config.enableURLSessionInstrumentation = enableURLSessionInstrumentation
     }
 
-    if let enableViewControllerInstrumentation = self.enableViewControllerInstrumentation {
+    if let enableViewControllerInstrumentation {
       config.enableViewControllerInstrumentation = enableViewControllerInstrumentation
     }
 
-    if let enableAppMetricInstrumentation = self.enableAppMetricInstrumentation {
+    if let enableAppMetricInstrumentation {
       config.enableAppMetricInstrumentation = enableAppMetricInstrumentation
     }
 
-    if let enableSystemMetrics = self.enableSystemMetrics {
+    if let enableSystemMetrics {
       config.enableSystemMetrics = enableSystemMetrics
     }
 
-    if let enableLifecycleEvents = self.enableLifecycleEvents {
+    if let enableLifecycleEvents {
       config.enableLifecycleEvents = enableLifecycleEvents
     }
 
-    if let persistentStorageConfig = self.persistentStorageConfig {
+    if let persistentStorageConfig {
       config.storageConfiguration = persistentStorageConfig
     }
 

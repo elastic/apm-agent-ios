@@ -89,6 +89,11 @@ System-metric instrumentation records CPU and memory usage minutely as metrics. 
 
 ## MetricKit instrumentation [metrickit-instrumentation]
 
+```{applies_to}
+product:
+  edot_ios: deprecated 2.0+
+```
+
 Available for iOS 13 and higher, the SDK provides instrumentation of key MetricKit data points:
 
 * Application launch times
@@ -110,7 +115,6 @@ A histogram of the different durations of time in which the app is too busy to h
 ### `application.exits` [exits]
 
 A count of application exits categorized by various attributes: `foreground` or `background`, and `normal` or `abnormal`, where `abnormal` exits are further subdivided. Find more details about the MetricKit data point in the [Apple documentation](https://developer.apple.com/documentation/metrickit/mxappexitmetric).
-
 
 ## Application lifecycle events [app-lifecycle-events]
 

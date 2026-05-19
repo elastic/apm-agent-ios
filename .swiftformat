@@ -15,3 +15,4 @@
 --wrapparameters after-first
 --disable todos
 --disable wrapLoopBodies
+--trailing-commas never
