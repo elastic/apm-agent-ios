@@ -96,7 +96,7 @@ product:
 
 MetricKit metrics require additional EDOT Collector processors and ECS routing so `application.launch.time` and related metrics appear in `metrics-apm.app.*` data streams.
 
-```edot-collector.yml
+```yaml
 processors:
   # Elasticsearch otel exporter requires delta histograms; converts cumulative OTLP if needed.
   cumulativetodelta:
