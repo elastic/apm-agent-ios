@@ -91,7 +91,7 @@ System-metric instrumentation records CPU and memory usage minutely as metrics. 
 
 ```{applies_to}
 product:
-  edot_ios: 2.1+
+  edot_ios: ga 2.1+
 ```
 
 MetricKit metrics require additional EDOT Collector processors and ECS routing so `application.launch.time` and related metrics appear in `metrics-apm.app.*` data streams.
