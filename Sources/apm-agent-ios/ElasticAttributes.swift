@@ -29,3 +29,9 @@ public enum ElasticAttributes: String {
 
   case serviceBuild = "service.build"
 }
+
+public enum ElasticMetrics: String {
+    case appLaunchTime = "application.launch.time"
+    case appHangtime = "application.responsiveness.hangtime"
+    case appExits = "application.exits"
+}
