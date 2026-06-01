@@ -1,6 +1,6 @@
 #if !os(watchOS)
-import CrashReporter
-import Kronos
+  import CrashReporter
+  import Kronos
 #endif
 import Foundation
 import NIO
@@ -10,22 +10,21 @@ import os.log
 import Logging
 
 public class ElasticApmAgent {
- public static let name = "apm-agent-ios"
+  public static let name = "apm-agent-ios"
 
-  public static func start(
-    with configuration: AgentConfiguration,
-    _ instrumentationConfiguration: InstrumentationConfiguration = InstrumentationConfiguration()
-  ) {
+  public static func start(with configuration: AgentConfiguration,
+                           _ instrumentationConfiguration: InstrumentationConfiguration = InstrumentationConfiguration()) {
     if !configuration.enableAgent {
       os_log("Elastic APM Agent has been disabled.")
       return
     }
     #if !os(watchOS)
-    Kronos.Clock.sync()
+      Kronos.Clock.sync()
     #endif
 
     instance = ElasticApmAgent(
-      configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
+      configuration: configuration, instrumentationConfiguration: instrumentationConfiguration
+    )
   }
 
   public static func start() {
@@ -43,7 +42,7 @@ public class ElasticApmAgent {
   let instrumentation: InstrumentationWrapper
 
   #if !os(watchOS)
-  let crashManager: CrashManager?
+    let crashManager: CrashManager?
   #endif
 
   let crashLogExporter: LogRecordExporter
@@ -55,32 +54,29 @@ public class ElasticApmAgent {
   let sessionSampler: SessionSampler
 
   let crashConfig = CrashManagerConfiguration()
-  
+
   var appMetrics: Any?
 
-
-  private init(
-    configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
-  ) {
+  private init(configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration) {
     crashConfig.sessionId = SessionManager.instance.session(false)
     #if os(iOS) && !targetEnvironment(macCatalyst)
       crashConfig.networkStatus = NetworkStatusManager().lastStatus
     #endif // os(iOS) && !targetEnvironment(macCatalyst)
 
-    _ = SessionManager.instance.session()  // initialize session
+    _ = SessionManager.instance.session() // initialize session
     agentConfigManager = AgentConfigManager(
       resource: AgentResource.get().merging(other: AgentEnvResource.get()),
- config: configuration,
+      config: configuration,
       instrumentationConfig: instrumentationConfiguration,
       logger: Logging.Logger(label: "Elastic.ConfigManager")
     )
 
-    sessionSampler = SessionSampler({
+    sessionSampler = SessionSampler {
       if let rate = CentralConfig().data.sampleRate {
         return rate
       }
       return configuration.sampleRate
-    })
+    }
 
     instrumentation = InstrumentationWrapper(config: agentConfigManager)
 
@@ -93,24 +89,26 @@ public class ElasticApmAgent {
       crashLogExporter = openTelemetry.initializeWithHttp(agentConfigManager)
     }
 
-    
-    if agentConfigManager.instrumentation.enableAppMetricInstrumentation,
-       let metricExporter = openTelemetry.metricExporter,
-       let resource = openTelemetry.resource {
-      appMetrics = AppMetrics(exporter: metricExporter, resource: resource)
-      if let metrics = appMetrics as? AppMetrics {
-        metrics.receiveReports()
+    #if os(iOS) || os(iPadOS)
+      if agentConfigManager.instrumentation.enableAppMetricInstrumentation,
+         let metricExporter = openTelemetry.metricExporter,
+         let resource = openTelemetry.resource {
+        appMetrics = AppMetrics(exporter: metricExporter, resource: resource)
+        if let metrics = appMetrics as? AppMetrics {
+          metrics.receiveReports()
+        }
       }
-    }
+    #endif
 
     #if !os(watchOS)
-    if instrumentationConfiguration.enableCrashReporting {
-      crashManager = CrashManager(
-        resource: AgentResource.get().merging(other: AgentEnvResource.get()),
-        logExporter: crashLogExporter)
-    } else {
-      crashManager = nil
-    }
+      if instrumentationConfiguration.enableCrashReporting {
+        crashManager = CrashManager(
+          resource: AgentResource.get().merging(other: AgentEnvResource.get()),
+          logExporter: crashLogExporter
+        )
+      } else {
+        crashManager = nil
+      }
     #endif
 
     os_log("Initializing Elastic APM Agent.")
@@ -118,15 +116,14 @@ public class ElasticApmAgent {
     instrumentation.initalize()
 
     #if !os(watchOS)
-    if agentConfigManager.instrumentation.enableCrashReporting {
-      crashManager?.initializeCrashReporter(configuration: crashConfig)
-    }
+      if agentConfigManager.instrumentation.enableCrashReporting {
+        crashManager?.initializeCrashReporter(configuration: crashConfig)
+      }
     #endif
   }
 
   deinit {
     // swiftlint:disable:next force_try
     try! group.syncShutdownGracefully()
-
   }
 }
