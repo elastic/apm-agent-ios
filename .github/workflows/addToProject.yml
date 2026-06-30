@@ -19,12 +19,22 @@ jobs:
         private-key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
         permission-organization-projects: write
         permission-issues: read
-    - name: Assign issues with milestones to project
-      uses: elastic/assign-one-project-github-action@1.2.2
+
+    - name: Add milestoned issues to project
+      id: add-issue-to-project
       if: github.event.issue && github.event.issue.milestone
+      uses: elastic/oblt-actions/github/project-add@v1
       with:
-        project: 'https://github.com/orgs/elastic/projects/454'
-        project_id: '5882982'
-        column_name: 'Planned'
-      env:
-        MY_GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
+        github-token: ${{ steps.get_token.outputs.token }}
+        project-id: 1674
+        item-url: ${{ github.event.issue.html_url }}
+
+    - name: Set issue status to Planned
+      if: github.event.issue && github.event.issue.milestone
+      uses: elastic/oblt-actions/github/project-field-set@v1
+      with:
+        github-token: ${{ steps.get_token.outputs.token }}
+        project-id: 1674
+        item-id: ${{ steps.add-issue-to-project.outputs.item-id }}
+        field-name: Status
+        field-value: Planned
