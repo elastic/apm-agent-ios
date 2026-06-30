@@ -1,0 +1,77 @@
+# EDOT Collector gateway for local iOS / OTLP SDK development (gateway.yml 9.4.x baseline).
+# MetricKit / ApplicationMetrics pipeline: see README.md in this directory.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+connectors:
+  elasticapm: {}
+
+processors:
+  # Elasticsearch otel exporter requires delta histograms; converts cumulative OTLP if needed.
+  cumulativetodelta:
+    initial_value: keep
+
+  batch:
+    send_batch_size: 1000
+    timeout: 1s
+    send_batch_max_size: 1500
+
+  batch/metrics:
+    send_batch_max_size: 0
+    timeout: 1s
+
+  elasticapm:
+    service_name_in_datastream_dataset: true
+
+  # mapping.mode in exporter YAML is ignored in 9.4; set after elasticapm enrichment.
+  transform/apm-app-ecs:
+    error_mode: ignore
+    metric_statements:
+      - context: scope
+        conditions:
+          - scope.name == "ApplicationMetrics"
+        statements:
+          - set(scope.attributes["elastic.mapping.mode"], "ecs")
+          - set(resource.attributes["data_stream.dataset"], Concat(["apm.app.", resource.attributes["service.name"]], ""))
+
+exporters:
+  debug:
+    verbosity: basic
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+  elasticsearch/otel:
+    endpoints:
+      - ${env:ELASTIC_ENDPOINT}
+    user: ${env:ELASTIC_USER}
+    password: ${env:ELASTIC_PASSWORD}
+    mapping:
+      mode: otel
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, elasticapm]
+      exporters: [elasticapm, elasticsearch/otel, debug]
+
+    metrics:
+      receivers: [otlp]
+      processors: [cumulativetodelta, elasticapm, transform/apm-app-ecs, batch/metrics]
+      exporters: [elasticsearch/otel, debug]
+
+    metrics/aggregated-otel-metrics:
+      receivers: [elasticapm]
+      processors: [batch/metrics]
+      exporters: [elasticsearch/otel, debug]
+
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [elasticapm, elasticsearch/otel, debug]
