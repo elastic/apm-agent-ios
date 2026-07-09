@@ -5,6 +5,9 @@ on:
       - main
     types:
       - opened
+permissions:
+  contents: none
+
 jobs:
   Check:
     runs-on: ubuntu-latest

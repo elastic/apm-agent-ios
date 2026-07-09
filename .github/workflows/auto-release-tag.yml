@@ -5,6 +5,9 @@ on :
       - main
     types:
       - closed
+permissions:
+  contents: read
+
 jobs:
   CheckRelease:
     runs-on: ubuntu-latest
