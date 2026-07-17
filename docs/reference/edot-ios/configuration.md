@@ -1,6 +1,6 @@
 ---
 navigation_title: Configuration
-description: Configure the Elastic Distribution of OpenTelemetry iOS (EDOT iOS) to send data to Elastic.
+description: Configure the Elastic OTel iOS to send data to Elastic.
 applies_to:
   stack:
   serverless:
@@ -15,7 +15,7 @@ mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/swift/current/configuration.html
 ---
 
-# Configure the EDOT iOS SDK [configuration]
+# Configure the Elastic OTel iOS SDK [configuration]
 
 Configure the SDK with `AgentConfigBuilder` passing the `AgentConfiguration` to the `start` function.
 
@@ -106,10 +106,10 @@ Selects the transport used to export OTLP data to the collector. `.grpc` uses th
 
 ### TLS connections [tls-connections]
 
-EDOT iOS supports TLS connections to OTLP endpoints and OpAMP (central configuration) endpoints when the server uses a TLS certificate signed by a trusted Certificate Authority (CA).
+Elastic OTel iOS supports TLS connections to OTLP endpoints and OpAMP (central configuration) endpoints when the server uses a TLS certificate signed by a trusted Certificate Authority (CA).
 
 :::{warning}
-Self-signed certificates are **not supported**. If your endpoint uses a self-signed certificate, EDOT iOS will not be able to establish a secure connection. Ensure your server uses a certificate issued by a publicly trusted CA or an internal CA that is trusted by the device.
+Self-signed certificates are **not supported**. If your endpoint uses a self-signed certificate, Elastic OTel iOS will not be able to establish a secure connection. Ensure your server uses a certificate issued by a publicly trusted CA or an internal CA that is trusted by the device.
 :::
 
 ### `useOpAMP` [useOpAMP]
@@ -270,14 +270,14 @@ You can set this value dynamically at runtime.
 | `1.0` | Double | true |
 
 
-## Central configuration (EDOT)
+## Central configuration [central-configuration-edot]
 
 ```{applies_to}
 product:
   edot_ios: preview 1.4.0
 ```
 
-You can remotely manage the EDOT iOS behavior through [Central configuration](opentelemetry://reference/central-configuration.md) and the EDOT Collector. 
+You can remotely manage the Elastic OTel iOS behavior through [Central configuration](opentelemetry://reference/central-configuration.md) and the {{agent}}. 
 
 ### Activate central configuration
 
@@ -302,4 +302,4 @@ If you don't use [`useOpAMP()`](#useopamp), the default Elastic central configur
 
 ### Central configuration settings
 
-The same [Dynamic configuration](#dynamic-configuration) settings are available when using central configuration through the EDOT Collector.
+The same [Dynamic configuration](#dynamic-configuration) settings are available when using central configuration through the {{agent}}.

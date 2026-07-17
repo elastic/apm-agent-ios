@@ -1,6 +1,6 @@
 ---
 navigation_title: Instrumentations
-description: Learn about the various instrumentation provided by the Elastic Distribution of OpenTelemetry iOS (EDOT iOS).
+description: Learn about the various instrumentation provided by Elastic OTel iOS.
 applies_to:
   stack:
   serverless:
@@ -15,9 +15,9 @@ mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/swift/current/Instrumentation.html
 ---
 
-# EDOT iOS instrumentations [Instrumentation]
+# Elastic OTel iOS instrumentations [Instrumentation]
 
-The following list describes the various instrumentation provided with the Elastic Distribution of OpenTelemetry iOS (EDOT iOS). These instrumentations can be configured as described in [instrumentation configuration](configuration.md#instrumentationConfiguration).
+The following list describes the various instrumentation provided with Elastic OTel iOS. These instrumentations can be configured as described in [instrumentation configuration](configuration.md#instrumentationConfiguration).
 
 ## Crash reporting [crash-reporting]
 

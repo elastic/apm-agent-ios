@@ -1,6 +1,6 @@
 ---
 navigation_title: Setup
-description: Set up the Elastic Distribution of OpenTelemetry iOS (EDOT iOS) to send data to Elastic.
+description: Set up the Elastic OTel iOS to send data to Elastic.
 applies_to:
   stack:
   serverless:
@@ -17,7 +17,7 @@ mapped_pages:
 
 # Set up the APM iOS Agent [setup]
 
-Learn how to set up and configure the Elastic Distribution of OpenTelemetry iOS (EDOT iOS) to instrument your application.
+Learn how to set up and configure Elastic OTel iOS to instrument your application.
 
 ## Requirements [requirements]
 
@@ -34,7 +34,7 @@ Other platform requires:
 
 ## Add the SDK dependency [add-agent-dependency]
 
-Add the Elastic Distribution of OpenTelemetry iOS to your Xcode project or your `Package.swift`.
+Add Elastic OTel iOS to your Xcode project or your `Package.swift`.
 
 Here are instructions for adding a [package dependency](https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app) to a standard Xcode project.
 

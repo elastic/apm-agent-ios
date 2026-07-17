@@ -1,6 +1,6 @@
 ---
-navigation_title: EDOT iOS
-description: The Elastic Distribution of OpenTelemetry iOS (EDOT iOS) is an APM agent based on OpenTelemetry. It provides built-in tools and configurations to make the OpenTelemetry SDK work with Elastic using as little code as possible while fully leveraging the combined forces of Elasticsearch and Kibana for your iOS application.
+navigation_title: Elastic OTel iOS
+description: Elastic OTel iOS is an APM agent based on OpenTelemetry. It provides built-in tools and configurations to make the OpenTelemetry SDK work with Elastic using as little code as possible while fully leveraging the combined forces of Elasticsearch and Kibana for your iOS application.
 applies_to:
   stack:
   serverless:
@@ -16,13 +16,13 @@ mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/swift/current/index.html
 ---
 
-# Elastic Distribution of OpenTelemetry iOS [intro]
+# Elastic OTel iOS [intro]
 
-The Elastic Distribution of OpenTelemetry iOS (EDOT iOS) measures the performance of your mobile applications in real time.
+Elastic OTel iOS measures the performance of your mobile applications in real time.
 
-## How does EDOT iOS work? [how-it-works]
+## How does Elastic OTel iOS work? [how-it-works]
 
-The Elastic Distribution of OpenTelemetry iOS uses the [OpenTelemetry-Swift SDK](https://github.com/open-telemetry/opentelemetry-swift). The agent automatically traces URLSessions and provides distributed traces annotated with device information along with your back-end services instrumented with OpenTelemetry.
+Elastic OTel iOS uses the [OpenTelemetry-Swift SDK](https://github.com/open-telemetry/opentelemetry-swift). The agent automatically traces URLSessions and provides distributed traces annotated with device information along with your back-end services instrumented with OpenTelemetry.
 
 The SDK also captures any custom OpenTelemetry traces or measurements created using the OpenTelemetry-Swift API.
 
@@ -41,11 +41,11 @@ You can find examples in the [opentelemetry-swift/examples](https://github.com/o
 
 ## Additional components [additional-components]
 
-EDOT SDKs work with the [APM Server](docs-content://solutions/observability/apm/index.md), [{{es}}](docs-content://get-started/index.md), and [{{kib}}](docs-content://get-started/the-stack.md). The [APM Guide](docs-content://solutions/observability/apm/index.md) provides details on how these components work together, and provides a matrix outlining [Agent and Server compatibility](docs-content://solutions/observability/apm/apm-agent-compatibility.md).
+Elastic OTel SDKs work with the [APM Server](docs-content://solutions/observability/apm/index.md), [{{es}}](docs-content://get-started/index.md), and [{{kib}}](docs-content://get-started/the-stack.md). The [APM Guide](docs-content://solutions/observability/apm/index.md) provides details on how these components work together, and provides a matrix outlining [Agent and Server compatibility](docs-content://solutions/observability/apm/apm-agent-compatibility.md).
 
 ## OpenTelemetry Components [_open_telemetry_components]
 
-The EDOT iOS SDK uses several OpenTelemetry-Swift libraries to provide automatic instrumentation of your applications and services. Details about these instrumentation libraries can be found in the official [opentelementry.io Swift Libraries documentation](https://opentelemetry.io/docs/instrumentation/swift/libraries/).
+The Elastic OTel iOS SDK uses several OpenTelemetry-Swift libraries to provide automatic instrumentation of your applications and services. Details about these instrumentation libraries can be found in the official [opentelementry.io Swift Libraries documentation](https://opentelemetry.io/docs/instrumentation/swift/libraries/).
 
 For network instrumentation, the agent uses `NSURLSessionInstrumentation`. This provides network instrumentation in the form of spans and enables distributed tracing for all instrumented downstream services.
 
