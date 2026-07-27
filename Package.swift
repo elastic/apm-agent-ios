@@ -26,6 +26,7 @@ let package = Package(
     .package(url: "https://github.com/MobileNativeFoundation/Kronos.git", .upToNextMajor(from: "4.2.2")),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.12.0")),
+    .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
   ],
   targets: [
     .target(
