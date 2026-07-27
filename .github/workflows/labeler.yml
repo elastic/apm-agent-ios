@@ -58,7 +58,7 @@ jobs:
         item_id=$(gh project item-add 1674 --url https://github.com/elastic/apm-agent-ios/pull/$PR_NUMBER --owner elastic --format json --jq .id)
         gh project item-edit --id "$item_id" --project-id "$PROJECT_ID" --field-id "$FIELD_ID" --single-select-option-id "$OPTION_ID"
       env:
-        MY_GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
+        GH_TOKEN: ${{ steps.get_token.outputs.token }}
         PROJECT_ID: 'PVT_kwDOAGc3Zs4Am42e'
         FIELD_ID: 'PVTSSF_lADOAGc3Zs4Am42ezgetx6g'
         OPTION_ID: 'f37476bf'
