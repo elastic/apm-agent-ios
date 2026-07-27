@@ -1,5 +1,5 @@
 name: Tag & Note Release
-on : 
+on:
   pull_request:
     branches:
       - main
@@ -10,35 +10,30 @@ permissions:
 
 jobs:
   CheckRelease:
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.head_ref, 'rel/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Check if merge is release branch
+      - name: Validate release branch
         id: check-release
         env:
           GITHUB_HEAD_REF: ${{ github.head_ref }}
-          GITHUB_EVENT_PULL_REQUEST_MERGED: ${{ github.event.pull_request.merged }}
         run: |
-          if [[ "${GITHUB_HEAD_REF}" =~ ^rel/([0-9]+\.[0-9]+\.[0-9]+$) ]]; then
-            echo "match=true" >> $GITHUB_OUTPUT
-            echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_EVENT_PULL_REQUEST_MERGED}" != "true" ]] ; then
-            FAILURE_MESSAGE='Tag if release branch'
-            echo "FAILURE_MESSAGE=${FAILURE_MESSAGE}" >> "$GITHUB_ENV"
-            echo "::error::${FAILURE_MESSAGE}" ; exit 1
+          if [[ "${GITHUB_HEAD_REF}" =~ ^rel/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Release branches must use the format rel/X.Y.Z"
+            exit 1
           fi
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
-          fetch-depth: '0'
-      - uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
-        with:
-          commit_message: version bump to ${{ steps.check-release.outputs.version }}
-          tagging_message: '${{ steps.check-release.outputs.version }}'
       - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
-        with: 
+        with:
           tag: ${{ steps.check-release.outputs.version }}
-          prerelease: true
+          commit: ${{ github.event.pull_request.merge_commit_sha }}
+          name: ${{ steps.check-release.outputs.version }}
+          draft: false
+          prerelease: false
+          makeLatest: true
           generateReleaseNotes: true
-
