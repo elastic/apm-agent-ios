@@ -45,7 +45,7 @@ Details of adding dependencies to your Package.swift can be found on [*Add a Dep
 ```swift
 Package(
     dependencies:[
-         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "1.4.0"),
+         .package(name: "apm-agent-ios", url: "https://github.com/elastic/apm-agent-ios.git", from: "2.0.2"),
     ],
   targets:[
     .target(
