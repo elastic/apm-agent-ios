@@ -57,6 +57,7 @@ jobs:
     name: xcode (${{ matrix.label }})
     needs: should-run
     if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
