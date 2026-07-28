@@ -17,19 +17,22 @@ import Foundation
 import XCTest
 @testable import ElasticApm
 
-public class OpampHttpRequestServiceTest : XCTestCase {
+public class OpampHttpRequestServiceTest: XCTestCase {
+
+  private func emptyRequestSupplier() -> AnonymousSupplier<OpampRequest> {
+    return AnonymousSupplier<OpampRequest> {
+      return OpampRequest(agentToServer: Opamp_Proto_AgentToServer())
+    }
+  }
 
   func testRequestServiceStates() {
-
-    let cond = NSCondition()
-
-    var counter = 0
-
+    let timer = MockRequestTimer()
+    let sender = MockOpampSender.getWith(statusCode: 500)
     let requestService = OpampHttpRequestService(
-      httpClient: MockOpampSender
-        .getWith(statusCode: 500),
-      requestDelay: 50000.0,
-      retryDelay: 1.0
+      httpClient: sender,
+      requestDelay: 30.0,
+      retryDelay: 1.0,
+      timer: timer
     )
 
     XCTAssertFalse(requestService.isRunning)
@@ -39,29 +42,22 @@ public class OpampHttpRequestServiceTest : XCTestCase {
     // stopping before started makes no changes
     XCTAssertFalse(requestService.isRunning)
     XCTAssertFalse(requestService.isStopped)
-
-
-    requestService
-      .start(
-        callback: MockRequestServiceCallback(onRequestFailed: { error, delay in
-          cond.lock()
-          counter += 1
-          cond.broadcast()
-          cond.unlock()
-        }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(
-          agentToServer: Opamp_Proto_AgentToServer()
-        )
-        }
-      )
-
-    XCTAssertTrue(requestService.isRunning)
-    XCTAssertFalse(requestService.isStopped)
+    XCTAssertFalse(timer.isCancelled)
 
     requestService
       .start(
         callback: MockRequestServiceCallback(),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
+        request: emptyRequestSupplier()
+      )
+
+    XCTAssertTrue(requestService.isRunning)
+    XCTAssertFalse(requestService.isStopped)
+    XCTAssertTrue(timer.isActivated)
+
+    requestService
+      .start(
+        callback: MockRequestServiceCallback(),
+        request: emptyRequestSupplier()
       )
     // calling start twice makes no changes
     XCTAssertTrue(requestService.isRunning)
@@ -70,215 +66,179 @@ public class OpampHttpRequestServiceTest : XCTestCase {
     requestService.stop()
 
     XCTAssertTrue(requestService.isStopped)
+    XCTAssertTrue(timer.isCancelled)
 
     requestService
       .start(
         callback: MockRequestServiceCallback(),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
+        request: emptyRequestSupplier()
       )
-
+    // starting after stop makes no changes
     XCTAssertTrue(requestService.isStopped)
 
-    requestService.sendRequest() // noop?
-
-    let start = Date()
-    cond.lock()
-    while (counter < 1 && Date().timeIntervalSince1970 - start.timeIntervalSince1970 < 10.0) {
-      cond.wait(until: Date(timeIntervalSinceNow: 1.0))
-    }
-    XCTAssertEqual(counter, 0, "requestService sendRequest executed")
-    cond.unlock()
-
+    requestService.sendRequest()
+    timer.fire()
+    // the cancelled timer no longer fires, so no request is sent
+    XCTAssertEqual(sender.sendCount, 0, "requestService sendRequest executed")
   }
 
   func testReqeustServiceSendsOnDemand() {
+    let timer = MockRequestTimer()
+    let requestFailed = expectation(description: "request failed callback")
     let requestService = OpampHttpRequestService(
-      httpClient: MockOpampSender
-        .getWith(statusCode: 500),
-      requestDelay: 10000.0,
-      retryDelay: 1.0
+      httpClient: MockOpampSender.getWith(statusCode: 500),
+      requestDelay: 30.0,
+      retryDelay: 1.0,
+      timer: timer
     )
 
-    let cond = NSCondition()
-    var counter = 0
-    var start = Date()
     requestService
       .start(
-        callback: MockRequestServiceCallback(onRequestFailed: { error, delay in
-          cond.lock()
-          counter += 1
-          let date = Date()
-          if (counter == 1) {
-
-            XCTAssertLessThan(date.timeIntervalSince1970 - start.timeIntervalSince1970, 10, "callback executed much sooner than reqeustDelay")
-            start = date
-          } else if counter == 2 {
-            XCTAssertEqual(date.timeIntervalSince1970 - start.timeIntervalSince1970, 1.0, accuracy: 1.0, "Retry delay is only about 1 second")
-          }
-          cond.broadcast()
-          cond.unlock()
+        callback: MockRequestServiceCallback(onRequestFailed: { _, _ in
+          requestFailed.fulfill()
         }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
+        request: emptyRequestSupplier()
       )
 
-      requestService.sendRequest()
+    // the initial schedule waits a full requestDelay
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: 30.0, repeating: 30.0)
+    )
 
-    cond.lock()
-    while (counter < 2 && Date().timeIntervalSince1970 - start.timeIntervalSince1970 < 20.0) {
-      cond.wait(until: Date(timeIntervalSinceNow: 1.0))
-    }
-    XCTAssertEqual(counter, 2, "condtional timed out")
-    cond.unlock()
+    requestService.sendRequest()
+    // sending on demand reschedules the timer to fire immediately
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: 0, repeating: 30.0)
+    )
+
+    timer.fire()
+    wait(for: [requestFailed], timeout: 10.0)
     requestService.stop()
   }
 
   func testHttpFailedRequest() {
-    let cond = NSCondition()
+    let timer = MockRequestTimer()
+    let requestFailed = expectation(description: "request failed callback")
     let requestService = OpampHttpRequestService(
-      httpClient: MockOpampSender
-        .getWith(statusCode: 500),
+      httpClient: MockOpampSender.getWith(statusCode: 500),
       requestDelay: 5.0,
-      retryDelay: 1.0
+      retryDelay: 1.0,
+      timer: timer
     )
 
-
-    let start = Date()
-    var isWaiting = true
     requestService
       .start(
         callback: MockRequestServiceCallback(
-          onRequestFailed: {
-            error,
-            delay in
-            let end = Date()
-            XCTAssert((error as NSError).code == 500)
-            XCTAssertEqual(
-              end.timeIntervalSince1970 - start.timeIntervalSince1970,
-              5.0,
-              accuracy: 1.0
-            )
-            cond.lock()
-            isWaiting = false
-            cond.broadcast()
-            cond.unlock()
+          onRequestFailed: { error, retryAfter in
+            XCTAssertEqual((error as NSError).code, 500)
+            XCTAssertEqual(retryAfter, 1.0)
+            requestFailed.fulfill()
           }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
+        request: emptyRequestSupplier()
       )
 
-
-    cond.lock()
-    while (isWaiting) {
-      cond.wait()
-    }
-    cond.unlock()
+    timer.fire()
+    // a failed request enables retry mode on the retryDelay timescale
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: 1.0, repeating: 1.0)
+    )
+    wait(for: [requestFailed], timeout: 10.0)
     requestService.stop()
   }
 
-
   func testHttpFailedConnect() {
-    let cond = NSCondition()
+    let timer = MockRequestTimer()
+    let connectFailed = expectation(description: "connection failure callback")
     let requestService = OpampHttpRequestService(
       httpClient: MockOpampSender
         .getWith(
           error: NSError(
             domain: HTTPURLResponse
-              .localizedString(forStatusCode:NSURLErrorTimedOut),
-            code:NSURLErrorTimedOut
+              .localizedString(forStatusCode: NSURLErrorTimedOut),
+            code: NSURLErrorTimedOut
           )
         ),
       requestDelay: 5.0,
-      retryDelay: 1.0
+      retryDelay: 1.0,
+      timer: timer
     )
 
-    let start = Date()
-    var isWaiting = true
     requestService
       .start(
         callback: MockRequestServiceCallback(
-          onConnectFailure: {
-            error,
-            delay in
-            let end = Date()
-            XCTAssert((error as NSError).code == NSURLErrorTimedOut)
-            XCTAssertEqual(
-              end.timeIntervalSince1970 - start.timeIntervalSince1970,
-              5.0,
-              accuracy: 1.0
-            )
-            cond.lock()
-            isWaiting = false
-            cond.broadcast()
-            cond.unlock()
+          onConnectFailure: { error, retryAfter in
+            XCTAssertEqual((error as NSError).code, NSURLErrorTimedOut)
+            XCTAssertEqual(retryAfter, 1.0)
+            connectFailed.fulfill()
           }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
+        request: emptyRequestSupplier()
+      )
 
-    cond.lock()
-    while (isWaiting) {
-      cond.wait()
-    }
-    cond.unlock()
+    timer.fire()
+    // a network error enables retry mode with exponential backoff (1 skip)
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: 1.0, repeating: 1.0)
+    )
+    wait(for: [connectFailed], timeout: 10.0)
     requestService.stop()
   }
 
   func testHttpFailureUpdatesRetryDelayHeader() {
-    let cond = NSCondition()
+    let timer = MockRequestTimer()
+    let requestFailed = expectation(description: "request failed callback")
+    requestFailed.expectedFulfillmentCount = 2
     let requestService = OpampHttpRequestService(
       httpClient: MockOpampSender(
-sender: {
-        let response = HTTPURLResponse(url: URL(string: "http://localhost")!,
-                                       statusCode: 503,
-                                       httpVersion: nil,
-                                       headerFields: ["Retry-After": "3"]
-                                               )!
-  return .success((OpampResponse(serverToAgent:  Opamp_Proto_ServerToAgent()), response))
-
-      }),
+        sender: {
+          let response = HTTPURLResponse(
+            url: URL(string: "http://localhost")!,
+            statusCode: 503,
+            httpVersion: nil,
+            headerFields: ["Retry-After": "3"]
+          )!
+          return .success((OpampResponse(serverToAgent: Opamp_Proto_ServerToAgent()), response))
+        }),
       requestDelay: 1.0,
-      retryDelay: 1000.0
+      retryDelay: 1000.0,
+      timer: timer
     )
 
-    let start = Date()
-    var isWaiting = true
-    var iteration = 0
     requestService
       .start(
         callback: MockRequestServiceCallback(
-          onRequestFailed: {
-            error,
-            delay in
-            XCTAssert((error as NSError).code == 503)
-            iteration+=1
-            if iteration == 1 {
-              XCTAssertEqual(Date().timeIntervalSince1970 - start.timeIntervalSince1970, 1.0, accuracy: 0.5,
-                             "reqeustDelay incorrect"
-              )
-            } else if (iteration == 2) {
-              // second iteration should be on the retryDelay timescale
-              XCTAssertEqual(
-                Date().timeIntervalSince1970 - start.timeIntervalSince1970,
-                4.0,
-                accuracy: 0.5,
-                "retryDelay with exponential backoff incorrect"
-              )
-              cond.lock()
-              isWaiting = false
-              cond.broadcast()
-              cond.unlock()
-            }
+          onRequestFailed: { error, retryAfter in
+            XCTAssertEqual((error as NSError).code, 503)
+            // the Retry-After header takes precedence over the configured retryDelay
+            XCTAssertEqual(retryAfter, 3.0)
+            requestFailed.fulfill()
           }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
+        request: emptyRequestSupplier()
+      )
 
+    timer.fire()
+    // retry mode uses the Retry-After header value
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: 3.0, repeating: 3.0)
+    )
 
-    cond.lock()
-    while (isWaiting) {
-      cond.wait()
-    }
-    cond.unlock()
+    let schedulesAfterFirstFailure = timer.schedules.count
+    timer.fire()
+    // retry mode is already enabled, so the second failure does not reschedule
+    XCTAssertEqual(timer.schedules.count, schedulesAfterFirstFailure)
+
+    wait(for: [requestFailed], timeout: 10.0)
     requestService.stop()
   }
 
   func testRetryErrorResponse() {
-    let cond = NSCondition()
+    let timer = MockRequestTimer()
+    let requestSucceeded = expectation(description: "request success callback")
+    requestSucceeded.expectedFulfillmentCount = 2
 
     var serverToAgent = Opamp_Proto_ServerToAgent()
     serverToAgent.errorResponse = Opamp_Proto_ServerErrorResponse()
@@ -288,105 +248,82 @@ sender: {
       httpClient: MockOpampSender
         .getSuccess(with: OpampResponse.init(serverToAgent: serverToAgent)),
       requestDelay: 5.0,
-      retryDelay: 1.0
+      retryDelay: 1.0,
+      timer: timer
     )
 
-    let start = Date()
-    var isWaiting = true
-    var iteration = 0
     requestService
       .start(
         callback: MockRequestServiceCallback(
-         onRequestSuccess: {
-           response
-             in
-           iteration+=1
-           if iteration == 1 {
-             XCTAssertEqual(Date().timeIntervalSince1970 - start.timeIntervalSince1970, 5.0, accuracy: 0.5,
-              "reqeustDelay incorrect"
-             )
-           } else if (iteration == 2) {
-             // second iteration should be on the retryDelay timescale
-             XCTAssertEqual(
-              Date().timeIntervalSince1970 - start.timeIntervalSince1970,
-              6.0,
-              accuracy: 0.5,
-              "retryDelay with exponential backoff incorrect"
-             )
-             cond.lock()
-             isWaiting = false
-             cond.broadcast()
-             cond.unlock()
-           }
+          onRequestSuccess: { _ in
+            requestSucceeded.fulfill()
           }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
+        request: emptyRequestSupplier()
+      )
 
-    cond.lock()
-    while (isWaiting) {
-      cond.wait()
-    }
-    cond.unlock()
+    timer.fire()
+    // the server error response enables retry mode on the retryDelay timescale
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: 1.0, repeating: 1.0)
+    )
+
+    timer.fire()
+    // the successful HTTP response first restores the requestDelay schedule,
+    // then the embedded error response re-enables retry mode
+    XCTAssertEqual(
+      timer.schedules.suffix(2),
+      [
+        MockRequestTimer.Schedule(delay: 5.0, repeating: 5.0),
+        MockRequestTimer.Schedule(delay: 1.0, repeating: 1.0)
+      ]
+    )
+
+    wait(for: [requestSucceeded], timeout: 10.0)
     requestService.stop()
   }
 
   func testHandleMessageRetryDelayUpdated() {
-    let cond = NSCondition()
+    let timer = MockRequestTimer()
+    let requestSucceeded = expectation(description: "request success callback")
 
     var serverToAgent = Opamp_Proto_ServerToAgent()
     serverToAgent.errorResponse = Opamp_Proto_ServerErrorResponse()
     serverToAgent.errorResponse.errorMessage = "error"
     serverToAgent.errorResponse.type = .unavailable
     serverToAgent.errorResponse.retryInfo = Opamp_Proto_RetryInfo()
-    serverToAgent.errorResponse.retryInfo.retryAfterNanoseconds = 1_000_000_000 // 1 seconds
+    serverToAgent.errorResponse.retryInfo.retryAfterNanoseconds = 1_000_000_000 // 1 second
     let requestService = OpampHttpRequestService(
       httpClient: MockOpampSender
         .getSuccess(with: OpampResponse.init(serverToAgent: serverToAgent)),
       requestDelay: 1.0,
-      retryDelay: 1000.0
+      retryDelay: 1000.0,
+      timer: timer
     )
 
-    let start = Date()
-    var isWaiting = true
-    var iteration = 0
     requestService
       .start(
         callback: MockRequestServiceCallback(
-          onRequestSuccess: {
-            response
-            in
-            iteration+=1
-            if iteration == 1 {
-              XCTAssertEqual(Date().timeIntervalSince1970 - start.timeIntervalSince1970, 1.0, accuracy: 0.5,
-                             "reqeustDelay incorrect"
-              )
-            } else if (iteration == 2) {
-              // second iteration should be on the retryDelay timescale
-              XCTAssertEqual(
-                Date().timeIntervalSince1970 - start.timeIntervalSince1970,
-                2.0,
-                accuracy: 0.5,
-                "retryDelay with exponential backoff incorrect"
-              )
-              cond.lock()
-              isWaiting = false
-              cond.broadcast()
-              cond.unlock()
-            }
+          onRequestSuccess: { _ in
+            requestSucceeded.fulfill()
           }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) })
+        request: emptyRequestSupplier()
+      )
 
-    cond.lock()
-    while (isWaiting && Date().timeIntervalSince1970 - start.timeIntervalSince1970 < 10.0) {
-      cond.wait()
-    }
-    XCTAssertEqual(iteration, 2, "Timed Out: ReqeustService did not update retry delay from message.")
-    cond.unlock()
+    timer.fire()
+    // the message's retry info takes precedence over the configured retryDelay
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: 1.0, repeating: 1.0)
+    )
+    wait(for: [requestSucceeded], timeout: 10.0)
     requestService.stop()
-
   }
 
   func testHandleNetworkError() {
-    let cond = NSCondition()
+    let timer = MockRequestTimer()
+    let connectFailed = expectation(description: "connection failure callback")
+    connectFailed.expectedFulfillmentCount = 2
     let retryDelay = 1.0
     let requestDelay = 3.0
     let requestService = OpampHttpRequestService(
@@ -395,59 +332,44 @@ sender: {
           error: NSError(
             domain: HTTPURLResponse
               .localizedString(forStatusCode: NSURLErrorTimedOut),
-            code:NSURLErrorTimedOut
+            code: NSURLErrorTimedOut
           )
         ),
       requestDelay: requestDelay,
-      retryDelay: retryDelay
+      retryDelay: retryDelay,
+      timer: timer
     )
 
-    let start = Date()
-    var isWaiting = true
-    var iteration = 0
     requestService
       .start(
         callback: MockRequestServiceCallback(
-          onConnectFailure: {
-            error,
- timeInterval
-            in
-            iteration+=1
-            if iteration == 1 {
-              XCTAssertEqual(
-                Date().timeIntervalSince1970 - start.timeIntervalSince1970,
-                requestDelay,
-                accuracy: 0.5,
-                             "reqeustDelay incorrect"
-              )
-            } else if (iteration == 2) {
-              // second iteration should be on the retryDelay timescale
-              XCTAssertEqual(
-                timeInterval,
-                retryDelay,
-                accuracy: 0.5,
-              )
-
-              XCTAssertEqual(
-                Date().timeIntervalSince1970 - start.timeIntervalSince1970,
-                requestDelay + retryDelay, accuracy: 0.5,
-              )
-              cond.lock()
-              isWaiting = false
-              cond.broadcast()
-              cond.unlock()
-            }
+          onConnectFailure: { error, timeInterval in
+            XCTAssertEqual((error as NSError).code, NSURLErrorTimedOut)
+            XCTAssertEqual(timeInterval, retryDelay)
+            connectFailed.fulfill()
           }),
-        request: AnonymousSupplier<OpampRequest> { return OpampRequest(agentToServer: Opamp_Proto_AgentToServer()) }
+        request: emptyRequestSupplier()
       )
 
-    cond.lock()
-    while (isWaiting && Date().timeIntervalSince1970 - start.timeIntervalSince1970 < 10.0) {
-      cond.wait()
-    }
-    XCTAssertEqual(iteration, 2, "Timed Out: ReqeustService did not retry.")
-    cond.unlock()
-    requestService.stop()
+    // the initial schedule waits a full requestDelay
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: requestDelay, repeating: requestDelay)
+    )
 
+    timer.fire()
+    // the first network error enables retry mode on the retryDelay timescale
+    XCTAssertEqual(
+      timer.lastSchedule,
+      MockRequestTimer.Schedule(delay: retryDelay, repeating: retryDelay)
+    )
+
+    let schedulesAfterFirstFailure = timer.schedules.count
+    timer.fire()
+    // retry mode is already enabled, so further failures do not reschedule
+    XCTAssertEqual(timer.schedules.count, schedulesAfterFirstFailure)
+
+    wait(for: [connectFailed], timeout: 10.0)
+    requestService.stop()
   }
 }

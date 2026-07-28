@@ -16,17 +16,18 @@
 import Foundation
 @testable import ElasticApm
 
-
 class MockOpampSender: OpampSender {
+  private(set) var sendCount = 0
+
   func send(
     opampRequest: ElasticApm.OpampRequest,
     completion: @escaping (
       Result<(ElasticApm.OpampResponse, URLResponse), any Error>
     ) -> Void
   ) {
+    sendCount += 1
     completion(sender())
   }
-
 
   let sender: () -> Result<(OpampResponse, URLResponse), Error>
 
@@ -62,7 +63,7 @@ class MockOpampSender: OpampSender {
         (
           response,
           HTTPURLResponse(
-            url:OpampHttpRequestService.defaultURL ,
+            url: OpampHttpRequestService.defaultURL,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil

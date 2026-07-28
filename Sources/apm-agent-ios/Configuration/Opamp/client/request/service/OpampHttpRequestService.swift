@@ -20,13 +20,10 @@ public class OpampHttpRequestService: RequestService {
   private let httpClient: OpampSender
   private let requestDelay: TimeInterval
   private let retryDelay: TimeInterval
-  private let requestQueue = DispatchQueue(
-    label: "com.elastic.apm.agent.opamp.http.request.timer",
-    qos: .utility)
   private let lock = NSLock()
   private var retryModeEnabled = false
   private var exponentialBackoffSkips = 0
-  private let requestTimer: DispatchSourceTimer
+  private let requestTimer: RequestTimer
 
   private var callback: RequestServiceCallback?
   private var request: (any Supplier<OpampRequest>)?
@@ -40,11 +37,12 @@ public class OpampHttpRequestService: RequestService {
     httpClient: OpampSender = OpampHttpSender(url: defaultURL),
     requestDelay: TimeInterval = 30.0,
     retryDelay: TimeInterval = 30.0,
+    timer: RequestTimer = DispatchSourceRequestTimer(),
   ) {
     self.httpClient = httpClient
     self.requestDelay = requestDelay
     self.retryDelay = retryDelay
-    self.requestTimer = DispatchSource.makeTimerSource(queue: requestQueue)
+    self.requestTimer = timer
     requestTimer.setEventHandler { [weak self] in
       autoreleasepool {
         guard let self = self else {
@@ -56,7 +54,7 @@ public class OpampHttpRequestService: RequestService {
 
     self.requestTimer
       .schedule(
-        deadline: .now() + requestDelay,
+        delay: requestDelay,
         repeating: requestDelay
       )
   }
@@ -64,11 +62,11 @@ public class OpampHttpRequestService: RequestService {
   public func start(callback: RequestServiceCallback, request: any Supplier<OpampRequest>) {
     lock.lock()
     defer { lock.unlock() }
-    if (isStopped) {
+    if isStopped {
       os_log("OpampHttpRequestService has been stopped.")
       return
     }
-    if (isRunning) {
+    if isRunning {
       os_log("OpampHttpReqeustService is already running.")
       return
     }
@@ -81,22 +79,21 @@ public class OpampHttpRequestService: RequestService {
   public func sendRequest() {
     lock.lock()
     defer { lock.unlock() }
-    self.requestTimer.schedule(deadline: .now(), repeating: self.requestDelay)
+    self.requestTimer.schedule(delay: 0, repeating: self.requestDelay)
   }
 
   public func stop() {
     lock.lock()
     defer { lock.unlock() }
-    if (!isRunning || isStopped) {
+    if !isRunning || isStopped {
       return
     }
     isStopped = true
-    requestTimer.schedule(deadline: .now(), repeating: .never)
+    requestTimer.schedule(delay: 0, repeating: nil)
     requestTimer.cancel()
   }
 
-
-  private func isSuccessful(_ response: URLResponse) -> Bool{
+  private func isSuccessful(_ response: URLResponse) -> Bool {
     if let httpResponse = response as? HTTPURLResponse {
       return httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
     }
@@ -107,14 +104,11 @@ public class OpampHttpRequestService: RequestService {
       return response.statusCode == 429 || response.statusCode == 503
   }
 
-
-
-
   private func handleHttpError(_ response: URLResponse) {
     if let httpResponse = response as? HTTPURLResponse {
       var retryAfter: TimeInterval = retryDelay
       if shouldUpdateRetryDelay(httpResponse) {
-        if let retryAfterHeader = httpResponse.value(forHTTPHeaderField:"Retry-After") {
+        if let retryAfterHeader = httpResponse.value(forHTTPHeaderField: "Retry-After") {
           if let parsedRetryAfter =  Double(retryAfterHeader) {
             retryAfter = parsedRetryAfter
           } else if let parsedDate = OpampHttpDate.parse(dateString: retryAfterHeader) {
@@ -137,23 +131,21 @@ public class OpampHttpRequestService: RequestService {
     }
   }
 
-
   private func enableRetryMode(_ retryAfter: TimeInterval) {
     if !retryModeEnabled {
       retryModeEnabled = true
       self.requestTimer
-        .schedule(deadline: .now() + retryAfter, repeating: retryAfter)
+        .schedule(delay: retryAfter, repeating: retryAfter)
     }
   }
 
   private func disableRetryMode() {
     if retryModeEnabled {
       retryModeEnabled = false
-      self.requestTimer.schedule(deadline: .now() + self.requestDelay, repeating: self.requestDelay)
+      self.requestTimer.schedule(delay: self.requestDelay, repeating: self.requestDelay)
 
     }
   }
-
 
   private func handleErrorResponse(
     _ errorResponse: Opamp_Proto_ServerErrorResponse
@@ -166,19 +158,19 @@ public class OpampHttpRequestService: RequestService {
       } else {
         incrementExponentialBackoff()
       }
-    case .badRequest, .unknown, .UNRECOGNIZED(_):
+    case .badRequest, .unknown, .UNRECOGNIZED:
       incrementExponentialBackoff()
     }
   }
 
   private func incrementExponentialBackoff() {
-    if (exponentialBackoffSkips == 0) {
-      exponentialBackoffSkips = 1;
+    if exponentialBackoffSkips == 0 {
+      exponentialBackoffSkips = 1
     } else {
-      exponentialBackoffSkips *= 2;
+      exponentialBackoffSkips *= 2
     }
-    if (exponentialBackoffSkips >= 32) {
-      exponentialBackoffSkips = 32;
+    if exponentialBackoffSkips >= 32 {
+      exponentialBackoffSkips = 32
     }
     enableRetryMode(retryDelay * Double(exponentialBackoffSkips))
   }
@@ -214,24 +206,21 @@ public class OpampHttpRequestService: RequestService {
     defer { self.lock.unlock() }
     if let request = self.request?.get() {
       httpClient.send(
-opampRequest: request,
- completion: {
-        [weak self]
-        result in
-
-   guard let self = self else { return }
-        switch result {
-        case let .success((opampResponse, urlResponse)):
-          if isSuccessful(urlResponse) {
-            resetExponentialBackoffSkips()
-            handleResponse(opampResponse)
-          } else {
-            handleHttpError(urlResponse)
+        opampRequest: request,
+        completion: { [weak self] result in
+          guard let self = self else { return }
+          switch result {
+          case let .success((opampResponse, urlResponse)):
+            if isSuccessful(urlResponse) {
+              resetExponentialBackoffSkips()
+              handleResponse(opampResponse)
+            } else {
+              handleHttpError(urlResponse)
+            }
+          case let .failure(error):
+            handleNetworkError(error)
           }
-        case let .failure(error):
-          handleNetworkError(error)
-        }
-      })
+        })
     }
   }
 }
