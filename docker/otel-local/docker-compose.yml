@@ -1,0 +1,129 @@
+# Local Elastic Stack + EDOT Collector for OTLP development.
+# MetricKit collector setup (application.launch.time, etc.): see README.md
+#
+# Usage (run from this directory so the config bind-mount resolves):
+#   cd docker/otel-local
+#   cp env.example .env
+#   docker compose up -d
+#
+# Confirm the collector uses otel-collector-config.yml (not the image default otel.yml):
+#   docker exec edot-local-collector head -3 /etc/otelcol/otel-collector-config.yml
+#
+# Ports bind on all interfaces (0.0.0.0) so phones/simulators on your LAN can
+# reach the stack via your host IP (e.g. http://192.168.1.42:4317).
+#
+# Endpoints (replace <host-ip> with your machine's LAN address):
+#   Elasticsearch  http://<host-ip>:9200  (elastic / $ELASTIC_PASSWORD)
+#   Kibana         http://<host-ip>:5601
+#   OTLP gRPC      <host-ip>:4317
+#   OTLP HTTP      http://<host-ip>:4318
+#
+# Dev-only: services are reachable on your local network without TLS.
+#
+# macOS: ensure vm.max_map_count is high enough for Elasticsearch if the
+# container fails to start (see Elastic Docker install docs).
+
+name: edot-local
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: edot-local-elasticsearch
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "${ES_PORT:-9200}:9200"
+    environment:
+      discovery.type: single-node
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.license.self_generated.type: trial
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS:--Xms1g -Xmx1g}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q '\"status\":\"\\(green\\|yellow\\)\"'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+
+  kibana-setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: edot-local-kibana-setup
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: "no"
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      KIBANA_PASSWORD: ${KIBANA_PASSWORD}
+    command: >
+      bash -c '
+        until curl -fsS -u "elastic:$${ELASTIC_PASSWORD}" \
+          -X POST "http://elasticsearch:9200/_security/user/kibana_system/_password" \
+          -H "Content-Type: application/json" \
+          -d "{\"password\":\"$${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do
+          sleep 2;
+        done;
+      '
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: edot-local-kibana
+    depends_on:
+      kibana-setup:
+        condition: service_completed_successfully
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: ${KIBANA_PASSWORD}
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY}
+      ELASTICSEARCH_PUBLICBASEURL: ${KIBANA_PUBLIC_URL:-http://localhost:5601}
+      SERVER_PUBLICBASEURL: ${KIBANA_PUBLIC_URL:-http://localhost:5601}
+      XPACK_SPACES_DEFAULTSOLUTION: oblt
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5601/api/status | grep -q '\"level\":\"available\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+
+  edot-collector:
+    image: docker.elastic.co/elastic-agent/elastic-otel-collector:${STACK_VERSION}
+    container_name: edot-local-collector
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    # Entrypoint runs: elastic-agent otel <command>
+    # Only this file is loaded — NOT the image default /usr/share/elastic-agent/otel.yml
+    command:
+      - --config=file:/etc/otelcol/otel-collector-config.yml
+    volumes:
+      - ./otel-collector-config.yml:/etc/otelcol/otel-collector-config.yml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      ELASTIC_ENDPOINT: http://elasticsearch:9200
+      ELASTIC_USER: elastic
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo -n > /dev/tcp/127.0.0.1/4317'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  es-data:
+  kibana-data:

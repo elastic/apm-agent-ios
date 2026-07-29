@@ -14,24 +14,8 @@
 
 import Foundation
 
-public enum ElasticAttributes: String {
-  /**
-   Timestamp applied to all spans at time of export. To help with clock drift.
-    */
-  case exportTimestamp = "telemetry.sdk.elastic_export_timestamp"
-
-  /**
-   The id of the device
-    */
-  case deviceIdentifier = "device.id"
-
-  case sessionId = "session.id"
-
-  case serviceBuild = "service.build"
-}
-
-public enum ElasticMetrics: String {
-    case appLaunchTime = "application.launch.time"
-    case appHangtime = "application.responsiveness.hangtime"
-    case appExits = "application.exits"
+/// Shared instrumentation scope for MetricKit app metrics.
+enum AppMetricsMeter {
+  static let scopeName = "ApplicationMetrics"
+  static let instrumentationVersion = "1.0.0"
 }

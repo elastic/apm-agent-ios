@@ -19,6 +19,8 @@ public struct AgentConfiguration {
   public var collectorPort = 8200
   public var collectorTLS = false
   public var connectionType: AgentConnectionType = .grpc
+  public var metricExportInterval: TimeInterval = 60.0
+
   var auth: String?
   var sampleRate: Double = 1.0
 

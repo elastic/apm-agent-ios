@@ -18,6 +18,7 @@ import MemorySampler
 import NetworkStatus
 import OpenTelemetryApi
 import URLSessionInstrumentation
+import OpenTelemetrySdk
 
 class InstrumentationWrapper {
   #if os(iOS)
@@ -27,7 +28,7 @@ class InstrumentationWrapper {
   #if os(iOS) && !targetEnvironment(macCatalyst)
     var netstatInjector: NetworkStatusInjector?
   #endif
-
+  
   var urlSessionInstrumentation: URLSessionInstrumentation?
   let config: AgentConfigManager
 
@@ -57,6 +58,7 @@ class InstrumentationWrapper {
         }
       }
     #endif
+
     if config.instrumentation.enableURLSessionInstrumentation {
       initializeNetworkInstrumentation()
     }

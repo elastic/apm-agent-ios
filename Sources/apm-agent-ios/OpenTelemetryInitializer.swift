@@ -24,17 +24,24 @@ import OpenTelemetrySdk
 import PersistenceExporter
 import os
 
-
 class OpenTelemetryInitializer {
   static let logLabel = "Elastic-OTLP-Exporter"
 
   let group: EventLoopGroup
   let sessionSampler: SessionSampler
 
+  /// Set after a successful ``initialize(_:)`` or ``initializeWithHttp(_:)`` call.
+  private(set) var metricExporter: MetricExporter?
+  /// Set after a successful ``initialize(_:)`` or ``initializeWithHttp(_:)`` call.
+  private(set) var resource: Resource?
+  /// Periodic metric reader interval from ``AgentConfiguration`` (seconds).
+  private(set) var metricExportInterval: TimeInterval = 60.0
+
   static func createPersistenceFolder() -> URL? {
     do {
       let cachesDir = try FileManager.default.url(
-        for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+      )
       let persistentDir = cachesDir.appendingPathComponent("elastic")
       try FileManager.default.createDirectory(at: persistentDir, withIntermediateDirectories: true)
       return persistentDir
@@ -43,8 +50,6 @@ class OpenTelemetryInitializer {
     }
   }
 
-
-
   init(group: EventLoopGroup, sessionSampler: SessionSampler) {
     self.group = group
     self.sessionSampler = sessionSampler
@@ -52,16 +57,15 @@ class OpenTelemetryInitializer {
 
   // swiftlint:disable:next function_body_length
   func initialize(_ configuration: AgentConfigManager) -> LogRecordExporter {
-
     var traceSampleFilter: [SignalFilter<ReadableSpan>] = [
       SignalFilter<ReadableSpan>({ [self] _ in
-        self.sessionSampler.shouldSample
+        sessionSampler.shouldSample
       })
     ]
 
     var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
       SignalFilter<ReadableLogRecord>({ [self] _ in
-        self.sessionSampler.shouldSample
+        sessionSampler.shouldSample
       })
     ]
 
@@ -70,33 +74,40 @@ class OpenTelemetryInitializer {
 
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
-      headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
+      headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth)
+    )
     let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
 
     let resources = AgentResource.get().merging(other: AgentEnvResource.get())
-    let metricExporter = {
+    let rawMetricExporter: MetricExporter = {
       let defaultExporter = OtlpMetricExporter(
-        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
+        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)
+      )
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceMetricExporterDecorator(
             metricExporter: defaultExporter, storageURL: path, exportCondition: { true },
-            performancePreset: configuration.instrumentation.storageConfiguration) as MetricExporter
+            performancePreset: configuration.instrumentation.storageConfiguration
+          ) as MetricExporter
         }
       } catch {}
       return defaultExporter as MetricExporter
     }()
+    let metricExporter = SynchronizedMetricExporter(inner: rawMetricExporter)
 
     let traceExporter = {
       let defaultExporter = OtlpTraceExporter(
-        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
+        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)
+      )
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceSpanExporterDecorator(
             spanExporter: OtlpTraceExporter(
-              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)
+            ),
             storageURL: path, exportCondition: { true },
-            performancePreset: configuration.instrumentation.storageConfiguration) as SpanExporter
+            performancePreset: configuration.instrumentation.storageConfiguration
+          ) as SpanExporter
         }
       } catch {}
       return defaultExporter as SpanExporter
@@ -104,46 +115,44 @@ class OpenTelemetryInitializer {
     }()
     let logExporter = {
       let defaultExporter = OtlpLogExporter(
-        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
+        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)
+      )
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: OtlpLogExporter(
-              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
+              channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)
+            ),
             storageURL: path, exportCondition: { true },
-            performancePreset: configuration.instrumentation.storageConfiguration) as LogRecordExporter
+            performancePreset: configuration.instrumentation.storageConfiguration
+          ) as LogRecordExporter
         }
       } catch {}
       return defaultExporter as LogRecordExporter
     }()
 
-    // initialize meter provider
-    OpenTelemetry.registerMeterProvider(
-      meterProvider: MeterProviderSdk.builder()
-        .registerView(
-          selector: InstrumentSelector
-            .builder()
-            .setInstrument(name: ".*")
-            .build(),
-          view: View.builder().build()
-        )
-        .registerMetricReader(
-          reader: PeriodicMetricReaderBuilder(
-            exporter: metricExporter
-          ).build())
-        .build())
+    self.metricExporter = metricExporter
+    self.resource = resources
+    self.metricExportInterval = configuration.agent.metricExportInterval
+    registerElasticMeterProvider(
+      rawMetricExporter: metricExporter,
+      resource: resources,
+      metricExportInterval: configuration.agent.metricExportInterval
+    )
 
     // initialize trace provider
     OpenTelemetry.registerTracerProvider(
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, agentConfiguration: configuration.agent)
+            spanExporter: traceExporter, agentConfiguration: configuration.agent
+          )
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
         .with(clock: NTPClock())
-        .build())
+        .build()
+    )
 
     OpenTelemetry.registerLoggerProvider(
       loggerProvider: LoggerProviderBuilder()
@@ -152,29 +161,30 @@ class OpenTelemetryInitializer {
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: logExporter,
-            configuration: configuration.agent)
+            configuration: configuration.agent
+          )
         ])
-        .build())
+        .build()
+    )
 
     return logExporter
   }
 
-
   func initializeWithHttp(_ configuration: AgentConfigManager) -> LogRecordExporter {
-    guard let endpoint =  OpenTelemetryHelper.getURL(with: configuration.agent) else {
+    guard let endpoint = OpenTelemetryHelper.getURL(with: configuration.agent) else {
       os_log("Failed to start Elastic agent: invalid collector url.")
       return NoopLogRecordExporter.instance
     }
 
     var traceSampleFilter: [SignalFilter<any ReadableSpan>] = [
       SignalFilter<any ReadableSpan>({ [self] _ in
-        self.sessionSampler.shouldSample
+        sessionSampler.shouldSample
       })
     ]
 
     var logSampleFliter: [SignalFilter<ReadableLogRecord>] = [
       SignalFilter<ReadableLogRecord>({ [self] _ in
-        self.sessionSampler.shouldSample
+        sessionSampler.shouldSample
       })
     ]
 
@@ -183,31 +193,35 @@ class OpenTelemetryInitializer {
 
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
-      headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
+      headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth)
+    )
 
     let resources = AgentResource.get().merging(other: AgentEnvResource.get())
-    let metricExporter = {
+    let rawMetricExporter: MetricExporter = {
       let metricEndpoint = URL(string: endpoint.absoluteString + "/v1/metrics")
       let defaultExporter = OtlpHttpMetricExporter(endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceMetricExporterDecorator(
             metricExporter: defaultExporter, storageURL: path, exportCondition: { true },
-            performancePreset: configuration.instrumentation.storageConfiguration) as MetricExporter
+            performancePreset: configuration.instrumentation.storageConfiguration
+          ) as MetricExporter
         }
       } catch {}
       return defaultExporter as MetricExporter
     }()
+    let metricExporter = SynchronizedMetricExporter(inner: rawMetricExporter)
 
     let traceExporter = {
       let traceEndpoint = URL(string: endpoint.absoluteString + "/v1/traces")
-      let defaultExporter = OtlpHttpTraceExporter(endpoint: traceEndpoint ?? endpoint, config:otlpConfiguration)
+      let defaultExporter = OtlpHttpTraceExporter(endpoint: traceEndpoint ?? endpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder() {
           return try PersistenceSpanExporterDecorator(
             spanExporter: defaultExporter,
             storageURL: path, exportCondition: { true },
-            performancePreset: configuration.instrumentation.storageConfiguration) as SpanExporter
+            performancePreset: configuration.instrumentation.storageConfiguration
+          ) as SpanExporter
         }
       } catch {}
       return defaultExporter as SpanExporter
@@ -221,39 +235,36 @@ class OpenTelemetryInitializer {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: defaultExporter,
             storageURL: path, exportCondition: { true },
-            performancePreset: configuration.instrumentation.storageConfiguration)
-          as LogRecordExporter
+            performancePreset: configuration.instrumentation.storageConfiguration
+          )
+            as LogRecordExporter
         }
       } catch {}
       return defaultExporter as LogRecordExporter
     }()
 
-OpenTelemetry.registerMeterProvider(
-    meterProvider: MeterProviderSdk.builder()
-      .registerView(
-        selector: InstrumentSelector
-          .builder()
-          .setInstrument(name: ".*")
-          .build(),
-        view: View.builder().build()
-      )
-      .registerMetricReader(
-        reader: PeriodicMetricReaderBuilder(
-          exporter: metricExporter
-        ).build()
-      ).build())
+    self.metricExporter = metricExporter
+    self.resource = resources
+    self.metricExportInterval = configuration.agent.metricExportInterval
+    registerElasticMeterProvider(
+      rawMetricExporter: metricExporter,
+      resource: resources,
+      metricExportInterval: configuration.agent.metricExportInterval
+    )
 
     // initialize trace provider
     OpenTelemetry.registerTracerProvider(
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, agentConfiguration: configuration.agent)
+            spanExporter: traceExporter, agentConfiguration: configuration.agent
+          )
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
         .with(clock: NTPClock())
-        .build())
+        .build()
+    )
 
     OpenTelemetry.registerLoggerProvider(
       loggerProvider: LoggerProviderBuilder()
@@ -262,9 +273,33 @@ OpenTelemetry.registerMeterProvider(
         .with(processors: [
           ElasticLogRecordProcessor(
             logRecordExporter: logExporter,
-            configuration: configuration.agent)
+            configuration: configuration.agent
+          )
         ])
-        .build())
+        .build()
+    )
     return logExporter
+  }
+
+  /// Registers the global ``MeterProvider`` for periodic system metrics (MemorySampler, CPUSampler).
+  /// MetricKit ``AppMetrics`` uses a separate provider via ``ApplicationMetricsMeterProvider``.
+  func registerElasticMeterProvider(
+    rawMetricExporter: MetricExporter,
+    resource: Resource,
+    metricExportInterval: TimeInterval
+  ) {
+    let meterProvider = MeterProviderSdk.builder()
+      .setResource(resource: resource)
+      .registerView(
+        selector: InstrumentSelector.builder().setInstrument(name: ".*").build(),
+        view: View.builder().build()
+      )
+      .registerMetricReader(
+        reader: PeriodicMetricReaderBuilder(exporter: rawMetricExporter)
+          .setInterval(timeInterval: metricExportInterval)
+          .build()
+      )
+      .build()
+    OpenTelemetry.registerMeterProvider(meterProvider: meterProvider)
   }
 }

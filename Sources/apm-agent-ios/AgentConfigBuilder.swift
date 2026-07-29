@@ -29,6 +29,7 @@ public class AgentConfigBuilder {
   private static let api = "ApiKey"
   private var connectionType: AgentConnectionType = .grpc
   private var sampleRate = 1.0
+  private var metricExportInterval: TimeInterval = 60.0
 
   private var spanFilters = [SignalFilter<ReadableSpan>]()
   private var logFilters = [SignalFilter<ReadableLogRecord>]()
@@ -89,6 +90,11 @@ public class AgentConfigBuilder {
     return self
   }
 
+  public func withMetricExportInterval(_ interval: TimeInterval) -> Self {
+    metricExportInterval = interval
+    return self
+  }
+
   public func addSpanFilter(_ shouldInclude: @escaping (any ReadableSpan) -> Bool) -> Self {
     spanFilters.append(SignalFilter<ReadableSpan>(shouldInclude))
     return self
@@ -113,6 +119,7 @@ public class AgentConfigBuilder {
 
     var config = AgentConfiguration()
     config.sampleRate = sampleRate
+    config.metricExportInterval = metricExportInterval
     config.logFilters = logFilters
     config.spanFilters = spanFilters
     config.connectionType = connectionType
