@@ -30,6 +30,32 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-ios-agent-versionext-fixes]
 
+## 2.0.2 [elastic-apm-202-release-notes]
+
+**Release date:** July 28, 2026
+
+### Features and enhancements [elastic-apm-ios-agent-202-features-enhancements]
+
+* Require swift-nio-ssl 2.37.2 or later to ensure builds resolve an up-to-date version [#362](https://github.com/elastic/apm-agent-ios/pull/362)
+
+## 2.0.1 [elastic-apm-201-release-notes]
+
+**Release date:** May 20, 2026
+
+### Features and enhancements [elastic-apm-ios-agent-201-features-enhancements]
+
+* [Breaking] Disable MetricKit instrumentation and make `withAppMetricInstrumentation` a deprecated no-op because it is incompatible with OpenTelemetry-Swift 2.x metrics [#349](https://github.com/elastic/apm-agent-ios/pull/349)
+
+## 2.0.0 [elastic-apm-200-release-notes]
+
+**Release date:** February 24, 2026
+
+### Features and enhancements [elastic-apm-ios-agent-200-features-enhancements]
+
+* [Breaking] Update OpenTelemetry-Swift from 1.17.0 to 2.x and use the new `opentelemetry-swift-core` package for the API and SDK [#321](https://github.com/elastic/apm-agent-ios/pull/321)
+* [Breaking] Remove `AgentConfigBuilder.addMetricFilter` and custom metric signal filtering due to upstream metrics API changes [#321](https://github.com/elastic/apm-agent-ios/pull/321)
+* Deprecate MetricKit instrumentation because it is incompatible with OpenTelemetry-Swift 2.x metrics [#321](https://github.com/elastic/apm-agent-ios/pull/321)
+
 ## 1.4.0 [elastic-apm-140-release-notes]
 
 ### Features and enhancements [elastic-apm-ios-agent-140-features-enhancements]
@@ -42,13 +68,28 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 ## 1.3.0 [elastic-apm-130-release-notes]
 
+**Release date:** August 25, 2025
+
 ### Features and enhancements [elastic-apm-ios-agent-130-features-enhancements]
 
+* [Breaking] Raise the minimum requirements to Swift 5.10, iOS 16, macOS 13, tvOS 16, and watchOS 10 [#281](https://github.com/elastic/apm-agent-ios/pull/281)
 * Updated OpenTelemetry-Swift to version 1.17.0
 * Allow signal filters to be mutable [#266](https://github.com/elastic/apm-agent-ios/pull/266)
 * Added mutableLogRecord so attributes can be appended during filtering [#271](https://github.com/elastic/apm-agent-ios/pull/271)
 * Adds support for custom collector paths [#267](https://github.com/elastic/apm-agent-ios/pull/276)
 * Signal interceptors [#283](https://github.com/elastic/apm-agent-ios/pull/283)
+
+## 1.2.1 [elastic-apm-121-release-notes]
+
+**Release date:** February 21, 2025
+
+### Features and enhancements [elastic-apm-ios-agent-121-features-enhancements]
+
+* Updated OpenTelemetry-Swift to version 1.13.0
+
+### Fixes [elastic-apm-ios-agent-121-fixes]
+
+* Make crash reports respect the configured connection type [#249](https://github.com/elastic/apm-agent-ios/pull/249)
 
 ## 1.2.0 [elastic-apm-120-release-notes]
 

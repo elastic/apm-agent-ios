@@ -35,5 +35,6 @@ If your application uses technologies not covered by auto-instrumentation, you h
 
 | Framework | Version |
 | --- | --- |
-| OpenTelemetry-Swift | 1.17.0 |
+| OpenTelemetry-Swift | 2.2.1 or later |
+| OpenTelemetry-Swift Core | 2.3.0 or later |
 
