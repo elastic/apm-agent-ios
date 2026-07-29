@@ -32,7 +32,11 @@ ElasticApmAgent.start(with:config)
 
 You can configure the `AgentConfigBuilder` with the following functions.
 
-### `withServerUrl` [withServerUrl] **Deprecated**
+### `withServerUrl` [withServerUrl]
+```{applies_to}
+product:
+   edot_ios: deprecated v1.4.0
+```
 
 * **Type:** URL
 * **Default:** nil
