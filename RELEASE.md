@@ -12,9 +12,9 @@ create a GitHub release.
 - [ ] Choose the next semantic version.
 - [ ] Confirm the latest commit on `main` passes all required checks.
 - [ ] Update the package version in
-      `docs/reference/edot-ios/set-up-apm-ios-agent.md`.
+      `docs/reference/edot-ios/getting-started.md`.
 - [ ] Update the OpenTelemetry Swift version in
-      `docs/reference/edot-ios/supported-technologies.md`, if necessary.
+      `docs/reference/edot-ios/automatic-instrumentation.md`, if necessary.
 - [ ] Add the release to `docs/release-notes/index.md`.
 - [ ] Update `NOTICE.txt` if dependency licenses changed.
 - [ ] Confirm all package dependencies resolve to semantic versions. The

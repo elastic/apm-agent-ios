@@ -1,6 +1,6 @@
 ---
 navigation_title: Configuration
-description: Configure the Elastic Distribution of OpenTelemetry iOS (EDOT iOS) to send data to Elastic.
+description: Comprehensive list of configuration parameters for the Elastic Distribution of OpenTelemetry iOS (EDOT iOS).
 applies_to:
   stack:
   serverless:
@@ -17,289 +17,401 @@ mapped_pages:
 
 # Configure the EDOT iOS SDK [configuration]
 
-Configure the SDK with `AgentConfigBuilder` passing the `AgentConfiguration` to the `start` function.
+This page contains the configuration available for EDOT iOS, including values you set during initialization and values you can update remotely afterward.
+
+Just getting started? Complete [Agent setup](getting-started.md#initialize) first.
+
+## Initialization configuration [initialization-configuration]
+
+Create an `AgentConfiguration` with `AgentConfigBuilder` and pass it to `ElasticApmAgent.start`:
 
 ```swift
-let config = AgentConfigBuilder()
-                .withServerUrl(URL(string: "http://localhost:8200"))
-                .withSecretToken("<Token>")
-                .build()
+import ElasticApm
+import Foundation
 
-ElasticApmAgent.start(with:config)
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withApiKey("your-api-key")
+  .useConnectionType(.http)
+  .build()
+
+ElasticApmAgent.start(with: configuration)
 ```
 
-## Configuration options [configuration-options]
+### Export connectivity [export-connectivity]
 
-You can configure the `AgentConfigBuilder` with the following functions.
-
-### `withServerUrl` [withServerUrl] **Deprecated**
-
-* **Type:** URL
-* **Default:** nil
-
-The URL host endpoint that handles both OTLP data export as well as Elastic Central Configuration.
-This configuration option is deprecated. Use `withExportUrl` instead.
-
-### `withExportUrl` [withExportUrl]
-
-* **Type:** URL
-* **Default:** `http://127.0.0.1:8200`
-
-The host endpoint handling OTLP exports. This configuration overrides `withServerUrl` when set.
-
-### `withManagementUrl` [withManagementUrl]
-
-* **Type:** URL
-* **Default:** ${exportUrl}/config/v1/agents
-
-The URL endpoint that handles Elastic Central Config. Set the correct path, for example: `/config/v1/agents`. For backwards compatibility purposes, if this config is unset, the SDK uses the value set by `withExportUrl` as the host. 
-
-Use this config in conjunction with `withExportUrl`.
-
-:::{note}
-If `useOpAMP` is enabled, set the URL to your OpAMP endpoint, such as `http://localhost:4320/v1/opamp`. For example: 
+Configure where EDOT iOS exports telemetry and which OTLP transport it uses:
 
 ```swift
-let config = AgentConfigBuilder()
-                .withServerUrl(URL(string: "http://localhost:8200")!)
-                .withManagementUrl(URL(string:"http://localhost:4320/v1/opamp")!)
-                .useOpAMP()
-                .build()
-
-ElasticApmAgent.start(with:config)
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://collector.example.com:4318")!) // <1>
+  .useConnectionType(.http) // <2>
+  .build()
 ```
-:::
 
-### `withRemoteManagement` [withRemoteManagement]
+1. The base endpoint that receives OTLP data.
+2. The OTLP transport. Use `.http` for OTLP/HTTP or `.grpc` for OTLP/gRPC.
 
-* **Type:** Bool
-* **Default:** `true`
+#### `withExportUrl(_:)` [withExportUrl]
 
-Controls whether the SDK attempts to contact Elastic Central Config for runtime configuration updates.
+| Type | Required |
+| --- | --- |
+| `URL` | Yes |
 
-### `withSecretToken` [secretToken]
+Sets the OTLP endpoint provided by an Elastic Agent or EDOT Collector gateway.
 
-* **Type:** String
-* **Default:** nil
-* **Env:** `OTEL_EXPORTER_OTLP_HEADERS`
+When the connection type is `.http`, EDOT iOS appends `/v1/traces`, `/v1/metrics`, or `/v1/logs` to the configured path for each signal. When the connection type is `.grpc`, all signals use the configured gRPC endpoint.
 
-Sets the secret token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (for example: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=bearer <secret token>"`)
+#### `useConnectionType(_:)` [useConnectionType]
 
-This setting is mutually exclusive with `withApiKey`.
+| Type | Default |
+| --- | --- |
+| `AgentConnectionType` | `.grpc` |
 
-### `withApiKey` [withApiKey]
+Selects the OTLP transport:
 
-* **Type:** String
-* **Default:** nil
-* **Env:** `OTEL_EXPORTER_OTLP_HEADERS`
+- `.grpc` uses the OTLP/gRPC exporters.
+- `.http` uses the OTLP/HTTP exporters.
 
-Sets the API Token for connecting to an authenticated APM Server. If using the env-var, the whole header map must be defined per [OpenTelemetry Protocol Exporter Config](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md) (for example: `OTEL_EXPORTER_OTLP_HEADERS="Authorization=ApiKey <key>"`)
+Make sure the endpoint supports the selected transport. EDOT Collector commonly listens on port `4317` for gRPC and `4318` for HTTP.
 
-This setting is mutually exclusive with `withSecretToken`
+### Authentication [authentication]
 
-### `useConnectionType` [useConnectionType]
+EDOT iOS supports APM agent keys and secret tokens. Configure only one authentication method. If you call both methods, the last value set on the builder is used.
 
-* **Type:** `AgentConnectionType`
-* **Default:** `.grpc`
+#### `withApiKey(_:)` [withApiKey]
 
-Selects the transport used to export OTLP data to the collector. `.grpc` uses the gRPC OTLP exporter (default). `.http` uses the OTLP/HTTP exporters and will send traces, metrics, and logs to the HTTP endpoints (for example `/v1/traces`, `/v1/metrics`, `/v1/logs`). 
+| Type | Default |
+| --- | --- |
+| `String` | No authentication |
 
-### TLS connections [tls-connections]
-
-EDOT iOS supports TLS connections to OTLP endpoints and OpAMP (central configuration) endpoints when the server uses a TLS certificate signed by a trusted Certificate Authority (CA).
-
-:::{warning}
-Self-signed certificates are **not supported**. If your endpoint uses a self-signed certificate, EDOT iOS will not be able to establish a secure connection. Ensure your server uses a certificate issued by a publicly trusted CA or an internal CA that is trusted by the device.
-:::
-
-### `useOpAMP` [useOpAMP]
-
-* **Type:** Call to enable OpAMP
-* **Default:** `false`
-
-Enable OpAMP-based central management. When enabled, the agent will assume the url provided to `withManagementUrl` is an OpAMP endpoint. Use this when your central configuration is delivered via OpAMP. see [withManagementUrl](#withmanagementurl).
-.
-
-### `disableAgent() -> Self` [disableAgent]
-
-Turns off the Elastic SDK. This is useful for disabling the SDK during development without having to remove the Elastic SDK completely. A log reports `"Elastic APM Agent has been disabled."`
-
-### `addSpanFilter` [addSpanFilter]
-
-* **Type:** `@escaping (ReadableSpan) → Bool`
-* **Default:** nil
-
-Adds an anonymous function that will be executed on each span in the span processor to decide if that span should be sent to the back end.
-
-### `addMetricFilter` [addMetricFilter]
-
-* **Type:** `@escaping (Metric) → Bool`
-* **Default:** nil
-
-Adds an anonymous function that will be executed on each metric in the span processor to decide if that metric should be sent to the back end.
-
-### `addLogFilter` [addLogFilter]
-
-* **Type:** `@escaping (ReadableLogRecord) → Bool`
-* **Default:** nil
-
-Adds an anonymous function that will be executed on each log in the span processor to decide if that log should be sent to the back end.
-
-### `addSpanAttributeInterceptor` [addSpanAttributeInterceptor]
-
-* **Type:** `any Interceptor<[String:AttributeValue>]`
-* **Default:** nil
-
-You can provide interceptors for all spans attributes, which will be executed on every span created, where you can read/modify them if needed.
-
-### `addLogRecordAttributeInterceptor` [addLogRecordAttributeInterceptor]
-
-* **Type:** `any Interceptor<[String:AttributeValue>]`
-* **Default:** nil
-
-You can provide interceptors for all LogRecord attributes, which will be executed on every span created, where you can read or modify them if needed.
-
-## Instrumentation configuration [instrumentationConfiguration]
-
-The `ElasticApmAgent.start` provides an additional optional parameter for configuring instrumentation. In the following example, an instrumentation configuration is passed to `Agent.start` with default values. This is equivalent to calling `ElasticApmAgent.start` with no instrumentation configuration passed.
+Sets an APM agent key and sends it in the `Authorization` header using the `ApiKey` scheme:
 
 ```swift
-let config = ...
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withApiKey("your-api-key")
+  .build()
+```
 
-let instrumentationConfig = InstrumentationConfigBuilder().build()
+Create an [APM agent key for EDOT SDKs](docs-content://solutions/observability/apm/opentelemetry/create-apm-agent-key-for-edot-sdks.md) to use least-privilege credentials.
 
-ElasticApmAgent.start(with:config, instrumentationConfig)
+#### `withSecretToken(_:)` [secretToken]
+
+| Type | Default |
+| --- | --- |
+| `String` | No authentication |
+
+Sets an APM secret token and sends it in the `Authorization` header using the `Bearer` scheme:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withSecretToken("your-secret-token")
+  .build()
+```
+
+Refer to [APM secret tokens](docs-content://solutions/observability/apm/secret-token.md) for deployment requirements.
+
+### Remote management connectivity [remote-management-connectivity]
+
+EDOT iOS retrieves central configuration from an EDOT Collector through an OpAMP endpoint.
+
+#### `withManagementUrl(_:)` [withManagementUrl]
+
+| Type | Default |
+| --- | --- |
+| `URL` | Not set |
+
+Sets the OpAMP endpoint used for central configuration. Set it explicitly and enable OpAMP:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withManagementUrl(
+    URL(string: "https://your-edot-collector:4320/v1/opamp")!
+  )
+  .useOpAMP()
+  .build()
+```
+
+#### `useOpAMP()` [useOpAMP]
+
+| Type | Default |
+| --- | --- |
+| Method call | Disabled |
+
+Enables OpAMP-based central configuration. When enabled, EDOT iOS treats `withManagementUrl(_:)` as an OpAMP endpoint.
+
+Refer to [Central configuration](#central-configuration) for the complete setup.
+
+### Session behavior [session-behavior]
+
+EDOT iOS makes a span sampling decision when a new app session begins.
+
+#### `withSessionSampleRate(_:)` [withSessionSampleRate]
+
+| Type | Default | Range |
+| --- | --- | --- |
+| `Double` | `1.0` | `0.0` through `1.0` |
+
+Sets the probability that spans from a new session are sampled. A value of `1.0` samples every session; `0.0` samples none. Values outside this range are clamped to the closest valid value.
+
+```swift
+let configuration = AgentConfigBuilder()
+  .withSessionSampleRate(0.5)
+  .build()
+```
+
+The sampling decision is reused for the session so related spans are kept together. A session expires after 30 minutes of inactivity.
+
+### Filter signals [filter-signals]
+
+Filters run before spans or log records are exported. Return `true` to keep a signal or `false` to drop it.
+
+#### `addSpanFilter(_:)` [addSpanFilter]
+
+Adds a span filter:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .addSpanFilter { span in
+    span.name != "health-check"
+  }
+  .build()
+```
+
+You can add multiple filters. A span is dropped when any filter returns `false`.
+
+#### `addLogFilter(_:)` [addLogFilter]
+
+Adds a log record filter:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .addLogFilter { logRecord in
+    logRecord.severity != .trace
+  }
+  .build()
+```
+
+You can add multiple filters. A log record is dropped when any filter returns `false`.
+
+### Intercept attributes [intercept-attributes]
+
+Attribute interceptors run on every span or log record and can read, add, replace, or remove attributes.
+
+#### `addSpanAttributeInterceptor(_:)` [addSpanAttributeInterceptor]
+
+Adds an interceptor for span attributes:
+
+```swift
+import ElasticApm
+import OpenTelemetryApi
+
+let interceptor = ClosureInterceptor<[String: AttributeValue]> { attributes in
+  var updatedAttributes = attributes
+  updatedAttributes["app.release_channel"] = .string("beta")
+  return updatedAttributes
+}
+
+let configuration = AgentConfigBuilder()
+  .addSpanAttributeInterceptor(interceptor)
+  .build()
+```
+
+#### `addLogRecordAttributeInterceptor(_:)` [addLogRecordAttributeInterceptor]
+
+Adds an interceptor for log record attributes:
+
+```swift
+import ElasticApm
+import OpenTelemetryApi
+
+let interceptor = ClosureInterceptor<[String: AttributeValue]> { attributes in
+  var updatedAttributes = attributes
+  updatedAttributes["app.release_channel"] = .string("beta")
+  return updatedAttributes
+}
+
+let configuration = AgentConfigBuilder()
+  .addLogRecordAttributeInterceptor(interceptor)
+  .build()
+```
+
+You can add multiple interceptors. EDOT iOS runs them in the order they were added.
+
+### Disable the SDK [disable-sdk]
+
+#### `disableAgent()` [disableAgent]
+
+Builds a configuration that prevents EDOT iOS from starting:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .disableAgent()
+  .build()
+
+ElasticApmAgent.start(with: configuration)
+```
+
+Use this when you need to keep the dependency in your app but disable it for a build or environment.
+
+## Automatic instrumentation configuration [instrumentationConfiguration]
+
+Create an `InstrumentationConfiguration` with `InstrumentationConfigBuilder` and pass it as the second argument to `ElasticApmAgent.start`:
+
+```swift
+let agentConfiguration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .build()
+
+let instrumentationConfiguration = InstrumentationConfigBuilder()
+  .withCrashReporting(false)
+  .withSystemMetrics(false)
+  .build()
+
+ElasticApmAgent.start(
+  with: agentConfiguration,
+  instrumentationConfiguration
+)
 ```
 
 ### Instrumentation options [instrumentationConfigOptions]
 
-You can configure the `InstrumentationConfigBuilder` with the following functions.
+#### `withCrashReporting(_:)` [withCrashReporting]
 
+| Type | Default |
+| --- | --- |
+| `Bool` | `true` |
 
-#### `withCrashReporting(_ enable: Bool) -> Self` [withCrashReporting]
+Turns [crash reporting](automatic-instrumentation.md#crash-reporting) on or off.
 
-* **Type:** Bool
-* **Default:** `true`
+#### `withURLSessionInstrumentation(_:)` [withURLSessionInstrumentation]
 
-Use this option to turn on or turn off the crash reporting functionality of the agent.
+| Type | Default |
+| --- | --- |
+| `Bool` | `true` |
 
-#### `withURLSessionInstrumentation(_ enable: Bool) -> Self` [withURLSessionInstrumentation]
+Turns [URLSession instrumentation](automatic-instrumentation.md#urlsession-instrumentation) on or off.
 
-* **Type:** Bool
-* **Default:** `true`
+#### `withViewControllerInstrumentation(_:)` [withViewControllerInstrumentation]
 
-Use this option to turn on or turn off the network tracing instrumentation.
+| Type | Default |
+| --- | --- |
+| `Bool` | `true` |
 
-#### `withViewControllerInstrumentation(_ enable: Bool) -> Self` [withViewControllerInstrumentation]
+Turns [SwiftUI and UIViewController instrumentation](automatic-instrumentation.md#view-instrumentation) on or off.
 
-* **Type:** Bool
-* **Default:** `true`
+#### `withSystemMetrics(_:)` [withSystemMetrics]
 
-Use this option to turn on or turn off the view controller tracing instrumentation.
+| Type | Default |
+| --- | --- |
+| `Bool` | `true` |
 
-#### `withAppMetricInstrumentation(_ enable: Bool) -> Self` [withAppMetricInstrumentation]
+Turns [CPU and memory metrics](automatic-instrumentation.md#system-metrics) on or off.
 
-```{applies_to}
-product:
-  edot_ios: deprecated 2.0+
+#### `withLifecycleEvents(_:)` [withLifecycleEvents]
+
+| Type | Default |
+| --- | --- |
+| `Bool` | `true` |
+
+Turns [application lifecycle events](automatic-instrumentation.md#app-lifecycle-events) on or off.
+
+#### `withPersistentStorageConfiguration(_:)` [withPersistentStorageConfiguration]
+
+| Type | Default |
+| --- | --- |
+| `PersistencePerformancePreset` | `.default`, equivalent to `.lowRuntimeImpact` |
+
+Configures [persistent storage](https://github.com/open-telemetry/opentelemetry-swift/tree/main/Sources/Exporters/Persistence) for traces, metrics, and logs:
+
+```swift
+let instrumentationConfiguration = InstrumentationConfigBuilder()
+  .withPersistentStorageConfiguration(.instantDataDelivery)
+  .build()
 ```
 
-* **Type:** Bool
-* **Default:** `true`
+The available upstream presets are:
 
-Use this option to turn on or turn off [MetricKit](https://developer.apple.com/documentation/metrickit) instrumentation.
+- `.lowRuntimeImpact`, the default, which favors lower runtime overhead.
+- `.instantDataDelivery`, which checks for exportable data more often.
 
-#### `withSystemMetrics(_ enable: Bool) -> Self` [withSystemMetrics]
+## Resource attributes [resourceAttributeInjection]
 
-* **Type:** Bool
-* **Default:** `true`
+EDOT iOS detects app, device, operating system, process, and telemetry SDK resource attributes. It also reads custom resource attributes from `OTEL_RESOURCE_ATTRIBUTES`.
 
-Use this option to turn on or turn off systems metrics instrumentation (CPU & memory usage).
+You can provide this value through the process environment or your app's `Info.plist`:
 
-#### `withLifecycleEvents(_ enable: Bool) -> Self` [withLifecycleEvents]
+```xml
+<key>OTEL_RESOURCE_ATTRIBUTES</key>
+<string>deployment.environment.name=staging,service.name=my-ios-app</string>
+```
 
-* **Type:** Bool
-* **Default:** `true`
+The format is a comma-separated list of `key=value` pairs. Values from the process environment override matching values from `Info.plist`.
 
-Use this option to turn on or turn off lifecycle events.
+Resource attributes affect how {{kib}} identifies and groups telemetry. Take care when overriding attributes such as `service.name`, `service.version`, and `deployment.environment.name`.
 
-#### `withPersistentStorageConfiguration(_ config: PersistencePerformancePreset) -> Self` [withPersistentStorageConfiguration]
+### Deployment environment [deployment-environment]
 
-* **Type:** `PersistencePerformancePreset`
-* **Default:** `.lowRuntimeImpact`
+EDOT iOS sets `deployment.environment.name` to `default`. Override it with `OTEL_RESOURCE_ATTRIBUTES`:
 
-Use this option to configure the behavior of the [persistent stores](https://github.com/open-telemetry/opentelemetry-swift/tree/main/Sources/Exporters/Persistence) for traces, metrics, and logs.
+```text
+deployment.environment.name=staging
+```
 
-## Resource attribute injection [resourceAttributeInjection]
+## Dynamic configuration [dynamic-configuration]
 
-In v0.5.0, the SDK provides a means to set [resource attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable) using the `OTEL_RESOURCE_ATTRIBUTES` env-var. This env-var also works through the application plist. Any resource attribute  can be overridden using this method, so care should be taken, as some attributes are critical to the functioning of the kibana UI.
-
-### `deployment.environment` [deployment-environment]
-
-Deployment environment is set to `default`. This can be overridden using the `OTEL_RESOURCE_ATTRIBUTES` set in your deployment’s plist. Use the field key as `OTEL_RESOURCE_ATTRIBUTES` and the value as `deployment.environment=staging`
-
-## Dynamic configuration ![dynamic config](images/dynamic-config.svg "") [dynamic-configuration]
-
-Dynamic configurations are available through the {{kib}} UI and are read by the SDK remotely to apply configuration on all active agents deployed in the field. More info on dynamic configurations can be found in  [agent configurations](docs-content://solutions/observability/apps/apm-agent-central-configuration.md).
+Dynamic settings can change after EDOT iOS starts. The SDK retrieves them through [Central configuration](#central-configuration).
 
 ### Recording [recording]
 
-A boolean specifying if the SDK should be recording or not. When recording, the SDK instruments incoming HTTP requests, tracks errors and collects and sends metrics. When not recording, the SDK works as a noop, not collecting data and not communicating with the APM sever, except for polling the central configuration endpoint. As this is a reversible switch, SDK threads are not being killed when inactivated, but they will be mostly idle in this state, so the overhead should be negligible.
-
-You can set this setting to dynamically disable Elastic APM at runtime.
-
-![dynamic config](images/dynamic-config.svg "")
+Controls whether EDOT iOS processes and exports log records. Central configuration polling remains active when recording is disabled.
 
 | Default | Type | Dynamic |
 | --- | --- | --- |
-| `true` | Boolean | true |
-
+| `true` | Boolean | Yes |
 
 ### Session sample rate [session-sample-rate]
 
-A double specifying the likelihood all data generated during a session should be recorded on a specific device. Value may range between 0 and 1. 1 meaning 100% likely, and 0 meaning 0% likely. Every time a new session starts, this value will be checked against a random number between 0 and 1, and will sample all data recorded in that session of the random number is below the session sample rate set.
+Controls the probability that spans from a new session are sampled. The value can range from `0.0` to `1.0`.
 
-This session focused sampling technique is to preserve related data points, as opposed to sampling signal by signal, where valuable context can be lost.
-
-You can set this value dynamically at runtime.
-
-![dynamic config](images/dynamic-config.svg "")
+The setting is evaluated when a new session begins. This keeps related spans together instead of making a separate decision for every span.
 
 | Default | Type | Dynamic |
 | --- | --- | --- |
-| `1.0` | Double | true |
+| `1.0` | Double | Yes |
 
+## Central configuration [central-configuration]
 
-## Central configuration (EDOT)
+EDOT iOS receives central configuration from an EDOT Collector through OpAMP.
 
 ```{applies_to}
 product:
   edot_ios: preview 1.4.0
 ```
 
-You can remotely manage the EDOT iOS behavior through [Central configuration](opentelemetry://reference/central-configuration.md) and the EDOT Collector. 
-
-### Activate central configuration
-
-To activate central configuration, provide your OpAMP endpoint when initializing the agent using the AgentConfigBuider [`withManagementUrl`](#withmanagementurl) API and enabling OpAMP with the [`useOpAMP()`](#useopamp) API. For example:
+To use an EDOT Collector OpAMP endpoint:
 
 ```swift
-let config = AgentConfigBuilder()
-                .withServerUrl(URL(string: "http://localhost:8200")!) 
-                .withManagementUrl(URL(string:"http://localhost:4320/v1/opamp")!) <1>
-                .useOpAMP() <2>
-                .build()
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withManagementUrl(
+    URL(string: "https://your-edot-collector:4320/v1/opamp")!
+  )
+  .withApiKey("your-api-key")
+  .useOpAMP()
+  .build()
 
-ElasticApmAgent.start(with:config)
+ElasticApmAgent.start(with: configuration)
 ```
 
-1. The central configuration endpoint.
-2. This enables OpAMP.
+Refer to [Central configuration for EDOT SDKs](opentelemetry://reference/central-configuration.md) for EDOT Collector and {{kib}} setup.
 
-:::{note}
-If you don't use [`useOpAMP()`](#useopamp), the default Elastic central configuration through APM Server is used instead.
-:::
+### Available settings [central-configuration-settings]
 
-### Central configuration settings
-
-The same [Dynamic configuration](#dynamic-configuration) settings are available when using central configuration through the EDOT Collector.
+| Setting | Description | Type |
+| --- | --- | --- |
+| Recording | Whether EDOT iOS processes and exports log records. | Dynamic |
+| Session sample rate | The probability that spans from a new session are sampled. | Dynamic |
