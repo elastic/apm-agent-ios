@@ -89,7 +89,7 @@ ElasticApmAgent.start(with: configuration)
 ```
 
 1. Replace this value with your OTLP endpoint. For deployment options, refer to [OpenTelemetry ingest paths](docs-content://solutions/observability/apm/opentelemetry/index.md).
-2. Create an [APM agent key for EDOT SDKs](docs-content://solutions/observability/apm/opentelemetry/create-apm-agent-key-for-edot-sdks.md). You can use a [secret token](configuration.md#secrettoken) instead when your deployment requires one.
+2. Create an [APM agent key for EDOT SDKs](docs-content://solutions/observability/apm/opentelemetry/create-apm-agent-key-for-edot-sdks.md). You can use a [secret token](configuration.md#secretToken) instead when your deployment requires one.
 3. Use OTLP/HTTP for an HTTP endpoint, usually on port `4318`. Use `.grpc` for an OTLP/gRPC endpoint, usually on port `4317`.
 
 ### SwiftUI applications [swiftui-setup]
