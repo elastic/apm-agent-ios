@@ -189,16 +189,7 @@ After your app sends spans:
 3. Select your app from the [Services inventory](docs-content://solutions/observability/apm/services.md).
 4. Open its traces and select a span to inspect its duration, attributes, events, and related spans.
 
-% IMAGE PLACEHOLDER: Add a screenshot of the iOS sample app in the Kibana Services inventory.
-% Suggested path: images/telemetry-visualization/services-inventory.png
-
-% IMAGE PLACEHOLDER: Add a screenshot of an iOS trace waterfall with span details.
-% Suggested path: images/telemetry-visualization/trace-waterfall.png
-
 You can also use [Discover](docs-content://explore-analyze/discover.md) to search raw spans and log records, including mobile attributes such as `session.id`.
-
-% IMAGE PLACEHOLDER: Add a screenshot of an iOS span or log record in Discover.
-% Suggested path: images/telemetry-visualization/discover-signal-details.png
 
 ## What's next? [whats-next]
 

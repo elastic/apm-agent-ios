@@ -75,6 +75,19 @@ Selects the OTLP transport:
 
 Make sure the endpoint supports the selected transport. EDOT Collector commonly listens on port `4317` for gRPC and `4318` for HTTP.
 
+#### `withServerUrl(_:)` [withServerUrl]
+
+```{applies_to}
+product:
+  edot_ios: deprecated 2.0.0
+```
+
+| Type | Default |
+| --- | --- |
+| `URL` | Not set |
+
+Sets a single URL host endpoint that handles both OTLP data export and central configuration. This option is deprecated: use [`withExportUrl(_:)`](#withExportUrl) for OTLP data export and [`withManagementUrl(_:)`](#withManagementUrl) for central configuration instead.
+
 ### Authentication [authentication]
 
 EDOT iOS supports APM agent keys and secret tokens. Configure only one authentication method. If you call both methods, the last value set on the builder is used.
@@ -144,6 +157,14 @@ let configuration = AgentConfigBuilder()
 Enables OpAMP-based central configuration. When enabled, EDOT iOS treats `withManagementUrl(_:)` as an OpAMP endpoint.
 
 Refer to [Central configuration](#central-configuration) for the complete setup.
+
+#### `withRemoteManagement(_:)` [withRemoteManagement]
+
+| Type | Default |
+| --- | --- |
+| `Bool` | `true` |
+
+Controls whether EDOT iOS contacts central configuration for runtime configuration updates. Set it to `false` to disable remote management entirely.
 
 ### Session behavior [session-behavior]
 
@@ -303,6 +324,19 @@ Turns [URLSession instrumentation](automatic-instrumentation.md#urlsession-instr
 
 Turns [SwiftUI and UIViewController instrumentation](automatic-instrumentation.md#view-instrumentation) on or off.
 
+#### `withAppMetricInstrumentation(_:)` [withAppMetricInstrumentation]
+
+```{applies_to}
+product:
+  edot_ios: deprecated 2.0.1
+```
+
+| Type | Default |
+| --- | --- |
+| `Bool` | `true` |
+
+Previously turned [MetricKit](https://developer.apple.com/documentation/metrickit) instrumentation on or off. This option is deprecated and has no effect.
+
 #### `withSystemMetrics(_:)` [withSystemMetrics]
 
 | Type | Default |
@@ -385,12 +419,12 @@ The setting is evaluated when a new session begins. This keeps related spans tog
 
 ## Central configuration [central-configuration]
 
-EDOT iOS receives central configuration from an EDOT Collector through OpAMP.
-
 ```{applies_to}
 product:
   edot_ios: preview 1.4.0
 ```
+
+EDOT iOS receives central configuration from an EDOT Collector through OpAMP.
 
 To use an EDOT Collector OpAMP endpoint:
 
