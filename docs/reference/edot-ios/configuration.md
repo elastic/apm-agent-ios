@@ -155,7 +155,7 @@ EDOT iOS makes a span sampling decision when a new app session begins.
 | --- | --- | --- |
 | `Double` | `1.0` | `0.0` through `1.0` |
 
-Sets the probability that spans from a new session are sampled. A value of `1.0` samples every session; `0.0` samples none. Values outside this range are clamped to the closest valid value.
+Sets the probability that spans from a new session are sampled. A value of `1.0` samples every session, `0.0` samples none. Values outside this range are clamped to the closest valid value.
 
 ```swift
 let configuration = AgentConfigBuilder()

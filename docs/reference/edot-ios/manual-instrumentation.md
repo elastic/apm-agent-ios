@@ -17,12 +17,12 @@ products:
 
 Learn how to manually instrument your app using the OpenTelemetry-Swift APIs configured by EDOT iOS.
 
-Manual instrumentation allows you to capture app-specific operations that [automatic instrumentation](automatic-instrumentation.md) cannot infer, such as:
+Manual instrumentation allows you to capture app-specific operations that [automatic instrumentation](automatic-instrumentation.md) can't infer, such as:
 
-- A user completing a checkout flow.
-- A local database query.
-- The number of items added to a cart.
-- A log record that explains why an operation failed.
+- A user completing a checkout flow
+- A local database query
+- The number of items added to a cart
+- A log record that explains why an operation failed
 
 ## OpenTelemetry APIs [opentelemetry-apis]
 

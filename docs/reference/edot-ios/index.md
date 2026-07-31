@@ -53,7 +53,7 @@ For example, you can create a log record when a user taps a button and a span wh
 
 A session is created when no previous session exists or the previous session has expired. Sessions expire after 30 minutes of inactivity.
 
-## Alerts, dashboards, and more [alerts-and-dashboards]
+## Alerts and dashboards [alerts-and-dashboards]
 
 EDOT iOS provides [direct access](manual-instrumentation.md) to OpenTelemetry-Swift, so you can generate telemetry that represents your app's own features and workflows. You can then use your data to:
 
@@ -69,7 +69,7 @@ EDOT iOS provides additional features on top of the OpenTelemetry-Swift SDK.
 
 Your app's telemetry is stored locally before it is sent to Elastic. Data is removed after it is exported successfully or when space is needed for newer telemetry. This minimizes data loss when network connectivity is interrupted.
 
-You can tune this behavior with the [persistent storage configuration](configuration.md#withpersistentstorageconfiguration).
+You can tune this behavior with the [persistent storage configuration](configuration.md#withPersistentStorageConfiguration).
 
 ### Crash reporting [crash-reporting]
 

@@ -135,7 +135,7 @@ Crash reporting is enabled by default.
 
 #### Test crash reporting [test-crash-reporting]
 
-Crash capture is disabled while a debugger is attached. A crash triggered during a normal Xcode debug session is not recorded.
+Crash capture is turned off while a debugger is attached. A crash triggered during a normal Xcode debug session is not recorded.
 
 To test crash reporting:
 
@@ -158,8 +158,8 @@ EDOT iOS records app CPU and memory usage:
 
 | Metric | Description | Unit |
 | --- | --- | --- |
-| `system.cpu.usage` | CPU used by the app's active threads. | Percentage |
-| `system.memory.usage` | Physical memory footprint of the app process. | Bytes |
+| `system.cpu.usage` | CPU used by the app's active threads | Percentage |
+| `system.memory.usage` | Physical memory footprint of the app process | Bytes |
 
 Both metrics include the attribute `state=app`.
 

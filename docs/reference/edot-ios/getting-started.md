@@ -185,7 +185,7 @@ EDOT iOS can also generate telemetry on your behalf. For example, [URLSession in
 After your app sends spans:
 
 1. In {{kib}}, go to **Observability** → **Applications** → **Services**.
-2. Set the time range to include the telemetry you just generated.
+2. Set the time range to include the telemetry you generated.
 3. Select your app from the [Services inventory](docs-content://solutions/observability/apm/services.md).
 4. Open its traces and select a span to inspect its duration, attributes, events, and related spans.
 
@@ -203,6 +203,6 @@ You can also use [Discover](docs-content://explore-analyze/discover.md) to searc
 ## What's next? [whats-next]
 
 - This guide uses the minimum configuration needed to initialize EDOT iOS. Refer to [Configuration](configuration.md) to customize connectivity, authentication, sampling, storage, and instrumentation.
-- Use [Manual instrumentation](manual-instrumentation.md) to create spans, metrics, and logs for your app's business logic.
 - Review [Automatic instrumentation](automatic-instrumentation.md) to learn what EDOT iOS captures on your behalf.
+- Use [Manual instrumentation](manual-instrumentation.md) to create spans, metrics, and logs for your app's business logic.
 - If data does not appear in {{kib}}, refer to [Troubleshooting](docs-content://troubleshoot/ingest/opentelemetry/edot-sdks/ios/index.md).
