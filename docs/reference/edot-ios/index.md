@@ -61,7 +61,7 @@ EDOT iOS provides [direct access](manual-instrumentation.md) to OpenTelemetry-Sw
 - [Build dashboards](docs-content://explore-analyze/dashboards.md) that show the data most important to your app.
 - Use [Discover](docs-content://explore-analyze/discover.md) to search spans, logs, and their attributes.
 
-## Features
+## Features [features]
 
 EDOT iOS provides additional features on top of the OpenTelemetry-Swift SDK.
 
