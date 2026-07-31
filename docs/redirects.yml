@@ -10,3 +10,5 @@ redirects:
   'reference/edot-ios/configuration.md':
     anchors:
       'central-configuration-edot': 'central-configuration'
+      'secrettoken': 'secretToken'
+      'withapikey': 'withApiKey'
