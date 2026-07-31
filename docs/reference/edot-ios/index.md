@@ -79,6 +79,11 @@ Crash reporting is enabled by default. Refer to [Crash reporting](automatic-inst
 
 ### Central configuration [central-configuration-feature]
 
+```{applies_to}
+product:
+  edot_ios: preview 1.4.0
+```
+
 You can remotely manage supported EDOT iOS settings through {{kib}}. Refer to [Central configuration](configuration.md#central-configuration) for setup instructions and available settings.
 
 ### Time synchronization [time-synchronization]
