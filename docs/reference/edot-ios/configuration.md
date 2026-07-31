@@ -164,7 +164,7 @@ Refer to [Central configuration](#central-configuration) for the complete setup.
 | --- | --- |
 | `Bool` | `true` |
 
-Controls whether EDOT iOS contacts central configuration for runtime configuration updates. Set it to `false` to disable remote management entirely.
+Controls whether EDOT iOS contacts central configuration for runtime configuration updates. Set it to `false` to turn off remote management entirely.
 
 ### Session behavior [session-behavior]
 
