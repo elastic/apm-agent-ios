@@ -7,3 +7,6 @@ redirects:
   'reference/edot-ios/set-up-apm-ios-agent.md': 'reference/edot-ios/getting-started.md'
   'reference/edot-ios/supported-technologies.md': 'reference/edot-ios/automatic-instrumentation.md'
   'reference/edot-ios/instrumentation.md': 'reference/edot-ios/automatic-instrumentation.md'
+  'reference/edot-ios/configuration.md':
+    anchors:
+      'central-configuration-edot': 'central-configuration'
