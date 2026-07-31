@@ -231,7 +231,7 @@ func logRefreshFailure() {
 }
 ```
 
-## Understand automatic-instrumentation scope [manual-instrumentation-scope]
+## When to use manual instrumentation [manual-instrumentation-scope]
 
 Use manual instrumentation for custom or proprietary code, closed-source components without instrumentation support, and application-specific business logic.
 
