@@ -16,10 +16,24 @@ public class ElasticApmAgent {
     with configuration: AgentConfiguration,
     _ instrumentationConfiguration: InstrumentationConfiguration = InstrumentationConfiguration()
   ) {
+    var configuration = configuration
     if !configuration.enableAgent {
       os_log("Elastic APM Agent has been disabled.")
       return
     }
+    let endpointResolution = configuration.resolveExportEndpoint()
+    if let warning = endpointResolution.warning {
+      os_log("%{public}@", type: .default, warning)
+    }
+    guard let endpoint = endpointResolution.url else {
+      os_log(
+        "%{public}@",
+        type: .error,
+        endpointResolution.validationMessage ?? AgentConfiguration.exportEndpointValidationMessage
+      )
+      return
+    }
+    configuration.setResolvedExportUrl(endpoint)
     #if !os(watchOS)
     Kronos.Clock.sync()
     #endif
@@ -28,6 +42,11 @@ public class ElasticApmAgent {
       configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)
   }
 
+  @available(
+    *,
+    deprecated,
+    message: "Build a configuration with AgentConfigBuilder.withExportUrl(_:) and call ElasticApmAgent.start(with:)."
+  )
   public static func start() {
     ElasticApmAgent.start(with: AgentConfiguration())
   }

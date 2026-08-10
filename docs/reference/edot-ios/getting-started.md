@@ -82,15 +82,17 @@ import Foundation
 let configuration = AgentConfigBuilder()
   .withExportUrl(URL(string: "https://your-otlp-endpoint")!) // <1>
   .withApiKey("your-api-key") // <2>
-  .useConnectionType(.http) // <3>
   .build()
 
 ElasticApmAgent.start(with: configuration)
 ```
 
+OTLP/HTTP is the default transport. Use `.useConnectionType(.grpc)` only when
+your OTLP endpoint requires gRPC, usually on port `4317`. The URL scheme selects
+transport security: `https` enables TLS and `http` uses plaintext.
+
 1. Replace this value with your OTLP endpoint. For deployment options, refer to [OpenTelemetry ingest paths](docs-content://solutions/observability/apm/opentelemetry/index.md).
 2. Create an [APM agent key for EDOT SDKs](docs-content://solutions/observability/apm/opentelemetry/create-apm-agent-key-for-edot-sdks.md). You can use a [secret token](configuration.md#secretToken) instead when your deployment requires one.
-3. Use OTLP/HTTP for an HTTP endpoint, usually on port `4318`. Use `.grpc` for an OTLP/gRPC endpoint, usually on port `4317`.
 
 ### SwiftUI applications [swiftui-setup]
 
@@ -109,7 +111,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     let configuration = AgentConfigBuilder()
       .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
       .withApiKey("your-api-key")
-      .useConnectionType(.http)
       .build()
 
     ElasticApmAgent.start(with: configuration)
@@ -146,7 +147,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     let configuration = AgentConfigBuilder()
       .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
       .withApiKey("your-api-key")
-      .useConnectionType(.http)
       .build()
 
     ElasticApmAgent.start(with: configuration)

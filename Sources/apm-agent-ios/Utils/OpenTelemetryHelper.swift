@@ -19,6 +19,33 @@ import ResourceExtension
 import GRPC
 import NIO
 
+struct GrpcChannelTarget: Equatable {
+  let host: String
+  let port: Int
+  let useTLS: Bool
+
+  init(host: String, port: Int, useTLS: Bool) {
+    self.host = host
+    self.port = port
+    self.useTLS = useTLS
+  }
+
+  init?(endpoint: URL) {
+    guard
+      let host = endpoint.host,
+      let scheme = endpoint.scheme?.lowercased(),
+      scheme == "http" || scheme == "https",
+      endpoint.port.map({ (1 ... 65_535).contains($0) }) ?? true
+    else {
+      return nil
+    }
+
+    self.host = host
+    useTLS = scheme == "https"
+    port = endpoint.port ?? (useTLS ? 443 : 80)
+  }
+}
+
 public class OpenTelemetryHelper {
     struct Headers {
         static let userAgent = "User-Agent"
@@ -49,27 +76,41 @@ public class OpenTelemetryHelper {
     }
 
   public static func getURL(with config: AgentConfiguration) -> URL? {
-
-    var port = "\(config.collectorPort)"
-    if config.collectorPort == 80 || config.collectorPort == 443 {
-      port = ""
-    }
-
-    return URL(
-      string: "\(config.collectorTLS ? "https://" : "http://")\(config.collectorHost)\( port.isEmpty ? "" : ":\(port)")\(config.collectorPath)"
-    )
-
+    config.resolvedExportUrl ?? config.resolveExportEndpoint().url
   }
 
-    public static func getChannel(with config: AgentConfiguration, group: EventLoopGroup) -> ClientConnection {
-
-        if config.collectorTLS {
-             return ClientConnection.usingPlatformAppropriateTLS(for: group)
-                 .connect(host: config.collectorHost, port: config.collectorPort)
-         } else {
-              return ClientConnection.insecure(group: group)
-                 .connect(host: config.collectorHost, port: config.collectorPort)
-         }
-
+  static func channelTarget(with config: AgentConfiguration) -> GrpcChannelTarget? {
+    guard let endpoint = getURL(with: config) else {
+      return nil
     }
+    return GrpcChannelTarget(endpoint: endpoint)
+  }
+
+  static func makeChannel(
+    target: GrpcChannelTarget,
+    group: EventLoopGroup
+  ) -> ClientConnection {
+    if target.useTLS {
+      return ClientConnection.usingPlatformAppropriateTLS(for: group)
+        .connect(host: target.host, port: target.port)
+    }
+    return ClientConnection.insecure(group: group)
+      .connect(host: target.host, port: target.port)
+  }
+
+  @available(
+    *,
+    deprecated,
+    message: "Start telemetry with ElasticApmAgent.start(with:) instead."
+  )
+  public static func getChannel(
+    with config: AgentConfiguration,
+    group: EventLoopGroup
+  ) -> ClientConnection {
+    guard let target = channelTarget(with: config) else {
+      preconditionFailure(AgentConfiguration.exportEndpointValidationMessage)
+    }
+
+    return makeChannel(target: target, group: group)
+  }
 }

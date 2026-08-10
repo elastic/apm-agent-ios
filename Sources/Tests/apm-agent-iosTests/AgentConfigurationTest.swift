@@ -13,66 +13,187 @@
 //   limitations under the License.
 
 import Foundation
-
 import XCTest
 @testable import ElasticApm
 
+final class AgentConfigurationTest: XCTestCase {
+  func testBuildWithoutAnEndpointIsNonThrowingAndReportsTheStableDiagnostic() {
+    let configuration: AgentConfiguration = AgentConfigBuilder().build()
 
-class AgentConfigurationTest : XCTestCase {
-  func testBasicConfiguration() {
-    let agentConfiguration = AgentConfigBuilder()
-      .withServerUrl(URL(string: "https://localhost:443")!)
-      .build()
-    XCTAssertEqual(agentConfiguration.collectorHost, "localhost")
-    XCTAssertEqual(agentConfiguration.collectorPort, 443)
-    XCTAssertEqual(agentConfiguration.collectorTLS, true)
-    XCTAssertEqual(agentConfiguration.connectionType, .grpc)
+    let resolution = configuration.resolveExportEndpoint()
+    XCTAssertNil(resolution.url)
+    XCTAssertNil(resolution.warning)
+    XCTAssertEqual(
+      resolution.validationMessage,
+      AgentConfiguration.exportEndpointValidationMessage
+    )
   }
 
-  func testEDOTUrls() {
-    let agentConfiguration = AgentConfigBuilder()
-      .withExportUrl(URL(string:"https://localhost:443")!)
-      .withManagementUrl(URL(string:"https://management.com:8200/v1/management")!)
-      .build()
-    let managementUrlComponents = agentConfiguration.managementUrlComponents()
-    XCTAssertEqual(managementUrlComponents.host, "management.com")
-    XCTAssertEqual(managementUrlComponents.port, 8200)
-    XCTAssertEqual(managementUrlComponents.path, "/v1/management")
-    XCTAssertEqual(managementUrlComponents.scheme, "https")
-    XCTAssertEqual(agentConfiguration.collectorHost, "localhost")
-    XCTAssertEqual(agentConfiguration.collectorPort, 443)
-    XCTAssertEqual(agentConfiguration.collectorTLS, true)
-    XCTAssertEqual(agentConfiguration.connectionType, .grpc)
+  func testInvalidEndpointsReportTheStableDiagnostic() {
+    let invalidUrls = [
+      URL(string: "relative/path")!,
+      URL(string: "ftp://collector.example.com")!,
+      URL(string: "https:///v1/traces")!,
+      URL(string: "https://collector.example.com:0")!,
+      URL(string: "https://collector.example.com:65536")!
+    ]
+
+    for invalidUrl in invalidUrls {
+      let resolution = AgentConfigBuilder()
+        .withExportUrl(invalidUrl)
+        .build()
+        .resolveExportEndpoint()
+      XCTAssertNil(resolution.url, "\(invalidUrl) must be rejected")
+      XCTAssertEqual(
+        resolution.validationMessage,
+        AgentConfiguration.exportEndpointValidationMessage
+      )
+    }
   }
 
- func testEDOTUrlAndNoManagementUrl() {
-    let agentConfiguration = AgentConfigBuilder()
-      .withExportUrl(URL(string:"https://localhost:443")!)
+  func testValidURLsPreservePathAndPortAndDeriveTLSFromScheme() {
+    let http = URL(string: "http://collector.example.com:4318/otlp")!
+    let https = URL(string: "https://collector.example.com:8443/otlp")!
+
+    let httpConfiguration = AgentConfigBuilder().withExportUrl(http).build()
+    XCTAssertEqual(httpConfiguration.resolveExportEndpoint().url, http)
+    XCTAssertEqual(OpenTelemetryHelper.getURL(with: httpConfiguration), http)
+    XCTAssertFalse(httpConfiguration.collectorTLS)
+    XCTAssertEqual(httpConfiguration.collectorPort, 4318)
+    XCTAssertEqual(httpConfiguration.collectorPath, "/otlp")
+
+    let httpsConfiguration = AgentConfigBuilder().withExportUrl(https).build()
+    XCTAssertEqual(httpsConfiguration.resolveExportEndpoint().url, https)
+    XCTAssertEqual(OpenTelemetryHelper.getURL(with: httpsConfiguration), https)
+    XCTAssertTrue(httpsConfiguration.collectorTLS)
+    XCTAssertEqual(httpsConfiguration.collectorPort, 8443)
+    XCTAssertEqual(httpsConfiguration.collectorPath, "/otlp")
+  }
+
+  func testOmittedPortsAreDerivedFromTheURLScheme() {
+    let http = AgentConfigBuilder()
+      .withExportUrl(URL(string: "http://collector.example.com")!)
+      .build()
+    let https = AgentConfigBuilder()
+      .withExportUrl(URL(string: "https://collector.example.com")!)
       .build()
 
-   XCTAssertEqual(agentConfiguration.managementUrlComponents().url, URL(string:"https://localhost:443/config/v1/agents"))
-    XCTAssertEqual(agentConfiguration.collectorHost, "localhost")
-    XCTAssertEqual(agentConfiguration.collectorPort, 443)
-   XCTAssertEqual(agentConfiguration.collectorTLS, true)
- }
+    XCTAssertEqual(http.collectorPort, 80)
+    XCTAssertFalse(http.collectorTLS)
+    XCTAssertEqual(https.collectorPort, 443)
+    XCTAssertTrue(https.collectorTLS)
+  }
 
-  func testEDOTUrlsWithDeprecatedServerUrl() {
-    let agentConfiguration = AgentConfigBuilder()
-      .withServerUrl(URL(string:"http://127.0.0.1:8080")!)
-      .withExportUrl(URL(string:"https://localhost:443")!)
-      .withManagementUrl(URL(string:"https://management.com:8200/v1/management")!)
+  func testHTTPIsTheDefaultConnectionTypeAndGrpcRemainsAnOptIn() {
+    XCTAssertEqual(AgentConfigBuilder().build().connectionType, .http)
+    XCTAssertEqual(
+      AgentConfigBuilder().useConnectionType(.grpc).build().connectionType,
+      .grpc
+    )
+  }
+
+  func testDeprecatedServerURLRemainsCompatibleAndExportURLTakesPrecedence() {
+    let serverUrl = URL(string: "http://legacy.example.com:4317")!
+    let exportUrl = URL(string: "https://export.example.com:4318/v1")!
+
+    let serverOnly = AgentConfigBuilder().withServerUrl(serverUrl).build()
+    XCTAssertEqual(serverOnly.resolveExportEndpoint().url, serverUrl)
+
+    let configuration = AgentConfigBuilder()
+      .withServerUrl(serverUrl)
+      .withExportUrl(exportUrl)
       .build()
+    XCTAssertEqual(configuration.resolveExportEndpoint().url, exportUrl)
+    XCTAssertEqual(
+      configuration.managementUrlComponents().url,
+      URL(string: "https://export.example.com:4318/v1/config/v1/agents")
+    )
+  }
 
-    let managementUrlComponents = agentConfiguration.managementUrlComponents()
-    XCTAssertEqual(managementUrlComponents.host, "management.com")
-    XCTAssertEqual(managementUrlComponents.port, 8200)
-    XCTAssertEqual(managementUrlComponents.path, "/v1/management")
-    XCTAssertEqual(managementUrlComponents.scheme, "https")
-    XCTAssertEqual(agentConfiguration.collectorHost, "localhost")
-    XCTAssertEqual(agentConfiguration.collectorPort, 443)
-    XCTAssertEqual(agentConfiguration.collectorTLS, true)
-    XCTAssertEqual(agentConfiguration.connectionType, .grpc)
+  func testDeprecatedEndpointPropertiesRemainAssignableAndAdaptLiveValues() {
+    var configuration = AgentConfigBuilder().build()
+    configuration.collectorHost = "legacy.example.com"
+    configuration.collectorPath = "/ingest"
+    configuration.collectorPort = 4318
+    configuration.collectorTLS = true
+
+    let resolution = configuration.resolveExportEndpoint()
+    XCTAssertEqual(
+      resolution.url,
+      URL(string: "https://legacy.example.com:4318/ingest")
+    )
+    XCTAssertEqual(
+      resolution.warning,
+      AgentConfiguration.deprecatedEndpointMigrationWarning
+    )
+    XCTAssertNil(resolution.validationMessage)
+  }
+
+  func testPartialDeprecatedEndpointChangesUseTheCompatibilityDefaults() {
+    var configuration = AgentConfigBuilder().build()
+    configuration.collectorPath = "/ingest"
+
+    let resolution = configuration.resolveExportEndpoint()
+    XCTAssertEqual(
+      resolution.url,
+      URL(string: "http://127.0.0.1:8200/ingest")
+    )
+    XCTAssertEqual(
+      resolution.warning,
+      AgentConfiguration.deprecatedEndpointMigrationWarning
+    )
+  }
+
+  func testFullURLProjectionIsNotTreatedAsDeprecatedPropertyMutation() {
+    let exportUrl = URL(string: "https://collector.example.com:8443/otlp")!
+    let configuration = AgentConfigBuilder().withExportUrl(exportUrl).build()
+
+    let resolution = configuration.resolveExportEndpoint()
+    XCTAssertEqual(resolution.url, exportUrl)
+    XCTAssertNil(resolution.warning)
+  }
+
+  func testFullURLWinsAfterDeprecatedEndpointPropertyMutation() {
+    let exportUrl = URL(string: "https://collector.example.com:8443/otlp")!
+    var configuration = AgentConfigBuilder()
+      .withExportUrl(exportUrl)
+      .useConnectionType(.grpc)
+      .build()
+    configuration.collectorHost = "ignored.example.com"
+    configuration.collectorPath = "/ignored"
+    configuration.collectorPort = 4317
+    configuration.collectorTLS = false
+
+    let resolution = configuration.resolveExportEndpoint()
+    XCTAssertEqual(resolution.url, exportUrl)
+    XCTAssertEqual(configuration.connectionType, .grpc)
+    XCTAssertEqual(
+      resolution.warning,
+      AgentConfiguration.ignoredDeprecatedEndpointMutationWarning
+    )
+    XCTAssertEqual(OpenTelemetryHelper.getURL(with: configuration), exportUrl)
+    XCTAssertEqual(
+      configuration.managementUrlComponents().url,
+      URL(string: "https://collector.example.com:8443/otlp/config/v1/agents")
+    )
+  }
+
+  func testInvalidFullURLDoesNotFallBackToDeprecatedEndpointProperties() {
+    var configuration = AgentConfigBuilder()
+      .withExportUrl(URL(string: "ftp://collector.example.com")!)
+      .build()
+    configuration.collectorHost = "legacy.example.com"
+    configuration.collectorPort = 4318
+
+    let resolution = configuration.resolveExportEndpoint()
+    XCTAssertNil(resolution.url)
+    XCTAssertEqual(
+      resolution.warning,
+      AgentConfiguration.ignoredDeprecatedEndpointMutationWarning
+    )
+    XCTAssertEqual(
+      resolution.validationMessage,
+      AgentConfiguration.exportEndpointValidationMessage
+    )
   }
 }
-
-

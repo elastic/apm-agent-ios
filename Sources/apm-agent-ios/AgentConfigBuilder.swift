@@ -19,7 +19,7 @@ import PersistenceExporter
 
 public class AgentConfigBuilder {
   private var enableAgent: Bool?
-  private var url: URL?
+  private var serverUrl: URL?
   private var exportUrl: URL?
   private var managementUrl: URL?
   private var enableRemoteManagement: Bool = true
@@ -27,7 +27,7 @@ public class AgentConfigBuilder {
   private var enableOpAPM: Bool = false
   private static let bearer = "Bearer"
   private static let api = "ApiKey"
-  private var connectionType: AgentConnectionType = .grpc
+  private var connectionType: AgentConnectionType = .http
   private var sampleRate = 1.0
 
   private var spanFilters = [SignalFilter<ReadableSpan>]()
@@ -42,10 +42,14 @@ public class AgentConfigBuilder {
     return self
   }
 
-  @available(*, deprecated, renamed: "withExportUrl",
-             message: "Export and config management URLs will be seperated in future.")
+  @available(
+    *,
+    deprecated,
+    renamed: "withExportUrl",
+    message: "Use withExportUrl(_:) for OTLP export and withManagementUrl(_:) for management."
+  )
   public func withServerUrl(_ url: URL) -> Self {
-    self.url = url
+    self.serverUrl = url
     return self
   }
 
@@ -135,31 +139,18 @@ public class AgentConfigBuilder {
       }
     }
 
-    let url = self.exportUrl ?? self.url
-    if let url {
-      if let proto = url.scheme, proto == "https" {
-        config.collectorTLS = true
-      }
-      if let host = url.host {
-        config.collectorHost = host
-      }
-      if let port = url.port {
-        config.collectorPort = port
-      } else {
-        config.collectorPort = config.collectorTLS ? 443 : 80
-      }
-
-      config.collectorPath = url.path
-
-      if let auth = self.auth {
-        config.auth = auth
-      }
+    let endpointUrl = self.exportUrl ?? self.serverUrl
+    config.setFullExportUrl(endpointUrl)
+    if let endpointUrl {
+      config.projectFullExportUrl(endpointUrl)
     }
 
-    if let enableAgent = enableAgent {
+    if let auth = self.auth {
+      config.auth = auth
+    }
+    if let enableAgent = self.enableAgent {
       config.enableAgent = enableAgent
     }
-
     config.enableOpAMP = enableOpAPM
     return config
   }
