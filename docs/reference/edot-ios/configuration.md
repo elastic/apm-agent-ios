@@ -99,7 +99,7 @@ It remains temporarily source compatible; when both URL methods are called,
 
 `AgentConfiguration.collectorHost`, `collectorPath`, `collectorPort`, and
 `collectorTLS` are deprecated compatibility properties. Do not use them for new
-integrations; configure the full endpoint with
+integrations. Configure the full endpoint with
 [`withExportUrl(_:)`](#withExportUrl) and start with
 `ElasticApmAgent.start(with:)` instead.
 
