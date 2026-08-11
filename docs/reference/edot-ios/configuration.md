@@ -106,7 +106,7 @@ integrations; configure the full endpoint with
 Existing integrations can temporarily mutate one or more of these properties
 after `build()`. When no full export URL is supplied, EDOT iOS synthesizes an
 HTTP(S) endpoint from their live values and logs a migration warning. When a
-full export URL was supplied, it remains authoritative, the mutations are
+full export URL is supplied, it remains authoritative, the mutations are
 ignored, and EDOT iOS logs an ignored-mutation warning.
 
 ### Authentication [authentication]
