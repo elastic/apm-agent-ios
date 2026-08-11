@@ -1,5 +1,4 @@
-//
-//  Copyright © 2025  Elasticsearch BV
+// Copyright © 2025  Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -15,51 +14,63 @@
 
 import Foundation
 import XCTest
-import OpenTelemetrySdk
 @testable import ElasticApm
 
-class OpenTelemetryHelperTests : XCTestCase {
-  func testGetURL() {
-    let simpleHttp = URL(string:"http://localhost")!
-    XCTAssertEqual(
-      simpleHttp,
-      OpenTelemetryHelper.getURL(with: AgentConfigBuilder().withExportUrl(simpleHttp).build())
-    )
-    let portHttp = URL(string: "http://localhost:8200")!
-    XCTAssertEqual(
-      portHttp,
-      OpenTelemetryHelper.getURL(with: AgentConfigBuilder().withExportUrl(portHttp).build())
-    )
+final class OpenTelemetryHelperTests: XCTestCase {
+  func testUsesTheCanonicalFullURL() {
+    let endpoints = [
+      URL(string: "http://collector.example.com")!,
+      URL(string: "http://collector.example.com:4318/unique/path")!,
+      URL(string: "https://collector.example.com:8443/unique/path")!
+    ]
 
-    let pathHttp = URL(string: "http://localhost/unique/path")!
-    XCTAssertEqual(
-      pathHttp,
-      OpenTelemetryHelper.getURL(with: AgentConfigBuilder().withExportUrl(pathHttp).build())
-    )
+    for endpoint in endpoints {
+      let configuration = AgentConfigBuilder().withExportUrl(endpoint).build()
+      XCTAssertEqual(OpenTelemetryHelper.getURL(with: configuration), endpoint)
+    }
+  }
 
-    let portPathHttp = URL(string: "http://localhost:8200/unique/path")!
-    XCTAssertEqual(
-      portPathHttp,
-      OpenTelemetryHelper.getURL(with: AgentConfigBuilder().withExportUrl(portPathHttp).build())
-    )
+  func testDoesNotActivateUntouchedCompatibilityDefaults() {
+    XCTAssertNil(OpenTelemetryHelper.getURL(with: AgentConfigBuilder().build()))
+  }
 
-    let portPathHttps = URL(string: "https://localhost:8200/unique/path")!
-    XCTAssertEqual(
-      portPathHttps,
-      OpenTelemetryHelper.getURL(with: AgentConfigBuilder().withExportUrl(portPathHttps).build())
-    )
+  func testChannelTargetUsesTheCanonicalEndpoint() {
+    let endpoints = [
+      (
+        URL(string: "http://collector.example.com:4318")!,
+        GrpcChannelTarget(host: "collector.example.com", port: 4318, useTLS: false)
+      ),
+      (
+        URL(string: "https://collector.example.com:8443")!,
+        GrpcChannelTarget(host: "collector.example.com", port: 8443, useTLS: true)
+      ),
+      (
+        URL(string: "https://collector.example.com")!,
+        GrpcChannelTarget(host: "collector.example.com", port: 443, useTLS: true)
+      )
+    ]
 
-    let defaultPortHttps = URL(string: "https://localhost:443/unique/path")!
-    XCTAssertEqual(
-      URL(string: "https://localhost/unique/path")!,
-      OpenTelemetryHelper.getURL(with: AgentConfigBuilder().withExportUrl(defaultPortHttps).build())
-    )
+    for (endpoint, expectedTarget) in endpoints {
+      let configuration = AgentConfigBuilder()
+        .withExportUrl(endpoint)
+        .useConnectionType(.grpc)
+        .build()
+      XCTAssertEqual(OpenTelemetryHelper.channelTarget(with: configuration), expectedTarget)
+    }
+  }
 
-    let defaultExportUrl = URL(string: "http://127.0.0.1:8200")
-    XCTAssertEqual(
-      defaultExportUrl,
-      OpenTelemetryHelper.getURL(with: AgentConfigBuilder().build())
-    )
+  func testChannelTargetIgnoresDeprecatedMutationsAfterAFullURL() {
+    var configuration = AgentConfigBuilder()
+      .withExportUrl(URL(string: "https://canonical.example.com:8443")!)
+      .useConnectionType(.grpc)
+      .build()
+    configuration.collectorHost = "ignored.example.com"
+    configuration.collectorPort = 4317
+    configuration.collectorTLS = false
 
+    XCTAssertEqual(
+      OpenTelemetryHelper.channelTarget(with: configuration),
+      GrpcChannelTarget(host: "canonical.example.com", port: 8443, useTLS: true)
+    )
   }
 }

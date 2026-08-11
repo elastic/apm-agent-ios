@@ -71,7 +71,15 @@ class OpenTelemetryInitializer {
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
       headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
-    let channel = OpenTelemetryHelper.getChannel(with: configuration.agent, group: group)
+    guard let channelTarget = OpenTelemetryHelper.channelTarget(with: configuration.agent) else {
+      os_log(
+        "%{public}@",
+        type: .error,
+        AgentConfiguration.exportEndpointValidationMessage
+      )
+      return NoopLogRecordExporter.instance
+    }
+    let channel = OpenTelemetryHelper.makeChannel(target: channelTarget, group: group)
 
     let resources = AgentResource.get().merging(other: AgentEnvResource.get())
     let metricExporter = {

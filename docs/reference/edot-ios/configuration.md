@@ -32,7 +32,6 @@ import Foundation
 let configuration = AgentConfigBuilder()
   .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .withApiKey("your-api-key")
-  .useConnectionType(.http)
   .build()
 
 ElasticApmAgent.start(with: configuration)
@@ -45,12 +44,10 @@ Configure where EDOT iOS exports telemetry and which OTLP transport it uses:
 ```swift
 let configuration = AgentConfigBuilder()
   .withExportUrl(URL(string: "https://collector.example.com:4318")!) // <1>
-  .useConnectionType(.http) // <2>
   .build()
 ```
 
 1. The base endpoint that receives OTLP data.
-2. The OTLP transport. Use `.http` for OTLP/HTTP or `.grpc` for OTLP/gRPC.
 
 #### `withExportUrl(_:)` [withExportUrl]
 
@@ -58,7 +55,8 @@ let configuration = AgentConfigBuilder()
 | --- | --- |
 | `URL` | Yes |
 
-Sets the OTLP endpoint provided by an Elastic Agent or EDOT Collector gateway.
+Sets the required OTLP endpoint provided by an Elastic Agent or EDOT Collector gateway.
+An enabled agent does not start without a valid `http` or `https` URL with a host.
 
 When the connection type is `.http`, EDOT iOS appends `/v1/traces`, `/v1/metrics`, or `/v1/logs` to the configured path for each signal. When the connection type is `.grpc`, all signals use the configured gRPC endpoint.
 
@@ -66,14 +64,18 @@ When the connection type is `.http`, EDOT iOS appends `/v1/traces`, `/v1/metrics
 
 | Type | Default |
 | --- | --- |
-| `AgentConnectionType` | `.grpc` |
+| `AgentConnectionType` | `.http` |
 
 Selects the OTLP transport:
 
 - `.grpc` uses the OTLP/gRPC exporters.
 - `.http` uses the OTLP/HTTP exporters.
 
-Make sure the endpoint supports the selected transport. EDOT Collector commonly listens on port `4317` for gRPC and `4318` for HTTP.
+OTLP/HTTP is the default. Use `.useConnectionType(.grpc)` only when the OTLP
+endpoint requires gRPC. The export URL controls security: `https` enables TLS
+and `http` uses plaintext. Make sure the endpoint supports the selected
+transport. EDOT Collector commonly listens on port `4317` for gRPC and `4318`
+for HTTP.
 
 #### `withServerUrl(_:)` [withServerUrl]
 
@@ -86,7 +88,26 @@ product:
 | --- | --- |
 | `URL` | Not set |
 
-Sets a single URL host endpoint that handles both OTLP data export and central configuration. This option is deprecated: use [`withExportUrl(_:)`](#withExportUrl) for OTLP data export and [`withManagementUrl(_:)`](#withManagementUrl) for central configuration instead.
+Sets a single URL host endpoint that handles both OTLP data export and central configuration.
+This option is deprecated: do not use it for new integrations. Use
+[`withExportUrl(_:)`](#withExportUrl) for OTLP data export and
+[`withManagementUrl(_:)`](#withManagementUrl) for central configuration instead.
+It remains temporarily source compatible; when both URL methods are called,
+`withExportUrl(_:)` takes precedence.
+
+#### Deprecated split endpoint properties [deprecated-split-endpoint-properties]
+
+`AgentConfiguration.collectorHost`, `collectorPath`, `collectorPort`, and
+`collectorTLS` are deprecated compatibility properties. Do not use them for new
+integrations. Configure the full endpoint with
+[`withExportUrl(_:)`](#withExportUrl) and start with
+`ElasticApmAgent.start(with:)` instead.
+
+Existing integrations can temporarily mutate one or more of these properties
+after `build()`. When no full export URL is supplied, EDOT iOS synthesizes an
+HTTP(S) endpoint from their live values and logs a migration warning. When a
+full export URL is supplied, it remains authoritative, the mutations are
+ignored, and EDOT iOS logs an ignored-mutation warning.
 
 ### Authentication [authentication]
 
@@ -180,6 +201,7 @@ Sets the probability that spans from a new session are sampled. A value of `1.0`
 
 ```swift
 let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .withSessionSampleRate(0.5)
   .build()
 ```
@@ -196,6 +218,7 @@ Adds a span filter:
 
 ```swift
 let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .addSpanFilter { span in
     span.name != "health-check"
   }
@@ -210,6 +233,7 @@ Adds a log record filter:
 
 ```swift
 let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .addLogFilter { logRecord in
     logRecord.severity != .trace
   }
@@ -237,6 +261,7 @@ let interceptor = ClosureInterceptor<[String: AttributeValue]> { attributes in
 }
 
 let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .addSpanAttributeInterceptor(interceptor)
   .build()
 ```
@@ -256,6 +281,7 @@ let interceptor = ClosureInterceptor<[String: AttributeValue]> { attributes in
 }
 
 let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .addLogRecordAttributeInterceptor(interceptor)
   .build()
 ```
@@ -276,7 +302,9 @@ let configuration = AgentConfigBuilder()
 ElasticApmAgent.start(with: configuration)
 ```
 
-Use this when you need to keep the dependency in your app but disable it for a build or environment.
+Use this when you need to keep the dependency in your app but disable it for a
+build or environment. Intentionally disabled configurations do not require an
+export URL because they do not initialize telemetry.
 
 ## Automatic instrumentation configuration [instrumentationConfiguration]
 
