@@ -110,6 +110,17 @@ final class AgentConfigurationTest: XCTestCase {
     )
   }
 
+  func testManagementURLDoesNotDuplicateTrailingPathSeparator() {
+    let configuration = AgentConfigBuilder()
+      .withExportUrl(URL(string: "https://export.example.com:4318/otlp/")!)
+      .build()
+
+    XCTAssertEqual(
+      configuration.managementUrlComponents().url,
+      URL(string: "https://export.example.com:4318/otlp/config/v1/agents")
+    )
+  }
+
   func testDeprecatedEndpointPropertiesRemainAssignableAndAdaptLiveValues() {
     var configuration = AgentConfigBuilder().build()
     configuration.collectorHost = "legacy.example.com"

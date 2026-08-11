@@ -166,7 +166,7 @@ public struct AgentConfiguration {
     components.path =
       (path.isEmpty || path == "/")
       ? "/config/v1/agents"
-      : "\(path)/config/v1/agents"
+      : "\(path.hasSuffix("/") ? String(path.dropLast()) : path)/config/v1/agents"
     return components
   }
 
