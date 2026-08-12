@@ -363,7 +363,7 @@ product:
 | --- | --- |
 | `Bool` | `true` |
 
-Previously turned [MetricKit](https://developer.apple.com/documentation/metrickit) instrumentation on or off. This option is deprecated and has no effect.
+Previously turned [MetricKit](https://developer.apple.com/documentation/metrickit) instrumentation on or off. This option is deprecated and has no effect because MetricKit instrumentation is incompatible with OpenTelemetry-Swift 2.x metrics.
 
 #### `withSystemMetrics(_:)` [withSystemMetrics]
 
