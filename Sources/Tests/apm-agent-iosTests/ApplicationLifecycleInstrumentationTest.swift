@@ -15,6 +15,7 @@
 import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import ElasticApmTestSupport
 @testable import ElasticApm
 import XCTest
 

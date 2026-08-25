@@ -74,9 +74,19 @@ let package = Package(
         .process("Resources/PrivacyInfo.xcprivacy")
       ]
     ),
+    .target(
+      name: "ElasticApmTestSupport",
+      dependencies: [
+        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core")
+      ],
+      path: "Sources/Tests/ElasticApmTestSupport"),
     .testTarget(
       name: "ElasticApmTests",
-      dependencies: ["ElasticApm"],
+      dependencies: [
+        "ElasticApm",
+        "ElasticApmTestSupport",
+        .product(name: "ResourceExtension", package: "opentelemetry-swift")
+      ],
       path: "Sources/Tests/apm-agent-iosTests"),
     .testTarget(
       name: "MemorySamplerTests",

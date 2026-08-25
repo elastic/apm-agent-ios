@@ -34,7 +34,7 @@ public class AgentResource {
 
     let osDataSource = OperatingSystemDataSource()
     overridingAttributes[SemanticConventions.Telemetry.sdkVersion.rawValue] =
-      AttributeValue.string("semver:\(ElasticApmAgent.elasticSwiftAgentVersion)")
+      AttributeValue.string(ElasticApmAgent.elasticSwiftAgentVersion)
     overridingAttributes[SemanticConventions.Process.runtimeName.rawValue] = AttributeValue
       .string(osDataSource.name)
     overridingAttributes[SemanticConventions.Process.runtimeVersion.rawValue] =

@@ -27,5 +27,5 @@ public enum ElasticAttributes: String {
 
   case sessionId = "session.id"
 
-  case serviceBuild = "service.build"
+  case serviceBuild = "app.build_id"
 }
