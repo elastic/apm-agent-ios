@@ -28,22 +28,89 @@ import os
 class OpenTelemetryInitializer {
   static let logLabel = "Elastic-OTLP-Exporter"
 
+  enum PersistenceSignal: String, CaseIterable {
+    case logs
+    case traces
+    case metrics
+  }
+
   let group: EventLoopGroup
   let sessionSampler: SessionSampler
 
-  static func createPersistenceFolder() -> URL? {
+  static func createPersistenceFolder(
+    for signal: PersistenceSignal,
+    fileManager: FileManager = .default,
+    baseDirectory: URL? = nil
+  ) -> URL? {
     do {
-      let cachesDir = try FileManager.default.url(
-        for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-      let persistentDir = cachesDir.appendingPathComponent("elastic")
-      try FileManager.default.createDirectory(at: persistentDir, withIntermediateDirectories: true)
-      return persistentDir
+      let persistentDirectory: URL
+      if let baseDirectory {
+        persistentDirectory = baseDirectory
+      } else {
+        let cachesDirectory = try fileManager.url(
+          for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        persistentDirectory = cachesDirectory.appendingPathComponent("elastic")
+      }
+
+      try fileManager.createDirectory(
+        at: persistentDirectory, withIntermediateDirectories: true)
+      // Direct files were written by the shared persistence layout from #371.
+      removeLegacyPersistenceFiles(
+        from: persistentDirectory, fileManager: fileManager)
+
+      let signalDirectory = persistentDirectory.appendingPathComponent(
+        signal.rawValue, isDirectory: true)
+      try fileManager.createDirectory(
+        at: signalDirectory, withIntermediateDirectories: true)
+      return signalDirectory
     } catch {
+      os_log(
+        "Unable to create the %{public}@ persistence directory: %{public}@",
+        type: .error,
+        signal.rawValue,
+        error.localizedDescription
+      )
       return nil
     }
   }
 
+  private static func removeLegacyPersistenceFiles(
+    from directory: URL,
+    fileManager: FileManager
+  ) {
+    let contents: [URL]
+    do {
+      contents = try fileManager.contentsOfDirectory(
+        at: directory,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+      )
+    } catch {
+      os_log(
+        "Unable to inspect the legacy persistence directory: %{public}@",
+        type: .error,
+        error.localizedDescription
+      )
+      return
+    }
 
+    for item in contents {
+      do {
+        let values = try item.resourceValues(forKeys: [.isRegularFileKey])
+        guard values.isRegularFile == true else {
+          continue
+        }
+        try fileManager.removeItem(at: item)
+      } catch {
+        os_log(
+          "Unable to remove legacy persistence file %{public}@: %{public}@",
+          type: .error,
+          item.lastPathComponent,
+          error.localizedDescription
+        )
+      }
+    }
+  }
 
   init(group: EventLoopGroup, sessionSampler: SessionSampler) {
     self.group = group
@@ -86,7 +153,7 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpMetricExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = Self.createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder(for: .metrics) {
           return try PersistenceMetricExporterDecorator(
             metricExporter: defaultExporter, storageURL: path, exportCondition: { true },
             performancePreset: configuration.instrumentation.storageConfiguration) as MetricExporter
@@ -99,7 +166,7 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpTraceExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = Self.createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder(for: .traces) {
           return try PersistenceSpanExporterDecorator(
             spanExporter: OtlpTraceExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
@@ -114,7 +181,7 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpLogExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = Self.createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder(for: .logs) {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: OtlpLogExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
@@ -198,7 +265,7 @@ class OpenTelemetryInitializer {
       let metricEndpoint = URL(string: endpoint.absoluteString + "/v1/metrics")
       let defaultExporter = OtlpHttpMetricExporter(endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
       do {
-        if let path = Self.createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder(for: .metrics) {
           return try PersistenceMetricExporterDecorator(
             metricExporter: defaultExporter, storageURL: path, exportCondition: { true },
             performancePreset: configuration.instrumentation.storageConfiguration) as MetricExporter
@@ -211,7 +278,7 @@ class OpenTelemetryInitializer {
       let traceEndpoint = URL(string: endpoint.absoluteString + "/v1/traces")
       let defaultExporter = OtlpHttpTraceExporter(endpoint: traceEndpoint ?? endpoint, config:otlpConfiguration)
       do {
-        if let path = Self.createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder(for: .traces) {
           return try PersistenceSpanExporterDecorator(
             spanExporter: defaultExporter,
             storageURL: path, exportCondition: { true },
@@ -225,7 +292,7 @@ class OpenTelemetryInitializer {
       let logsEndpoint = URL(string: endpoint.absoluteString + "/v1/logs")
       let defaultExporter = OtlpHttpLogExporter(endpoint: logsEndpoint ?? endpoint, config: otlpConfiguration)
       do {
-        if let path = Self.createPersistenceFolder() {
+        if let path = Self.createPersistenceFolder(for: .logs) {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: defaultExporter,
             storageURL: path, exportCondition: { true },
