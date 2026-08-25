@@ -26,6 +26,10 @@ import OpenTelemetrySdk
 
 public class AgentResource {
   public static func get() -> Resource {
+    get(useLegacyAttributeNames: false)
+  }
+
+  static func get(useLegacyAttributeNames: Bool) -> Resource {
     let defaultResource = DefaultResources().get()
     var overridingAttributes = [
       SemanticConventions.Telemetry.sdkName.rawValue: AttributeValue
@@ -34,7 +38,12 @@ public class AgentResource {
 
     let osDataSource = OperatingSystemDataSource()
     overridingAttributes[SemanticConventions.Telemetry.sdkVersion.rawValue] =
-      AttributeValue.string(ElasticApmAgent.elasticSwiftAgentVersion)
+      AttributeValue.string(
+        useLegacyAttributeNames
+          ? LegacyAttributeNames.telemetrySDKVersionPrefix
+            + ElasticApmAgent.elasticSwiftAgentVersion
+          : ElasticApmAgent.elasticSwiftAgentVersion
+      )
     overridingAttributes[SemanticConventions.Process.runtimeName.rawValue] = AttributeValue
       .string(osDataSource.name)
     overridingAttributes[SemanticConventions.Process.runtimeVersion.rawValue] =
@@ -49,7 +58,11 @@ public class AgentResource {
       if let version = appDataSource.version {
         overridingAttributes[SemanticConventions.Service.version.rawValue] = AttributeValue
           .string(version)
-        overridingAttributes[ElasticAttributes.serviceBuild.rawValue] = AttributeValue.string(build)
+        overridingAttributes[
+          useLegacyAttributeNames
+            ? LegacyAttributeNames.serviceBuild
+            : SemanticConventions.App.buildId.rawValue
+        ] = AttributeValue.string(build)
       } else {
         overridingAttributes[SemanticConventions.Service.version.rawValue] = AttributeValue
           .string(build)

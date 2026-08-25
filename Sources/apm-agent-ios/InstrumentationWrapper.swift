@@ -29,6 +29,8 @@ class InstrumentationWrapper {
   #endif
 
   var urlSessionInstrumentation: URLSessionInstrumentation?
+  var memorySampler: MemorySampler?
+  var cpuSampler: CPUSampler?
   let config: AgentConfigManager
 
   init(config: AgentConfigManager) {
@@ -36,7 +38,8 @@ class InstrumentationWrapper {
 
     #if os(iOS)
       if config.instrumentation.enableLifecycleEvents {
-        applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
+        applicationLifecycleInstrumentation = ApplicationLifecycleInstrumentation(
+          useLegacyAttributeNames: config.agent.useLegacyAttributeNames)
       }
       do {
         if self.config.instrumentation.enableViewControllerInstrumentation {
@@ -52,8 +55,10 @@ class InstrumentationWrapper {
     #if os(iOS)
       if #available(iOS 13.0, *) {
         if config.instrumentation.enableSystemMetrics {
-          _ = MemorySampler()
-          _ = CPUSampler()
+          memorySampler = MemorySampler(
+            useLegacyAttributeNames: config.agent.useLegacyAttributeNames)
+          cpuSampler = CPUSampler(
+            useLegacyAttributeNames: config.agent.useLegacyAttributeNames)
         }
       }
     #endif
@@ -75,7 +80,14 @@ class InstrumentationWrapper {
       }
     #endif
 
-    let config = URLSessionInstrumentationConfiguration(
+    let configuration = makeURLSessionInstrumentationConfiguration()
+
+    urlSessionInstrumentation = URLSessionInstrumentation(configuration: configuration)
+  }
+
+  func makeURLSessionInstrumentationConfiguration()
+    -> URLSessionInstrumentationConfiguration {
+    URLSessionInstrumentationConfiguration(
       shouldRecordPayload: nil,
       shouldInstrument: nil,
 
@@ -143,9 +155,8 @@ class InstrumentationWrapper {
             ]
           )
         // swiftlint:enable line_length
-      }
+      },
+      semanticConvention: config.agent.useLegacyAttributeNames ? .old : .stable
     )
-
-    urlSessionInstrumentation = URLSessionInstrumentation(configuration: config)
   }
 }

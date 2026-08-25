@@ -92,6 +92,23 @@ final class AgentConfigurationTest: XCTestCase {
     )
   }
 
+  func testLegacyAttributeNamesAreDisabledByDefaultAndCanBeSelectedExplicitly() {
+    XCTAssertFalse(AgentConfigBuilder().build().useLegacyAttributeNames)
+    XCTAssertTrue(
+      AgentConfigBuilder()
+        .useLegacyAttributeNames(true)
+        .build()
+        .useLegacyAttributeNames
+    )
+    XCTAssertFalse(
+      AgentConfigBuilder()
+        .useLegacyAttributeNames(true)
+        .useLegacyAttributeNames(false)
+        .build()
+        .useLegacyAttributeNames
+    )
+  }
+
   func testDeprecatedServerURLRemainsCompatibleAndExportURLTakesPrecedence() {
     let serverUrl = URL(string: "http://legacy.example.com:4317")!
     let exportUrl = URL(string: "https://export.example.com:4318/v1")!

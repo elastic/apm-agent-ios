@@ -24,8 +24,8 @@ import XCTest
 
 final class ResourceAttributeSmokeTests: XCTestCase {
   func testCompleteResourceOnSpansLogsAndMetrics() throws {
-    try withSmokeTelemetry { harness in
-      let expected = try expectedResourceAttributes()
+    try withSmokeTelemetry(useLegacyAttributeNames: false) { harness in
+      let expected = try expectedResourceAttributes(useLegacyAttributeNames: false)
       harness.emitSpanAndLog()
       let metric = try harness.emitMetric()
       let span = try harness.waitForSpan()
@@ -34,13 +34,46 @@ final class ResourceAttributeSmokeTests: XCTestCase {
       XCTAssertEqual(span.resource.attributes, expected)
       XCTAssertEqual(log.resource.attributes, expected)
       XCTAssertEqual(metric.resource.attributes, expected)
+      XCTAssertNil(span.resource.attributes["service.build"])
+      XCTAssertNotEqual(
+        span.resource.attributes["telemetry.sdk.version"],
+        .string("semver:\(ElasticApmAgent.elasticSwiftAgentVersion)")
+      )
+    }
+  }
+
+  func testCompleteLegacyResourceOnSpansLogsAndMetrics() throws {
+    try withSmokeTelemetry(useLegacyAttributeNames: true) { harness in
+      let expected = try expectedResourceAttributes(useLegacyAttributeNames: true)
+      harness.emitSpanAndLog()
+      let metric = try harness.emitMetric()
+      let span = try harness.waitForSpan()
+      let log = try harness.waitForLog()
+
+      XCTAssertEqual(span.resource.attributes, expected)
+      XCTAssertEqual(log.resource.attributes, expected)
+      XCTAssertEqual(metric.resource.attributes, expected)
+      XCTAssertEqual(
+        span.resource.attributes["telemetry.sdk.version"],
+        .string("semver:\(ElasticApmAgent.elasticSwiftAgentVersion)")
+      )
+      XCTAssertNotEqual(
+        span.resource.attributes["telemetry.sdk.version"],
+        .string(ElasticApmAgent.elasticSwiftAgentVersion)
+      )
+
+      let application = ApplicationDataSource()
+      if application.build != nil, application.version != nil {
+        XCTAssertNotNil(span.resource.attributes["service.build"])
+        XCTAssertNil(span.resource.attributes["app.build_id"])
+      }
     }
   }
 }
 
 final class GlobalSignalAttributeSmokeTests: XCTestCase {
   func testCompleteGlobalAttributesOnSpansAndLogs() throws {
-    try withSmokeTelemetry { harness in
+    try withSmokeTelemetry(useLegacyAttributeNames: false) { harness in
       let expectedSessionId = SessionManager.instance.session()
       harness.emitSpanAndLog()
       let span = try harness.waitForSpan()
@@ -66,12 +99,15 @@ private final class SmokeTelemetryHarness {
 
   private let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-  init() {
+  init(useLegacyAttributeNames: Bool) {
     let configuration = AgentConfigBuilder()
       .withExportUrl(URL(string: "https://unused.invalid")!)
       .withRemoteManagement(false)
+      .useLegacyAttributeNames(useLegacyAttributeNames)
       .build()
-    let resource = AgentResource.get().merging(other: AgentEnvResource.get())
+    let resource = AgentResource.get(
+      useLegacyAttributeNames: useLegacyAttributeNames
+    ).merging(other: AgentEnvResource.get())
     let configManager = AgentConfigManager(
       resource: resource,
       config: configuration,
@@ -160,6 +196,7 @@ private struct DirectorySnapshot: Equatable {
 }
 
 private func withSmokeTelemetry(
+  useLegacyAttributeNames: Bool,
   _ test: (SmokeTelemetryHarness) throws -> Void
 ) throws {
   XCTAssertNil(ProcessInfo.processInfo.environment[AgentEnvResource.otelResourceAttributesEnv])
@@ -178,7 +215,8 @@ private func withSmokeTelemetry(
     create: false)
     .appendingPathComponent("elastic", isDirectory: true)
   let initialCaches = DirectorySnapshot(at: cachesDirectory)
-  let harness = SmokeTelemetryHarness()
+  let harness = SmokeTelemetryHarness(
+    useLegacyAttributeNames: useLegacyAttributeNames)
 
   defer {
     harness.shutDown()
@@ -192,7 +230,9 @@ private func withSmokeTelemetry(
   try test(harness)
 }
 
-private func expectedResourceAttributes() throws -> [String: AttributeValue] {
+private func expectedResourceAttributes(
+  useLegacyAttributeNames: Bool
+) throws -> [String: AttributeValue] {
   let application = ApplicationDataSource()
   let device = DeviceDataSource()
   let operatingSystem = OperatingSystemDataSource()
@@ -207,7 +247,11 @@ private func expectedResourceAttributes() throws -> [String: AttributeValue] {
     "os.version": .string(operatingSystem.version),
     "telemetry.sdk.name": .string("iOS"),
     "telemetry.sdk.language": .string("swift"),
-    "telemetry.sdk.version": .string(ElasticApmAgent.elasticSwiftAgentVersion),
+    "telemetry.sdk.version": .string(
+      useLegacyAttributeNames
+        ? "semver:\(ElasticApmAgent.elasticSwiftAgentVersion)"
+        : ElasticApmAgent.elasticSwiftAgentVersion
+    ),
     "process.runtime.name": .string(operatingSystem.name),
     "process.runtime.version": .string(operatingSystem.version)
   ]
@@ -215,7 +259,8 @@ private func expectedResourceAttributes() throws -> [String: AttributeValue] {
   if let build = application.build {
     if let version = application.version {
       expected["service.version"] = .string(version)
-      expected["app.build_id"] = .string(build)
+      expected[useLegacyAttributeNames ? "service.build" : "app.build_id"] =
+        .string(build)
     } else {
       expected["service.version"] = .string(build)
     }

@@ -68,7 +68,8 @@ public struct ElasticSpanProcessor: SpanProcessor {
       }
       .join { attributes in
         var newAttributes = attributes
-        newAttributes[ElasticAttributes.sessionId.rawValue] = .string(SessionManager.instance.session())
+        newAttributes[SemanticConventions.Session.id.rawValue] = .string(
+          SessionManager.instance.session())
         return newAttributes
       }
   }
@@ -105,7 +106,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
         newAttributes.updateValue(value: .string("mobile"), forKey: "type")
         newAttributes.updateValue(
           value: AttributeValue.string(SessionManager.instance.session()),
-          forKey: ElasticAttributes.sessionId.rawValue)
+          forKey: SemanticConventions.Session.id.rawValue)
         let parentSpanContext = SpanContext.create(
           traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(),
           traceState: TraceState())

@@ -78,6 +78,10 @@ public class ElasticApmAgent {
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
   ) {
+    let resource = AgentResource.get(
+      useLegacyAttributeNames: configuration.useLegacyAttributeNames
+    ).merging(other: AgentEnvResource.get())
+
     crashConfig.sessionId = SessionManager.instance.session(false)
     #if os(iOS) && !targetEnvironment(macCatalyst)
       crashConfig.networkStatus = NetworkStatusManager().lastStatus
@@ -85,7 +89,7 @@ public class ElasticApmAgent {
 
     _ = SessionManager.instance.session()  // initialize session
     agentConfigManager = AgentConfigManager(
-      resource: AgentResource.get().merging(other: AgentEnvResource.get()),
+      resource: resource,
  config: configuration,
       instrumentationConfig: instrumentationConfiguration,
       logger: Logging.Logger(label: "Elastic.ConfigManager")
@@ -112,8 +116,9 @@ public class ElasticApmAgent {
     #if !os(watchOS)
     if instrumentationConfiguration.enableCrashReporting {
       crashManager = CrashManager(
-        resource: AgentResource.get().merging(other: AgentEnvResource.get()),
-        logExporter: crashLogExporter)
+        resource: resource,
+        logExporter: crashLogExporter,
+        useLegacyAttributeNames: configuration.useLegacyAttributeNames)
     } else {
       crashManager = nil
     }

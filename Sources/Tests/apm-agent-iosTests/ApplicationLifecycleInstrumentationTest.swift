@@ -12,125 +12,91 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-import Foundation
-import OpenTelemetryApi
-import OpenTelemetrySdk
-import ElasticApmTestSupport
-@testable import ElasticApm
-import XCTest
+#if canImport(UIKit) && !os(watchOS) // UIApplication lifecycle events are unavailable on macOS and watchOS.
+  import ElasticApmTestSupport
+  import Foundation
+  import OpenTelemetryApi
+  import OpenTelemetrySdk
+  @testable import ElasticApm
+  import XCTest
 
-#if canImport(UIKit) && !os(watchOS)
-class ApplicationLifecycleInstrumentationTest: XCTestCase {
-    func testLifecycleActive() {
-        let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
-
-        let config = AgentConfiguration()
-
-      let  factory = LoggerProviderSdk(
-        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: config, scheduleDelay: 0.5)]
-      )
-
-        OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
-
-        let appLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
-        appLifecycleInstrumentation.active(Notification(name: Notification.Name("test")))
-
-        let exported = waitingExporter.waitForExport()
-
-        XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].eventName, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "active")
+  final class ApplicationLifecycleInstrumentationTest: XCTestCase {
+    func testDefaultLifecycleEventsUseSemanticConventionNames() throws {
+      try assertLifecycleEvents(useLegacyAttributeNames: false)
     }
 
-    func testLifecycleInactive() {
-        let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
-
-      let config = AgentConfiguration()
-
-
-      let  factory = LoggerProviderSdk(
-        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: config, scheduleDelay: 0.5)]
-      )
-
-        OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
-
-        let appLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
-        appLifecycleInstrumentation.inactive(Notification(name: Notification.Name("test")))
-
-        let exported = waitingExporter.waitForExport()
-
-        XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].eventName, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "inactive")
+    func testLegacyLifecycleEventsRestorePreviousNames() throws {
+      try assertLifecycleEvents(useLegacyAttributeNames: true)
     }
 
-    func testLifecycleBackground() {
-        let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
+    private func assertLifecycleEvents(useLegacyAttributeNames: Bool) throws {
+      let cases: [
+        (
+          state: SemanticConventions.Ios.AppStateValues,
+          emit: (ApplicationLifecycleInstrumentation) -> Void
+        )
+      ] = [
+        (.active, { $0.active(Notification(name: Notification.Name("test"))) }),
+        (.inactive, { $0.inactive(Notification(name: Notification.Name("test"))) }),
+        (.background, { $0.background(Notification(name: Notification.Name("test"))) }),
+        (.foreground, { $0.foreground(Notification(name: Notification.Name("test"))) }),
+        (.terminate, { $0.terminate(Notification(name: Notification.Name("test"))) })
+      ]
 
-      let config = AgentConfiguration()
+      let centralConfig = CentralConfig()
+      let previousCentralConfig = centralConfig.config
+      centralConfig.config = nil
+      defer {
+        centralConfig.config = previousCentralConfig
+      }
 
-      let  factory = LoggerProviderSdk(
-        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,configuration: config, scheduleDelay: 0.5)]
-      )
+      for lifecycleCase in cases {
+        let exported = try exportLifecycleEvent(
+          useLegacyAttributeNames: useLegacyAttributeNames,
+          emit: lifecycleCase.emit
+        )
+        let expectedEventName =
+          useLegacyAttributeNames ? "lifecycle" : "device.app.lifecycle"
+        let expectedAttributeName =
+          useLegacyAttributeNames ? "lifecycle.state" : "ios.app.state"
+        let rejectedEventName =
+          useLegacyAttributeNames ? "device.app.lifecycle" : "lifecycle"
+        let rejectedAttributeName =
+          useLegacyAttributeNames ? "ios.app.state" : "lifecycle.state"
 
-        OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
-
-        let appLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
-        appLifecycleInstrumentation.background(Notification(name: Notification.Name("test")))
-
-        let exported = waitingExporter.waitForExport()
-
-        XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].eventName, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "background")
+        XCTAssertEqual(exported.eventName, expectedEventName)
+        XCTAssertNotEqual(exported.eventName, rejectedEventName)
+        XCTAssertEqual(
+          exported.attributes[expectedAttributeName],
+          .string(lifecycleCase.state.description)
+        )
+        XCTAssertNil(exported.attributes[rejectedAttributeName])
+      }
     }
-    func testLifecycleForeground() {
-        let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
 
-      let config = AgentConfiguration()
-
-      let  factory = LoggerProviderSdk(
-        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,configuration: config, scheduleDelay: 0.5)]
+    private func exportLifecycleEvent(
+      useLegacyAttributeNames: Bool,
+      emit: (ApplicationLifecycleInstrumentation) -> Void
+    ) throws -> ReadableLogRecord {
+      let exporter = WaitingLogRecordExporter(numberToWaitFor: 1)
+      let provider = LoggerProviderSdk(
+        logRecordProcessors: [
+          ElasticLogRecordProcessor(
+            logRecordExporter: exporter,
+            configuration: AgentConfigBuilder()
+              .useLegacyAttributeNames(useLegacyAttributeNames)
+              .build(),
+            scheduleDelay: 0.01
+          )
+        ]
       )
+      OpenTelemetry.registerLoggerProvider(loggerProvider: provider)
 
-        OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
+      let instrumentation = ApplicationLifecycleInstrumentation(
+        useLegacyAttributeNames: useLegacyAttributeNames)
+      emit(instrumentation)
 
-        let appLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
-        appLifecycleInstrumentation.foreground(Notification(name: Notification.Name("test")))
-
-        let exported = waitingExporter.waitForExport()
-
-        XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].eventName, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "foreground")
+      return try XCTUnwrap(exporter.waitForExport()?.first)
     }
-
-    func testLifecycleTerminate() {
-        let waitingExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
-
-      let config = AgentConfiguration()
-
-      let  factory = LoggerProviderSdk(
-        logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter, configuration: config, scheduleDelay: 0.5)]
-      )
-
-        OpenTelemetry.registerLoggerProvider(loggerProvider: factory)
-
-        let appLifecycleInstrumentation = ApplicationLifecycleInstrumentation()
-        appLifecycleInstrumentation.terminate(Notification(name: Notification.Name("test")))
-
-        let exported = waitingExporter.waitForExport()
-
-        XCTAssertEqual(exported?.count, 1)
-        XCTAssertNotNil(exported?[0].attributes["lifecycle.state"])
-        XCTAssertEqual(exported?[0].eventName, "lifecycle")
-        XCTAssertEqual(exported?[0].attributes["lifecycle.state"]?.description, "terminate")
-    }
-}
-#else
-class ApplicationLifecycleInstrumentationTest: XCTestCase {}
+  }
 #endif

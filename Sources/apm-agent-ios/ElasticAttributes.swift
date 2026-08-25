@@ -14,18 +14,43 @@
 
 import Foundation
 
+@available(
+  *,
+  deprecated,
+  message: "Use OpenTelemetryApi.SemanticConventions constants instead."
+)
 public enum ElasticAttributes: String {
   /**
    Timestamp applied to all spans at time of export. To help with clock drift.
     */
+  @available(
+    *,
+    deprecated,
+    message: "No SemanticConventions attribute replaces this value; use OpenTelemetry signal timestamps."
+  )
   case exportTimestamp = "telemetry.sdk.elastic_export_timestamp"
 
   /**
    The id of the device
     */
+  @available(
+    *,
+    deprecated,
+    message: "Use SemanticConventions.Device.id."
+  )
   case deviceIdentifier = "device.id"
 
+  @available(
+    *,
+    deprecated,
+    message: "Use SemanticConventions.Session.id."
+  )
   case sessionId = "session.id"
 
+  @available(
+    *,
+    deprecated,
+    message: "Use SemanticConventions.App.buildId."
+  )
   case serviceBuild = "app.build_id"
 }

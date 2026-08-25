@@ -145,7 +145,9 @@ class OpenTelemetryInitializer {
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
 
-    let resources = AgentResource.get().merging(other: AgentEnvResource.get())
+    let resources = AgentResource.get(
+      useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
+    ).merging(other: AgentEnvResource.get())
     if let exporters {
       return registerProviders(
         configuration: configuration,
@@ -234,7 +236,9 @@ class OpenTelemetryInitializer {
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
 
-    let resources = AgentResource.get().merging(other: AgentEnvResource.get())
+    let resources = AgentResource.get(
+      useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
+    ).merging(other: AgentEnvResource.get())
     if let exporters {
       return registerProviders(
         configuration: configuration,

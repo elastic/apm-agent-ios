@@ -19,19 +19,73 @@ import OpenTelemetrySdk
 public class CPUSampler {
   let meter: any Meter
   var gauge: ObservableDoubleGauge
+
     public init() {
-      meter = OpenTelemetry.instance.meterProvider
-        .meterBuilder(name: "CPU Sampler")
-        .setInstrumentationVersion(instrumentationVersion: "1.0.0")
-        .build()
-      gauge = meter.gaugeBuilder(name: "system.cpu.usage").buildWithCallback({ measurement in
-        measurement.record(value: CPUSampler.cpuFootprint(), attributes: ["state": .string("app")])
-      })
+      let meter = Self.makeMeter()
+      self.meter = meter
+      gauge = Self.makeGauge(
+        meter: meter,
+        useLegacyAttributeNames: false,
+        cpuFootprint: Self.cpuFootprint)
     }
+
+  public convenience init(useLegacyAttributeNames: Bool) {
+    self.init(
+      useLegacyAttributeNames: useLegacyAttributeNames,
+      cpuFootprint: Self.cpuFootprint)
+  }
+
+  init(
+    useLegacyAttributeNames: Bool,
+    cpuFootprint: @escaping () -> Double
+  ) {
+    let meter = Self.makeMeter()
+    self.meter = meter
+    gauge = Self.makeGauge(
+      meter: meter,
+      useLegacyAttributeNames: useLegacyAttributeNames,
+      cpuFootprint: cpuFootprint)
+  }
+
+  private static func makeMeter() -> any Meter {
+    OpenTelemetry.instance.meterProvider
+      .meterBuilder(name: "CPU Sampler")
+      .setInstrumentationVersion(instrumentationVersion: "1.0.0")
+      .build()
+  }
+
+  private static func makeGauge(
+    meter: any Meter,
+    useLegacyAttributeNames: Bool,
+    cpuFootprint: @escaping () -> Double
+  ) -> ObservableDoubleGauge {
+    let metricName =
+      useLegacyAttributeNames ? "system.cpu.usage" : "process.cpu.utilization"
+    return meter.gaugeBuilder(name: metricName).buildWithCallback({ measurement in
+      let percentSum = cpuFootprint()
+      let value =
+        useLegacyAttributeNames
+        ? percentSum
+        : Self.utilization(fromPercentSum: percentSum)
+      let attributes: [String: AttributeValue] =
+        useLegacyAttributeNames ? ["state": .string("app")] : [:]
+      measurement.record(value: value, attributes: attributes)
+    })
+  }
 
   deinit {
     gauge.close()
   }
+
+    static func utilization(
+      fromPercentSum percentSum: Double,
+      processorCount: Int = ProcessInfo.processInfo.activeProcessorCount
+    ) -> Double {
+      guard processorCount > 0 else {
+        return 0
+      }
+      return min(max(percentSum / 100.0 / Double(processorCount), 0), 1)
+    }
 
     static func cpuFootprint() -> Double {
         var kr: kern_return_t

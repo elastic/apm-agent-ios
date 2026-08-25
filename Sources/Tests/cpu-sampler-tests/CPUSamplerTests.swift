@@ -1,4 +1,4 @@
-// Copyright © 2021 Elasticsearch BV
+// Copyright © 2026 Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -13,31 +13,38 @@
 //   limitations under the License.
 
 import ElasticApmTestSupport
+import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import XCTest
 
-@testable import MemorySampler
+@testable import CPUSampler
 
-final class MemorySamplerTests: XCTestCase {
-  func testDefaultMetricUsesProcessNameWithoutLegacyState() throws {
+final class CPUSamplerTests: XCTestCase {
+  private let percentSum =
+    Double(ProcessInfo.processInfo.activeProcessorCount) * 50.0
+
+  func testDefaultMetricUsesProcessRatioWithoutLegacyState() throws {
     let metric = try collectMetric(useLegacyAttributeNames: false)
     let point = try XCTUnwrap(metric.data.points.first as? DoublePointData)
 
-    XCTAssertEqual(metric.name, "process.memory.usage")
-    XCTAssertNotEqual(metric.name, "system.memory.usage")
-    XCTAssertEqual(point.value, 4_096)
+    XCTAssertEqual(metric.name, "process.cpu.utilization")
+    XCTAssertNotEqual(metric.name, "system.cpu.usage")
+    XCTAssertEqual(point.value, 0.5, accuracy: 0.000_001)
+    XCTAssertGreaterThanOrEqual(point.value, 0)
+    XCTAssertLessThanOrEqual(point.value, 1)
     XCTAssertTrue(point.attributes.isEmpty)
     XCTAssertNil(point.attributes["state"])
   }
 
-  func testLegacyMetricRestoresSystemNameAndState() throws {
+  func testLegacyMetricRestoresPercentSumNameAndState() throws {
     let metric = try collectMetric(useLegacyAttributeNames: true)
     let point = try XCTUnwrap(metric.data.points.first as? DoublePointData)
 
-    XCTAssertEqual(metric.name, "system.memory.usage")
-    XCTAssertNotEqual(metric.name, "process.memory.usage")
-    XCTAssertEqual(point.value, 4_096)
+    XCTAssertEqual(metric.name, "system.cpu.usage")
+    XCTAssertNotEqual(metric.name, "process.cpu.utilization")
+    XCTAssertEqual(point.value, percentSum, accuracy: 0.000_001)
+    XCTAssertGreaterThan(point.value, 1)
     XCTAssertEqual(point.attributes, ["state": .string("app")])
   }
 
@@ -56,9 +63,9 @@ final class MemorySamplerTests: XCTestCase {
       .build()
     OpenTelemetry.registerMeterProvider(meterProvider: provider)
 
-    let sampler = MemorySampler(
+    let sampler = CPUSampler(
       useLegacyAttributeNames: useLegacyAttributeNames,
-      memoryFootprint: { 4_096 }
+      cpuFootprint: { self.percentSum }
     )
     let metric = try withExtendedLifetime(sampler) {
       XCTAssertEqual(provider.forceFlush(), .success)

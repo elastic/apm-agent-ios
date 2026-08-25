@@ -18,22 +18,59 @@ import OpenTelemetrySdk
 
 public class MemorySampler {
   let meter: any Meter
-  var gauge: ObservableLongGauge
+  var gauge: ObservableDoubleGauge
 
     public init() {
-      meter = OpenTelemetry.instance.meterProvider
-        .meterBuilder(name: "Memory Sampler")
-        .setInstrumentationVersion(instrumentationVersion: "1.0.0")
-        .build()
-      gauge = meter
-        .gaugeBuilder(name: "system.memory.usage")
-        .ofLongs()
-        .buildWithCallback({ gauge in
-            if let memoryUsage = MemorySampler.memoryFootprint() {
-              gauge.record(value: Int(memoryUsage), attributes: ["state": .string("app")])
-            }
-        })
+      let meter = Self.makeMeter()
+      self.meter = meter
+      gauge = Self.makeGauge(
+        meter: meter,
+        useLegacyAttributeNames: false,
+        memoryFootprint: Self.memoryFootprint)
     }
+
+  public convenience init(useLegacyAttributeNames: Bool) {
+    self.init(
+      useLegacyAttributeNames: useLegacyAttributeNames,
+      memoryFootprint: Self.memoryFootprint)
+  }
+
+  init(
+    useLegacyAttributeNames: Bool,
+    memoryFootprint: @escaping () -> mach_vm_size_t?
+  ) {
+    let meter = Self.makeMeter()
+    self.meter = meter
+    gauge = Self.makeGauge(
+      meter: meter,
+      useLegacyAttributeNames: useLegacyAttributeNames,
+      memoryFootprint: memoryFootprint)
+  }
+
+  private static func makeMeter() -> any Meter {
+    OpenTelemetry.instance.meterProvider
+      .meterBuilder(name: "Memory Sampler")
+      .setInstrumentationVersion(instrumentationVersion: "1.0.0")
+      .build()
+  }
+
+  private static func makeGauge(
+    meter: any Meter,
+    useLegacyAttributeNames: Bool,
+    memoryFootprint: @escaping () -> mach_vm_size_t?
+  ) -> ObservableDoubleGauge {
+    let metricName =
+      useLegacyAttributeNames ? "system.memory.usage" : "process.memory.usage"
+    return meter
+      .gaugeBuilder(name: metricName)
+      .buildWithCallback({ gauge in
+        if let memoryUsage = memoryFootprint() {
+          let attributes: [String: AttributeValue] =
+            useLegacyAttributeNames ? ["state": .string("app")] : [:]
+          gauge.record(value: Double(memoryUsage), attributes: attributes)
+        }
+      })
+  }
 
   deinit {
     gauge.close()
