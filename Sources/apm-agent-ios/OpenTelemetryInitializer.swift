@@ -54,7 +54,6 @@ class OpenTelemetryInitializer {
 
       try fileManager.createDirectory(
         at: persistentDirectory, withIntermediateDirectories: true)
-      // Direct files were written by the shared persistence layout from #371.
       removeLegacyPersistenceFiles(
         from: persistentDirectory, fileManager: fileManager)
 
