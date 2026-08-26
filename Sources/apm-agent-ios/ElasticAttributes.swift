@@ -52,5 +52,5 @@ public enum ElasticAttributes: String {
     deprecated,
     message: "Use SemanticConventions.App.buildId."
   )
-  case serviceBuild = "app.build_id"
+  case serviceBuild = "service.build"
 }

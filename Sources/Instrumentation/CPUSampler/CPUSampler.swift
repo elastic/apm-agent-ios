@@ -61,14 +61,23 @@ public class CPUSampler {
   ) -> ObservableDoubleGauge {
     let metricName =
       useLegacyAttributeNames ? "system.cpu.usage" : "process.cpu.utilization"
-    return meter.gaugeBuilder(name: metricName).buildWithCallback({ measurement in
+    let unit = useLegacyAttributeNames ? "" : "1"
+    let builder = meter.gaugeBuilder(name: metricName)
+    _ = (builder as? DoubleGaugeBuilderSdk)?.setUnit(unit)
+    return builder.buildWithCallback({ measurement in
       let percentSum = cpuFootprint()
       let value =
         useLegacyAttributeNames
         ? percentSum
         : Self.utilization(fromPercentSum: percentSum)
       let attributes: [String: AttributeValue] =
-        useLegacyAttributeNames ? ["state": .string("app")] : [:]
+        useLegacyAttributeNames
+        ? ["state": .string("app")]
+        : [
+          // Darwin reports aggregate process CPU usage rather than separate user/system values.
+          SemanticConventions.Cpu.mode.rawValue:
+            .string(SemanticConventions.Cpu.ModeValues("total").description)
+        ]
       measurement.record(value: value, attributes: attributes)
     })
   }

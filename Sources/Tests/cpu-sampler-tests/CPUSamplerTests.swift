@@ -33,7 +33,13 @@ final class CPUSamplerTests: XCTestCase {
     XCTAssertEqual(point.value, 0.5, accuracy: 0.000_001)
     XCTAssertGreaterThanOrEqual(point.value, 0)
     XCTAssertLessThanOrEqual(point.value, 1)
-    XCTAssertTrue(point.attributes.isEmpty)
+    XCTAssertEqual(metric.unit, "1")
+    XCTAssertEqual(
+      point.attributes,
+      [
+        SemanticConventions.Cpu.mode.rawValue:
+          .string(SemanticConventions.Cpu.ModeValues("total").description)
+      ])
     XCTAssertNil(point.attributes["state"])
   }
 
@@ -45,6 +51,7 @@ final class CPUSamplerTests: XCTestCase {
     XCTAssertNotEqual(metric.name, "process.cpu.utilization")
     XCTAssertEqual(point.value, percentSum, accuracy: 0.000_001)
     XCTAssertGreaterThan(point.value, 1)
+    XCTAssertEqual(metric.unit, "")
     XCTAssertEqual(point.attributes, ["state": .string("app")])
   }
 

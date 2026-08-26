@@ -18,12 +18,12 @@ import OpenTelemetrySdk
 
 public class MemorySampler {
   let meter: any Meter
-  var gauge: ObservableDoubleGauge
+  let closeInstrument: () -> Void
 
     public init() {
       let meter = Self.makeMeter()
       self.meter = meter
-      gauge = Self.makeGauge(
+      closeInstrument = Self.makeInstrument(
         meter: meter,
         useLegacyAttributeNames: false,
         memoryFootprint: Self.memoryFootprint)
@@ -41,7 +41,7 @@ public class MemorySampler {
   ) {
     let meter = Self.makeMeter()
     self.meter = meter
-    gauge = Self.makeGauge(
+    closeInstrument = Self.makeInstrument(
       meter: meter,
       useLegacyAttributeNames: useLegacyAttributeNames,
       memoryFootprint: memoryFootprint)
@@ -54,26 +54,40 @@ public class MemorySampler {
       .build()
   }
 
-  private static func makeGauge(
+  private static func makeInstrument(
     meter: any Meter,
     useLegacyAttributeNames: Bool,
     memoryFootprint: @escaping () -> mach_vm_size_t?
-  ) -> ObservableDoubleGauge {
+  ) -> () -> Void {
     let metricName =
       useLegacyAttributeNames ? "system.memory.usage" : "process.memory.usage"
-    return meter
-      .gaugeBuilder(name: metricName)
-      .buildWithCallback({ gauge in
-        if let memoryUsage = memoryFootprint() {
-          let attributes: [String: AttributeValue] =
-            useLegacyAttributeNames ? ["state": .string("app")] : [:]
-          gauge.record(value: Double(memoryUsage), attributes: attributes)
-        }
-      })
+    let callback: (ObservableDoubleMeasurement) -> Void = { measurement in
+      if let memoryUsage = memoryFootprint() {
+        let attributes: [String: AttributeValue] =
+          useLegacyAttributeNames ? ["state": .string("app")] : [:]
+        measurement.record(value: Double(memoryUsage), attributes: attributes)
+      }
+    }
+
+    if useLegacyAttributeNames {
+      let gauge = meter
+        .gaugeBuilder(name: metricName)
+        .buildWithCallback(callback)
+      return { gauge.close() }
+    }
+
+    let builder = meter
+      .upDownCounterBuilder(name: metricName)
+      .ofDoubles()
+    _ = (builder as? DoubleUpDownCounterBuilderSdk)?.setUnit("By")
+    let upDownCounter = builder.buildWithCallback { measurement in
+      callback(measurement)
+    }
+    return { upDownCounter.close() }
   }
 
   deinit {
-    gauge.close()
+    closeInstrument()
   }
 
     static func memoryFootprint() -> mach_vm_size_t? {

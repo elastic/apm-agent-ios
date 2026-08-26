@@ -27,6 +27,11 @@ final class MemorySamplerTests: XCTestCase {
     XCTAssertEqual(metric.name, "process.memory.usage")
     XCTAssertNotEqual(metric.name, "system.memory.usage")
     XCTAssertEqual(point.value, 4_096)
+    XCTAssertEqual(metric.unit, "By")
+    guard case .DoubleSum = metric.type else {
+      return XCTFail("process.memory.usage must use an UpDownCounter")
+    }
+    XCTAssertFalse(metric.isMonotonic)
     XCTAssertTrue(point.attributes.isEmpty)
     XCTAssertNil(point.attributes["state"])
   }
@@ -38,6 +43,10 @@ final class MemorySamplerTests: XCTestCase {
     XCTAssertEqual(metric.name, "system.memory.usage")
     XCTAssertNotEqual(metric.name, "process.memory.usage")
     XCTAssertEqual(point.value, 4_096)
+    XCTAssertEqual(metric.unit, "")
+    guard case .DoubleGauge = metric.type else {
+      return XCTFail("Legacy system.memory.usage must remain a gauge")
+    }
     XCTAssertEqual(point.attributes, ["state": .string("app")])
   }
 

@@ -23,6 +23,11 @@ import XCTest
 @testable import ElasticApm
 
 final class ResourceAttributeSmokeTests: XCTestCase {
+  @available(*, deprecated)
+  func testDeprecatedServiceBuildConstantRetainsLegacyRawValue() {
+    XCTAssertEqual(ElasticAttributes.serviceBuild.rawValue, "service.build")
+  }
+
   func testCompleteResourceOnSpansLogsAndMetrics() throws {
     try withSmokeTelemetry(useLegacyAttributeNames: false) { harness in
       let expected = try expectedResourceAttributes(useLegacyAttributeNames: false)
