@@ -21,6 +21,9 @@ XCODEBUILD_OPTIONS_WATCHOS := \
 	-destination 'platform=watchOS Simulator,name=Apple Watch Series 11 (46mm)' \
 	-scheme $(PROJECT_NAME)
 
+XCODEBUILD_RESULT_BUNDLE_IOS := \
+	$(if $(IOS_RESULT_BUNDLE_PATH),-resultBundlePath '$(IOS_RESULT_BUNDLE_PATH)')
+
 .PHONY: setup-brew
 setup-brew:
 	brew update && brew install xcbeautify
@@ -39,7 +42,7 @@ build-for-testing-watchos:
 
 .PHONY: test-without-building-ios
 test-without-building-ios:
-	set -o pipefail && xcodebuild $(XCODEBUILD_OPTIONS_IOS) test-without-building | xcbeautify
+	set -o pipefail && xcodebuild $(XCODEBUILD_OPTIONS_IOS) $(XCODEBUILD_RESULT_BUNDLE_IOS) test-without-building | xcbeautify
 
 .PHONY: test-without-building-tvos
 test-without-building-tvos:

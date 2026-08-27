@@ -91,9 +91,19 @@ jobs:
         run: swift test
       - name: Build and test (iOS Simulator)
         if: ${{ matrix.label == 'ios' }}
+        env:
+          IOS_RESULT_BUNDLE_PATH: ${{ runner.temp }}/ios-tests.xcresult
         run: |
           make build-for-testing-ios
           make test-without-building-ios
+      - name: Upload failed iOS test results
+        if: ${{ failure() && matrix.label == 'ios' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-test-results
+          path: ${{ runner.temp }}/ios-tests.xcresult
+          if-no-files-found: warn
+          retention-days: 7
       - name: Build and test (tvOS Simulator)
         if: ${{ matrix.label == 'tvos' }}
         run: |
