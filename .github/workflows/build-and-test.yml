@@ -96,12 +96,28 @@ jobs:
         run: |
           make build-for-testing-ios
           make test-without-building-ios
-      - name: Upload failed iOS test results
+      - name: Extract failed iOS test diagnostics
+        if: ${{ failure() && matrix.label == 'ios' }}
+        env:
+          IOS_RESULT_BUNDLE_PATH: ${{ runner.temp }}/ios-tests.xcresult
+          IOS_RESULT_DIAGNOSTICS_PATH: ${{ runner.temp }}/ios-test-diagnostics
+        run: |
+          if [[ ! -d "$IOS_RESULT_BUNDLE_PATH" ]]; then
+            echo "::warning::No iOS test result bundle was created"
+            exit 0
+          fi
+
+          mkdir -p "$IOS_RESULT_DIAGNOSTICS_PATH"
+          xcrun xcresulttool get test-results summary \
+            --path "$IOS_RESULT_BUNDLE_PATH" > "$IOS_RESULT_DIAGNOSTICS_PATH/summary.json"
+          xcrun xcresulttool get log --type action \
+            --path "$IOS_RESULT_BUNDLE_PATH" > "$IOS_RESULT_DIAGNOSTICS_PATH/action-log.json"
+      - name: Upload failed iOS test diagnostics
         if: ${{ failure() && matrix.label == 'ios' }}
         uses: actions/upload-artifact@v7
         with:
-          name: ios-test-results
-          path: ${{ runner.temp }}/ios-tests.xcresult
+          name: ios-test-diagnostics
+          path: ${{ runner.temp }}/ios-test-diagnostics
           if-no-files-found: warn
           retention-days: 7
       - name: Build and test (tvOS Simulator)

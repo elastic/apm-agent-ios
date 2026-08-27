@@ -15,6 +15,8 @@ import Foundation
 #if os(iOS) || os(macOS)
 
 public final class LoopbackHTTPTestServer {
+  private static let requestReadTimeout: TimeInterval = 10
+
   public struct Request: Equatable {
     public let method: String
     public let path: String
@@ -207,15 +209,22 @@ public final class LoopbackHTTPTestServer {
     var data = Data()
     var buffer = [UInt8](repeating: 0, count: 4096)
     let headerSeparator = Data("\r\n\r\n".utf8)
+    let readDeadline = Date().addingTimeInterval(Self.requestReadTimeout)
 
     while data.range(of: headerSeparator) == nil {
-      let count = recv(clientSocket, &buffer, buffer.count, 0)
-      guard count > 0 else {
-        recordEvent("connection closed before complete headers; errno \(errno)")
+      let result = receive(
+        from: clientSocket,
+        into: &buffer,
+        count: buffer.count,
+        deadline: readDeadline)
+      guard result.count > 0 else {
+        recordEvent(
+          result.error.map { "header receive failed with errno \($0)" }
+            ?? "connection closed before complete headers")
         sendResponse("HTTP/1.1 400 Bad Request", to: clientSocket)
         return
       }
-      data.append(contentsOf: buffer.prefix(count))
+      data.append(contentsOf: buffer.prefix(result.count))
     }
 
     guard
@@ -250,11 +259,19 @@ public final class LoopbackHTTPTestServer {
     }.flatMap { Int($0.value) } ?? 0
     var receivedBodyBytes = data.count - headerRange.upperBound
     while receivedBodyBytes < contentLength {
-      let count = recv(clientSocket, &buffer, min(buffer.count, contentLength - receivedBodyBytes), 0)
-      guard count > 0 else {
-        break
+      let result = receive(
+        from: clientSocket,
+        into: &buffer,
+        count: min(buffer.count, contentLength - receivedBodyBytes),
+        deadline: readDeadline)
+      guard result.count > 0 else {
+        recordEvent(
+          result.error.map { "body receive failed with errno \($0)" }
+            ?? "connection closed before complete body")
+        sendResponse("HTTP/1.1 400 Bad Request", to: clientSocket)
+        return
       }
-      receivedBodyBytes += count
+      receivedBodyBytes += result.count
     }
 
     let request = Request(
@@ -267,6 +284,33 @@ public final class LoopbackHTTPTestServer {
       recordedEvents.append("recorded \(request.method) \(request.path)")
     }
     sendResponse("HTTP/1.1 200 OK", to: clientSocket)
+  }
+
+  private func receive(
+    from socket: Int32,
+    into buffer: inout [UInt8],
+    count: Int,
+    deadline: Date
+  ) -> (count: Int, error: Int32?) {
+    while true {
+      let receivedCount = recv(socket, &buffer, count, 0)
+      guard receivedCount < 0 else {
+        return (receivedCount, nil)
+      }
+
+      let receiveError = errno
+      if receiveError == EINTR {
+        continue
+      }
+      if receiveError == EAGAIN || receiveError == EWOULDBLOCK {
+        guard Date() < deadline else {
+          return (receivedCount, receiveError)
+        }
+        Thread.sleep(forTimeInterval: 0.01)
+        continue
+      }
+      return (receivedCount, receiveError)
+    }
   }
 
   private func recordEvent(_ event: String) {

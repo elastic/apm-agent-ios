@@ -22,7 +22,58 @@
   import OpenTelemetrySdk
   import XCTest
 
+  #if canImport(Darwin)
+    import Darwin
+  #endif
+
   @testable import ElasticApm
+
+  final class LoopbackHTTPTestServerTests: XCTestCase {
+    func testWaitsForHeadersAfterAcceptingConnection() throws {
+      let server = LoopbackHTTPTestServer()
+      try server.start()
+      defer { server.stop() }
+
+      let clientSocket = socket(AF_INET, SOCK_STREAM, 0)
+      XCTAssertGreaterThanOrEqual(clientSocket, 0)
+      defer { close(clientSocket) }
+
+      var noSignal: Int32 = 1
+      XCTAssertEqual(
+        setsockopt(
+          clientSocket,
+          SOL_SOCKET,
+          SO_NOSIGPIPE,
+          &noSignal,
+          socklen_t(MemoryLayout<Int32>.size)),
+        0)
+
+      var address = sockaddr_in()
+      address.sin_family = sa_family_t(AF_INET)
+      address.sin_port = UInt16(server.port).bigEndian
+      address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+      let connectionResult = withUnsafePointer(to: &address) { pointer in
+        connect(
+          clientSocket,
+          UnsafeRawPointer(pointer).assumingMemoryBound(to: sockaddr.self),
+          socklen_t(MemoryLayout<sockaddr_in>.size))
+      }
+      XCTAssertEqual(connectionResult, 0)
+
+      Thread.sleep(forTimeInterval: 0.1)
+      let requestText = "POST /delayed HTTP/1.1\r\nContent-Length: 0\r\n\r\n"
+      let sentCount = requestText.withCString {
+        send(clientSocket, $0, strlen($0), 0)
+      }
+      XCTAssertEqual(sentCount, requestText.utf8.count)
+
+      let request = try XCTUnwrap(
+        server.waitForRequest(timeout: 2) { _ in true },
+        server.diagnostics)
+      XCTAssertEqual(request.method, "POST")
+      XCTAssertEqual(request.path, "/delayed")
+    }
+  }
 
   class OTLPHTTPWireTestCase: XCTestCase {
     static let requestTimeout: TimeInterval = 25
