@@ -189,6 +189,11 @@ Controls whether EDOT iOS contacts central configuration for runtime configurati
 
 ### Telemetry attribute compatibility [telemetry-attribute-compatibility]
 
+```yaml {applies_to}
+product:
+  edot_ios: ga 2.1.0+
+```
+
 EDOT iOS emits current OpenTelemetry semantic-convention names by default.
 
 #### `useLegacyAttributeNames(_:)` [useLegacyAttributeNames]
@@ -198,7 +203,7 @@ EDOT iOS emits current OpenTelemetry semantic-convention names by default.
 | `Bool` | `false` |
 
 Restores the telemetry names emitted before the semantic-convention cleanup.
-Use this temporary compatibility option only while dashboards, alerts, or other
+Use this temporary compatibility option only until dashboards, alerts, or other
 consumers migrate to the current names:
 
 ```swift
@@ -208,7 +213,7 @@ let configuration = AgentConfigBuilder()
   .build()
 ```
 
-When enabled, this option restores all of the following legacy output:
+When enabled, this option restores the following legacy output:
 
 - URLSession spans use the old HTTP attributes such as `http.method`,
   `http.url`, and `http.status_code` instead of stable HTTP attributes.
@@ -222,12 +227,17 @@ When enabled, this option restores all of the following legacy output:
   `telemetry.sdk.version` uses the previous `semver:` prefix.
 
 The option changes only these compatibility names and the CPU value coupled to
-its metric name. It does not disable other fixes or instrumentation.
+its metric name. It does not turn off other fixes or instrumentation.
 
-#### Deprecated `ElasticAttributes` constants [deprecated-elastic-attributes]
+#### `ElasticAttributes` constants [deprecated-elastic-attributes]
 
-`ElasticAttributes` and all of its cases are deprecated in source after EDOT
-iOS 2.0.2. New integrations must use the upstream OpenTelemetry semantic
+```yaml {applies_to}
+product:
+  edot_ios: deprecated 2.1.0+
+```
+
+`ElasticAttributes` and all of its cases are deprecated in source in EDOT iOS
+2.1.0. New integrations must use the upstream OpenTelemetry semantic
 convention constants:
 
 - Replace `ElasticAttributes.deviceIdentifier` with
