@@ -42,6 +42,7 @@ class OpenTelemetryInitializer {
   let group: EventLoopGroup
   let sessionSampler: SessionSampler
   let exporters: Exporters?
+  let persistenceBaseDirectory: URL?
 
   static func createPersistenceFolder(
     for signal: PersistenceSignal,
@@ -120,11 +121,13 @@ class OpenTelemetryInitializer {
   init(
     group: EventLoopGroup,
     sessionSampler: SessionSampler,
-    exporters: Exporters? = nil
+    exporters: Exporters? = nil,
+    persistenceBaseDirectory: URL? = nil
   ) {
     self.group = group
     self.sessionSampler = sessionSampler
     self.exporters = exporters
+    self.persistenceBaseDirectory = persistenceBaseDirectory
   }
 
   // swiftlint:disable:next function_body_length
@@ -172,7 +175,10 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpMetricExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = Self.createPersistenceFolder(for: .metrics) {
+        if let path = Self.createPersistenceFolder(
+          for: .metrics,
+          baseDirectory: persistenceBaseDirectory
+        ) {
           return try PersistenceMetricExporterDecorator(
             metricExporter: defaultExporter, storageURL: path, exportCondition: { true },
             performancePreset: configuration.instrumentation.storageConfiguration) as MetricExporter
@@ -185,7 +191,10 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpTraceExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = Self.createPersistenceFolder(for: .traces) {
+        if let path = Self.createPersistenceFolder(
+          for: .traces,
+          baseDirectory: persistenceBaseDirectory
+        ) {
           return try PersistenceSpanExporterDecorator(
             spanExporter: OtlpTraceExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
@@ -200,7 +209,10 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpLogExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
       do {
-        if let path = Self.createPersistenceFolder(for: .logs) {
+        if let path = Self.createPersistenceFolder(
+          for: .logs,
+          baseDirectory: persistenceBaseDirectory
+        ) {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: OtlpLogExporter(
               channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel)),
@@ -259,7 +271,10 @@ class OpenTelemetryInitializer {
       let metricEndpoint = URL(string: endpoint.absoluteString + "/v1/metrics")
       let defaultExporter = OtlpHttpMetricExporter(endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
       do {
-        if let path = Self.createPersistenceFolder(for: .metrics) {
+        if let path = Self.createPersistenceFolder(
+          for: .metrics,
+          baseDirectory: persistenceBaseDirectory
+        ) {
           return try PersistenceMetricExporterDecorator(
             metricExporter: defaultExporter, storageURL: path, exportCondition: { true },
             performancePreset: configuration.instrumentation.storageConfiguration) as MetricExporter
@@ -273,7 +288,10 @@ class OpenTelemetryInitializer {
       let defaultExporter = OtlpHttpTraceExporter(
         endpoint: traceEndpoint ?? endpoint, config: otlpConfiguration)
       do {
-        if let path = Self.createPersistenceFolder(for: .traces) {
+        if let path = Self.createPersistenceFolder(
+          for: .traces,
+          baseDirectory: persistenceBaseDirectory
+        ) {
           return try PersistenceSpanExporterDecorator(
             spanExporter: defaultExporter,
             storageURL: path, exportCondition: { true },
@@ -287,7 +305,10 @@ class OpenTelemetryInitializer {
       let logsEndpoint = URL(string: endpoint.absoluteString + "/v1/logs")
       let defaultExporter = OtlpHttpLogExporter(endpoint: logsEndpoint ?? endpoint, config: otlpConfiguration)
       do {
-        if let path = Self.createPersistenceFolder(for: .logs) {
+        if let path = Self.createPersistenceFolder(
+          for: .logs,
+          baseDirectory: persistenceBaseDirectory
+        ) {
           return try PersistenceLogExporterDecorator(
             logRecordExporter: defaultExporter,
             storageURL: path, exportCondition: { true },
