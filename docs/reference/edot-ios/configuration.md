@@ -249,7 +249,7 @@ convention constants:
 - `ElasticAttributes.exportTimestamp` has no semantic-convention attribute
   replacement. Use the timestamps carried by OpenTelemetry signals.
 
-The deprecated enum remains available for source compatibility.
+The deprecated `enum` remains available for source compatibility.
 
 ### Session behavior [session-behavior]
 
