@@ -91,6 +91,7 @@ public struct AgentConfiguration {
   public var connectionType: AgentConnectionType = .http
   var auth: String?
   var sampleRate: Double = 1.0
+  var useLegacyAttributeNames = false
 
   var spanFilters = [SignalFilter<ReadableSpan>]()
   var logFilters = [SignalFilter<ReadableLogRecord>]()

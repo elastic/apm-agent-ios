@@ -14,6 +14,7 @@
 
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import ElasticApmTestSupport
 @testable import ElasticApm
 import XCTest
 
@@ -116,47 +117,4 @@ class ElasticLogRecordProcessorTest: XCTestCase {
 
   }
 
-}
-
-
-
-class WaitingLogRecordExporter: LogRecordExporter {
-    var logRecordList = [ReadableLogRecord]()
-    let cond = NSCondition()
-    let numberToWaitFor: Int
-    var shutdownCalled = false
-
-    init(numberToWaitFor: Int) {
-        self.numberToWaitFor = numberToWaitFor
-    }
-
-    func export(logRecords: [OpenTelemetrySdk.ReadableLogRecord], explicitTimeout: TimeInterval? = nil) -> OpenTelemetrySdk.ExportResult {
-        cond.lock()
-        logRecordList.append(contentsOf: logRecords)
-        cond.unlock()
-        cond.broadcast()
-        return .success
-    }
-
-    func waitForExport() -> [ReadableLogRecord]? {
-        var ret: [ReadableLogRecord]
-        cond.lock()
-        defer { cond.unlock() }
-
-        while logRecordList.count < numberToWaitFor {
-            cond.wait()
-        }
-        ret = logRecordList
-        logRecordList.removeAll()
-
-        return ret
-    }
-
-    func forceFlush(explicitTimeout: TimeInterval? = nil) -> ExportResult {
-        return .success
-    }
-
-    func shutdown(explicitTimeout: TimeInterval? = nil) {
-        shutdownCalled = true
-    }
 }

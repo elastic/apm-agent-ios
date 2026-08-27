@@ -29,6 +29,7 @@ public class AgentConfigBuilder {
   private static let api = "ApiKey"
   private var connectionType: AgentConnectionType = .http
   private var sampleRate = 1.0
+  private var legacyAttributeNames = false
 
   private var spanFilters = [SignalFilter<ReadableSpan>]()
   private var logFilters = [SignalFilter<ReadableLogRecord>]()
@@ -78,6 +79,11 @@ public class AgentConfigBuilder {
     return self
   }
 
+  public func useLegacyAttributeNames(_ enabled: Bool) -> Self {
+    legacyAttributeNames = enabled
+    return self
+  }
+
   public func useOpAMP() -> Self {
     enableOpAPM = true
     return self
@@ -122,6 +128,7 @@ public class AgentConfigBuilder {
     config.connectionType = connectionType
     config.managementUrl = self.managementUrl
     config.enableRemoteManagement = enableRemoteManagement
+    config.useLegacyAttributeNames = legacyAttributeNames
 
     if !self.spanAttributeInterceptors.isEmpty {
       if self.spanAttributeInterceptors.count > 1 {

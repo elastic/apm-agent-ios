@@ -187,6 +187,70 @@ Refer to [Central configuration](#central-configuration) for the complete setup.
 
 Controls whether EDOT iOS contacts central configuration for runtime configuration updates. Set it to `false` to turn off remote management entirely.
 
+### Telemetry attribute compatibility [telemetry-attribute-compatibility]
+
+```yaml {applies_to}
+product:
+  edot_ios: ga 2.1.0+
+```
+
+EDOT iOS emits current OpenTelemetry semantic-convention names by default.
+
+#### `useLegacyAttributeNames(_:)` [useLegacyAttributeNames]
+
+| Type | Default |
+| --- | --- |
+| `Bool` | `false` |
+
+Restores the telemetry names emitted before the semantic-convention cleanup.
+Use this temporary compatibility option only until dashboards, alerts, or other
+consumers migrate to the current names:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .useLegacyAttributeNames(true)
+  .build()
+```
+
+When enabled, this option restores the following legacy output:
+
+- URLSession spans use the old HTTP attributes such as `http.method`,
+  `http.url`, and `http.status_code` instead of stable HTTP attributes.
+- Application lifecycle events use `lifecycle` and `lifecycle.state` instead
+  of `device.app.lifecycle` and `ios.app.state`.
+- CPU and memory gauges use `system.cpu.usage` and `system.memory.usage` with
+  `state` set to `app`. CPU values use the previous percent-sum scale instead
+  of the `process.cpu.utilization` ratio.
+- Crash log records use the `crash` event name instead of `app.crash`.
+- Build identity uses `service.build` instead of `app.build_id`, and
+  `telemetry.sdk.version` uses the previous `semver:` prefix.
+
+The option changes only these compatibility names and the CPU value coupled to
+its metric name. It does not turn off other fixes or instrumentation.
+
+#### `ElasticAttributes` constants [deprecated-elastic-attributes]
+
+```yaml {applies_to}
+product:
+  edot_ios: deprecated 2.1.0+
+```
+
+`ElasticAttributes` and all of its cases are deprecated in source in EDOT iOS
+2.1.0. New integrations must use the upstream OpenTelemetry semantic
+convention constants:
+
+- Replace `ElasticAttributes.deviceIdentifier` with
+  `SemanticConventions.Device.id`.
+- Replace `ElasticAttributes.sessionId` with
+  `SemanticConventions.Session.id`.
+- Replace `ElasticAttributes.serviceBuild` with
+  `SemanticConventions.App.buildId`.
+- `ElasticAttributes.exportTimestamp` has no semantic-convention attribute
+  replacement. Use the timestamps carried by OpenTelemetry signals.
+
+The deprecated `enum` remains available for source compatibility.
+
 ### Session behavior [session-behavior]
 
 EDOT iOS makes a span sampling decision when a new app session begins.

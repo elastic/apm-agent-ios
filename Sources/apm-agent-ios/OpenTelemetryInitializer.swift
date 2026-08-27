@@ -24,9 +24,14 @@ import OpenTelemetrySdk
 import PersistenceExporter
 import os
 
-
 class OpenTelemetryInitializer {
   static let logLabel = "Elastic-OTLP-Exporter"
+
+  struct Exporters {
+    let metric: MetricExporter
+    let trace: SpanExporter
+    let log: LogRecordExporter
+  }
 
   enum PersistenceSignal: String, CaseIterable {
     case logs
@@ -36,6 +41,7 @@ class OpenTelemetryInitializer {
 
   let group: EventLoopGroup
   let sessionSampler: SessionSampler
+  let exporters: Exporters?
 
   static func createPersistenceFolder(
     for signal: PersistenceSignal,
@@ -111,9 +117,14 @@ class OpenTelemetryInitializer {
     }
   }
 
-  init(group: EventLoopGroup, sessionSampler: SessionSampler) {
+  init(
+    group: EventLoopGroup,
+    sessionSampler: SessionSampler,
+    exporters: Exporters? = nil
+  ) {
     self.group = group
     self.sessionSampler = sessionSampler
+    self.exporters = exporters
   }
 
   // swiftlint:disable:next function_body_length
@@ -134,6 +145,16 @@ class OpenTelemetryInitializer {
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
 
+    let resources = AgentResource.get(
+      useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
+    ).merging(other: AgentEnvResource.get())
+    if let exporters {
+      return registerProviders(
+        configuration: configuration,
+        resources: resources,
+        exporters: exporters)
+    }
+
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
       headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
@@ -147,7 +168,6 @@ class OpenTelemetryInitializer {
     }
     let channel = OpenTelemetryHelper.makeChannel(target: channelTarget, group: group)
 
-    let resources = AgentResource.get().merging(other: AgentEnvResource.get())
     let metricExporter = {
       let defaultExporter = OtlpMetricExporter(
         channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
@@ -191,55 +211,16 @@ class OpenTelemetryInitializer {
       return defaultExporter as LogRecordExporter
     }()
 
-    // initialize meter provider
-    OpenTelemetry.registerMeterProvider(
-      meterProvider: MeterProviderSdk.builder()
-        .registerView(
-          selector: InstrumentSelector
-            .builder()
-            .setInstrument(name: ".*")
-            .build(),
-          view: View.builder().build()
-        )
-        .registerMetricReader(
-          reader: PeriodicMetricReaderBuilder(
-            exporter: metricExporter
-          ).build())
-        .build())
-
-    // initialize trace provider
-    OpenTelemetry.registerTracerProvider(
-      tracerProvider: TracerProviderBuilder()
-        .add(
-          spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, agentConfiguration: configuration.agent)
-        )
-        .with(sampler: sessionSampler as Sampler)
-        .with(resource: resources)
-        .with(clock: NTPClock())
-        .build())
-
-    OpenTelemetry.registerLoggerProvider(
-      loggerProvider: LoggerProviderBuilder()
-        .with(clock: NTPClock())
-        .with(resource: resources)
-        .with(processors: [
-          ElasticLogRecordProcessor(
-            logRecordExporter: logExporter,
-            configuration: configuration.agent)
-        ])
-        .build())
-
-    return logExporter
+    return registerProviders(
+      configuration: configuration,
+      resources: resources,
+      exporters: Exporters(
+        metric: metricExporter,
+        trace: traceExporter,
+        log: logExporter))
   }
 
-
   func initializeWithHttp(_ configuration: AgentConfigManager) -> LogRecordExporter {
-    guard let endpoint =  OpenTelemetryHelper.getURL(with: configuration.agent) else {
-      os_log("Failed to start Elastic agent: invalid collector url.")
-      return NoopLogRecordExporter.instance
-    }
-
     var traceSampleFilter: [SignalFilter<any ReadableSpan>] = [
       SignalFilter<any ReadableSpan>({ [self] _ in
         self.sessionSampler.shouldSample
@@ -255,11 +236,25 @@ class OpenTelemetryInitializer {
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
 
+    let resources = AgentResource.get(
+      useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
+    ).merging(other: AgentEnvResource.get())
+    if let exporters {
+      return registerProviders(
+        configuration: configuration,
+        resources: resources,
+        exporters: exporters)
+    }
+
+    guard let endpoint =  OpenTelemetryHelper.getURL(with: configuration.agent) else {
+      os_log("Failed to start Elastic agent: invalid collector url.")
+      return NoopLogRecordExporter.instance
+    }
+
     let otlpConfiguration = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
       headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
 
-    let resources = AgentResource.get().merging(other: AgentEnvResource.get())
     let metricExporter = {
       let metricEndpoint = URL(string: endpoint.absoluteString + "/v1/metrics")
       let defaultExporter = OtlpHttpMetricExporter(endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
@@ -275,7 +270,8 @@ class OpenTelemetryInitializer {
 
     let traceExporter = {
       let traceEndpoint = URL(string: endpoint.absoluteString + "/v1/traces")
-      let defaultExporter = OtlpHttpTraceExporter(endpoint: traceEndpoint ?? endpoint, config:otlpConfiguration)
+      let defaultExporter = OtlpHttpTraceExporter(
+        endpoint: traceEndpoint ?? endpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder(for: .traces) {
           return try PersistenceSpanExporterDecorator(
@@ -302,27 +298,41 @@ class OpenTelemetryInitializer {
       return defaultExporter as LogRecordExporter
     }()
 
-OpenTelemetry.registerMeterProvider(
-    meterProvider: MeterProviderSdk.builder()
-      .registerView(
-        selector: InstrumentSelector
-          .builder()
-          .setInstrument(name: ".*")
-          .build(),
-        view: View.builder().build()
-      )
-      .registerMetricReader(
-        reader: PeriodicMetricReaderBuilder(
-          exporter: metricExporter
-        ).build()
-      ).build())
+    return registerProviders(
+      configuration: configuration,
+      resources: resources,
+      exporters: Exporters(
+        metric: metricExporter,
+        trace: traceExporter,
+        log: logExporter))
+  }
 
-    // initialize trace provider
+  private func registerProviders(
+    configuration: AgentConfigManager,
+    resources: Resource,
+    exporters: Exporters
+  ) -> LogRecordExporter {
+    OpenTelemetry.registerMeterProvider(
+      meterProvider: MeterProviderSdk.builder()
+        .setResource(resource: resources)
+        .registerView(
+          selector: InstrumentSelector
+            .builder()
+            .setInstrument(name: ".*")
+            .build(),
+          view: View.builder().build()
+        )
+        .registerMetricReader(
+          reader: PeriodicMetricReaderBuilder(
+            exporter: exporters.metric
+          ).build()
+        ).build())
+
     OpenTelemetry.registerTracerProvider(
       tracerProvider: TracerProviderBuilder()
         .add(
           spanProcessor: ElasticSpanProcessor(
-            spanExporter: traceExporter, agentConfiguration: configuration.agent)
+            spanExporter: exporters.trace, agentConfiguration: configuration.agent)
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
@@ -335,10 +345,10 @@ OpenTelemetry.registerMeterProvider(
         .with(resource: resources)
         .with(processors: [
           ElasticLogRecordProcessor(
-            logRecordExporter: logExporter,
+            logRecordExporter: exporters.log,
             configuration: configuration.agent)
         ])
         .build())
-    return logExporter
+    return exporters.log
   }
 }

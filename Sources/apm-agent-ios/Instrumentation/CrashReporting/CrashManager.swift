@@ -24,14 +24,20 @@ import os.log
 
 #if !os(watchOS)
 struct CrashManager {
-  static let crashEventName: String = "crash"
+  static let crashEventName = "app.crash"
   static let crashManagerVersion = "0.0.3"
   static let lastResourceDefaultsKey: String = "elastic.last.resource"
   static let instrumentationName = "PLCrashReporter"
+  let eventName: String
   let lastResource: Resource
   let loggerProvider: LoggerProvider
   private let logger = OSLog(subsystem: "co.elastic.crash-reporter", category: "instrumentation")
-  init(resource: Resource, logExporter: LogRecordExporter) {
+  init(
+    resource: Resource,
+    logExporter: LogRecordExporter,
+    useLegacyAttributeNames: Bool = false
+  ) {
+    eventName = Self.eventName(useLegacyAttributeNames: useLegacyAttributeNames)
     // if something went wrong with the lastResource in the user defaults, fallback of the current resource data.
     var tempResource = resource
 
@@ -127,7 +133,7 @@ struct CrashManager {
           }
 
             logger.logRecordBuilder()
-                .setEventName(Self.crashEventName)
+                .setEventName(eventName)
                 .setSeverity(.fatal)
                 .setObservedTimestamp(report.systemInfo.timestamp)
                 .setAttributes(attributes)
@@ -149,7 +155,10 @@ struct CrashManager {
     crashReporter.purgePendingCrashReport()
   }
 
-  
+  static func eventName(useLegacyAttributeNames: Bool) -> String {
+    useLegacyAttributeNames ? LegacyAttributeNames.crashEvent : crashEventName
+  }
+
   private func getSignalHandler() -> PLCrashReporterSignalHandlerType {
     #if os(tvOS)
       return .BSD

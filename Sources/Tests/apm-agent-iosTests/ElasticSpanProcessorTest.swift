@@ -14,6 +14,7 @@
 
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import ElasticApmTestSupport
 @testable import ElasticApm
 import XCTest
 
@@ -157,46 +158,5 @@ class SessionSpanProcessorTest: XCTestCase {
     let exported = waitingSpanExporter.waitForExport()
 
     XCTAssertTrue(exported?[0].attributes["foo"]?.description == "bar")
-  }
-}
-
-class WaitingSpanExporter: SpanExporter {
-  var spanDataList = [SpanData]()
-  let cond = NSCondition()
-  let numberToWaitFor: Int
-  var shutdownCalled = false
-
-  init(numberToWaitFor: Int) {
-    self.numberToWaitFor = numberToWaitFor
-  }
-
-  func waitForExport() -> [SpanData]? {
-    var ret: [SpanData]
-    cond.lock()
-    defer { cond.unlock() }
-
-    while spanDataList.count < numberToWaitFor {
-      cond.wait()
-    }
-    ret = spanDataList
-    spanDataList.removeAll()
-
-    return ret
-  }
-
-  func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
-    cond.lock()
-    spanDataList.append(contentsOf: spans)
-    cond.unlock()
-    cond.broadcast()
-    return .success
-  }
-
-  func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
-    return .success
-  }
-
-  func shutdown(explicitTimeout: TimeInterval? = nil) {
-    shutdownCalled = true
   }
 }

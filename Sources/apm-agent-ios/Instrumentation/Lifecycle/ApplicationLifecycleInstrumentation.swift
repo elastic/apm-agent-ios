@@ -17,14 +17,10 @@ import Foundation
 import UIKit
 import OpenTelemetryApi
 public class ApplicationLifecycleInstrumentation: NSObject {
-    private static let eventName: String = "lifecycle"
-    private enum State: String {
-        case active
-        case inactive
-        case background
-        case foreground
-        case terminate
-}
+    // https://opentelemetry.io/docs/specs/semconv/mobile/mobile-events/
+    private static let eventName = "device.app.lifecycle"
+    private let useLegacyAttributeNames: Bool
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -38,8 +34,18 @@ public class ApplicationLifecycleInstrumentation: NSObject {
     }
 
     public override init() {
+        useLegacyAttributeNames = false
         super.init()
+        registerObservers()
+    }
 
+    init(useLegacyAttributeNames: Bool) {
+        self.useLegacyAttributeNames = useLegacyAttributeNames
+        super.init()
+        registerObservers()
+    }
+
+    private func registerObservers() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(active(_:)),
                                                name: UIApplication.didBecomeActiveNotification,
@@ -67,38 +73,38 @@ public class ApplicationLifecycleInstrumentation: NSObject {
     }
 
     @objc func active(_ notification: Notification) {
-        Self.getLogger().logRecordBuilder()
-            .setEventName(Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(State.active.rawValue)])
-            .emit()
+        emit(state: .active)
     }
 
     @objc func inactive(_ notification: Notification) {
-        Self.getLogger().logRecordBuilder()
-            .setEventName(Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(State.inactive.rawValue)])
-            .emit()
+        emit(state: .inactive)
     }
 
     @objc func background(_ notification: Notification) {
-        Self.getLogger().logRecordBuilder()
-            .setEventName(Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(State.background.rawValue)])
-            .emit()
+        emit(state: .background)
     }
 
     @objc func foreground(_ notification: Notification) {
-        Self.getLogger().logRecordBuilder()
-            .setEventName(Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(State.foreground.rawValue)])
-            .emit()
+        emit(state: .foreground)
     }
 
     @objc func terminate(_ notification: Notification) {
+        emit(state: .terminate)
+    }
+
+    private func emit(state: SemanticConventions.Ios.AppStateValues) {
+        let eventName = useLegacyAttributeNames
+            ? LegacyAttributeNames.lifecycleEvent
+            : Self.eventName
+        let stateAttribute = useLegacyAttributeNames
+            ? LegacyAttributeNames.lifecycleState
+            : SemanticConventions.Ios.appState.rawValue
+
         Self.getLogger().logRecordBuilder()
-            .setEventName(Self.eventName)
-            .setAttributes(["lifecycle.state": AttributeValue.string(State.terminate.rawValue)])
-            .emit()}
+            .setEventName(eventName)
+            .setAttributes([stateAttribute: AttributeValue.string(state.description)])
+            .emit()
+    }
 }
 
 #endif

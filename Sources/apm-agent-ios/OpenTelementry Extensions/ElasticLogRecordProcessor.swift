@@ -33,7 +33,7 @@ public struct ElasticLogRecordProcessor: LogRecordProcessor {
     self.attributeInterceptor = configuration.logRecordAttributeInterceptor
       .join { attributes in
           var newAttributes = attributes
-          newAttributes[ElasticAttributes.sessionId.rawValue] = .string(
+          newAttributes[SemanticConventions.Session.id.rawValue] = .string(
             SessionManager.instance.session())
           return newAttributes
         }

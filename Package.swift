@@ -74,13 +74,38 @@ let package = Package(
         .process("Resources/PrivacyInfo.xcprivacy")
       ]
     ),
+    .target(
+      name: "ElasticApmTestSupport",
+      dependencies: [
+        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core")
+      ],
+      path: "Sources/Tests/ElasticApmTestSupport"),
     .testTarget(
       name: "ElasticApmTests",
-      dependencies: ["ElasticApm"],
+      dependencies: [
+        "ElasticApm",
+        "ElasticApmTestSupport",
+        .product(name: "ResourceExtension", package: "opentelemetry-swift"),
+        .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift")
+      ],
       path: "Sources/Tests/apm-agent-iosTests"),
     .testTarget(
       name: "MemorySamplerTests",
-      dependencies: ["MemorySampler"],
+      dependencies: [
+        "MemorySampler",
+        "ElasticApmTestSupport",
+        .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
+        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core")
+      ],
       path: "Sources/Tests/memory-sampler-tests"),
+    .testTarget(
+      name: "CPUSamplerTests",
+      dependencies: [
+        "CPUSampler",
+        "ElasticApmTestSupport",
+        .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
+        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core")
+      ],
+      path: "Sources/Tests/cpu-sampler-tests")
   ]
 )
