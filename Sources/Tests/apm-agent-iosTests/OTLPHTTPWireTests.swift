@@ -44,7 +44,7 @@
       try super.setUpWithError()
       XCTAssertNil(
         ProcessInfo.processInfo.environment["OTEL_EXPORTER_OTLP_HEADERS"],
-        "Wire tests require configured headers to reach the exporter")
+        "Wire tests require OTEL_EXPORTER_OTLP_HEADERS to be unset so the configured test authorization is used")
       try removePersistence()
     }
 
