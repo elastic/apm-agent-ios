@@ -51,7 +51,7 @@
       var address = sockaddr_in()
       address.sin_family = sa_family_t(AF_INET)
       address.sin_port = UInt16(server.port).bigEndian
-      address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+      address.sin_addr = in_addr(s_addr: UInt32(INADDR_LOOPBACK).bigEndian)
       let connectionResult = withUnsafePointer(to: &address) { pointer in
         connect(
           clientSocket,
@@ -239,7 +239,7 @@
 
       let configuration = AgentConfigBuilder()
         .disableAgent()
-        .withExportUrl(URL(string: "http://127.0.0.1:\(server.port)")!)
+        .withExportUrl(server.baseURL)
         .withApiKey(uniqueCredential())
         .build()
       ElasticApmAgent.start(with: configuration)
@@ -304,7 +304,7 @@
         .appendingPathComponent("edot-wire-\(UUID().uuidString)", isDirectory: true)
 
       let builder = AgentConfigBuilder()
-        .withExportUrl(URL(string: "http://127.0.0.1:\(server.port)")!)
+        .withExportUrl(server.baseURL)
         .withRemoteManagement(false)
       authentication.apply(to: builder)
       let configuration = builder.build()

@@ -15,6 +15,7 @@ import Foundation
 #if os(iOS) || os(macOS)
 
 public final class LoopbackHTTPTestServer {
+  private static let host = "127.0.0.1"
   private static let requestReadTimeout: TimeInterval = 10
 
   public struct Request: Equatable {
@@ -36,6 +37,13 @@ public final class LoopbackHTTPTestServer {
   }
 
   public private(set) var port = 0
+
+  public var baseURL: URL {
+    guard let url = URL(string: "http://\(Self.host):\(port)") else {
+      preconditionFailure("Failed to construct loopback server URL")
+    }
+    return url
+  }
 
   private let requestsQueue = DispatchQueue(label: "LoopbackHTTPTestServer.requests")
   private let serverQueue = DispatchQueue(label: "LoopbackHTTPTestServer.server")
@@ -77,7 +85,7 @@ public final class LoopbackHTTPTestServer {
     var address = sockaddr_in()
     address.sin_family = sa_family_t(AF_INET)
     address.sin_port = 0
-    address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+    address.sin_addr = in_addr(s_addr: UInt32(INADDR_LOOPBACK).bigEndian)
 
     let bindResult = withUnsafePointer(to: &address) { pointer in
       bind(
@@ -111,7 +119,7 @@ public final class LoopbackHTTPTestServer {
       throw ServerError.listenFailed
     }
 
-    recordEvent("listening on 127.0.0.1:\(port)")
+    recordEvent("listening on \(Self.host):\(port)")
     isRunning = true
     serverQueue.async { [weak self] in
       self?.acceptRequests()
