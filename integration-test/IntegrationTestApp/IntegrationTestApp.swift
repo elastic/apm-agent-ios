@@ -6,7 +6,6 @@
  */
 
 import ElasticApm
-import OpenTelemetryApi
 import SwiftUI
 import UIKit
 

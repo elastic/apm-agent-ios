@@ -11,13 +11,11 @@
 		1E2442B4EB64F939A612BC05 /* IntegrationHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB247F5064034107BB47FA8B /* IntegrationHomeView.swift */; };
 		259D0F61A07672C9133727D6 /* IntegrationTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5C7BC1D901420C40049E05 /* IntegrationTelemetry.swift */; };
 		5FCE11860A0BD7C5B0036B46 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0E82BC29BF788936C46ACED6 /* Assets.xcassets */; };
-		8BC4DF3693D7662ED0FB1388 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08A78264121965808EB4E8D0 /* Foundation.framework */; };
 		BF0590504BF63D1FAC8775F2 /* ElasticApm in Frameworks */ = {isa = PBXBuildFile; productRef = A8C6B9D7DA5F170A86F58C05 /* ElasticApm */; };
 		C42D24A403525C8D1D2573ED /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = 336F1C931CDB75BD6EF54538 /* OpenTelemetryApi */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		08A78264121965808EB4E8D0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		0D5C7BC1D901420C40049E05 /* IntegrationTelemetry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationTelemetry.swift; sourceTree = "<group>"; };
 		0E82BC29BF788936C46ACED6 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8287A8FC635A1EDD9009488A /* IntegrationTestApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationTestApp.swift; sourceTree = "<group>"; };
@@ -31,7 +29,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8BC4DF3693D7662ED0FB1388 /* Foundation.framework in Frameworks */,
 				BF0590504BF63D1FAC8775F2 /* ElasticApm in Frameworks */,
 				C42D24A403525C8D1D2573ED /* OpenTelemetryApi in Frameworks */,
 			);
@@ -40,22 +37,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13219D29AC60AA5365E6855B /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				08A78264121965808EB4E8D0 /* Foundation.framework */,
-			);
-			name = iOS;
-			sourceTree = "<group>";
-		};
-		7C2CC880416966788AF71439 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				13219D29AC60AA5365E6855B /* iOS */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		9DDDE0822E4303B030DAA2CF /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -68,7 +49,6 @@
 			isa = PBXGroup;
 			children = (
 				9DDDE0822E4303B030DAA2CF /* Products */,
-				7C2CC880416966788AF71439 /* Frameworks */,
 				FA8147346FE37BD3226CC8C4 /* IntegrationTestApp */,
 			);
 			sourceTree = "<group>";
