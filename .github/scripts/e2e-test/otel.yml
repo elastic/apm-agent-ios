@@ -1,0 +1,46 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 127.0.0.1:4317
+      http:
+        endpoint: 127.0.0.1:4318
+
+connectors:
+  elasticapm: {}
+
+processors:
+  batch:
+    send_batch_size: 1000
+    send_batch_max_size: 1500
+    timeout: 1s
+  batch/metrics:
+    send_batch_max_size: 0
+    timeout: 1s
+  elasticapm: {}
+
+exporters:
+  elasticsearch/otel:
+    endpoints:
+      - ${env:ELASTIC_ENDPOINT}
+    mapping:
+      mode: otel
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [elasticapm, elasticsearch/otel]
+    traces:
+      receivers: [otlp]
+      processors: [batch, elasticapm]
+      exporters: [elasticapm, elasticsearch/otel]
+    metrics:
+      receivers: [otlp]
+      processors: [batch/metrics]
+      exporters: [elasticsearch/otel]
+    metrics/aggregated-otel-metrics:
+      receivers: [elasticapm]
+      processors: []
+      exporters: [elasticsearch/otel]

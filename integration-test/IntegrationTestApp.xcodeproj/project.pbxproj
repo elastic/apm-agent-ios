@@ -1,0 +1,377 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0DA42B98186D4A3C04C2010F /* IntegrationTestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8287A8FC635A1EDD9009488A /* IntegrationTestApp.swift */; };
+		1E2442B4EB64F939A612BC05 /* IntegrationHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB247F5064034107BB47FA8B /* IntegrationHomeView.swift */; };
+		259D0F61A07672C9133727D6 /* IntegrationTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5C7BC1D901420C40049E05 /* IntegrationTelemetry.swift */; };
+		5FCE11860A0BD7C5B0036B46 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0E82BC29BF788936C46ACED6 /* Assets.xcassets */; };
+		8BC4DF3693D7662ED0FB1388 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08A78264121965808EB4E8D0 /* Foundation.framework */; };
+		BF0590504BF63D1FAC8775F2 /* ElasticApm in Frameworks */ = {isa = PBXBuildFile; productRef = A8C6B9D7DA5F170A86F58C05 /* ElasticApm */; };
+		C42D24A403525C8D1D2573ED /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = 336F1C931CDB75BD6EF54538 /* OpenTelemetryApi */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08A78264121965808EB4E8D0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		0D5C7BC1D901420C40049E05 /* IntegrationTelemetry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationTelemetry.swift; sourceTree = "<group>"; };
+		0E82BC29BF788936C46ACED6 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8287A8FC635A1EDD9009488A /* IntegrationTestApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationTestApp.swift; sourceTree = "<group>"; };
+		A9798CD10E9571AE1EBF6C75 /* IntegrationTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB247F5064034107BB47FA8B /* IntegrationHomeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationHomeView.swift; sourceTree = "<group>"; };
+		BC21FDD28720AF02A26EFC49 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F5444C2D99BE621A73D49137 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8BC4DF3693D7662ED0FB1388 /* Foundation.framework in Frameworks */,
+				BF0590504BF63D1FAC8775F2 /* ElasticApm in Frameworks */,
+				C42D24A403525C8D1D2573ED /* OpenTelemetryApi in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		13219D29AC60AA5365E6855B /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				08A78264121965808EB4E8D0 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		7C2CC880416966788AF71439 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				13219D29AC60AA5365E6855B /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9DDDE0822E4303B030DAA2CF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A9798CD10E9571AE1EBF6C75 /* IntegrationTestApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C20C094A159B3BE21668FA68 = {
+			isa = PBXGroup;
+			children = (
+				9DDDE0822E4303B030DAA2CF /* Products */,
+				7C2CC880416966788AF71439 /* Frameworks */,
+				FA8147346FE37BD3226CC8C4 /* IntegrationTestApp */,
+			);
+			sourceTree = "<group>";
+		};
+		FA8147346FE37BD3226CC8C4 /* IntegrationTestApp */ = {
+			isa = PBXGroup;
+			children = (
+				8287A8FC635A1EDD9009488A /* IntegrationTestApp.swift */,
+				0D5C7BC1D901420C40049E05 /* IntegrationTelemetry.swift */,
+				BB247F5064034107BB47FA8B /* IntegrationHomeView.swift */,
+				BC21FDD28720AF02A26EFC49 /* Info.plist */,
+				0E82BC29BF788936C46ACED6 /* Assets.xcassets */,
+			);
+			name = IntegrationTestApp;
+			path = IntegrationTestApp;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CF4E30B7583EF0E665B19593 /* IntegrationTestApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BC702CC7C21E177457311E92 /* Build configuration list for PBXNativeTarget "IntegrationTestApp" */;
+			buildPhases = (
+				3CC0E356CFA6F718CBC1A69A /* Sources */,
+				F5444C2D99BE621A73D49137 /* Frameworks */,
+				DFF4BE6AE311572186D4A03C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IntegrationTestApp;
+			packageProductDependencies = (
+				A8C6B9D7DA5F170A86F58C05 /* ElasticApm */,
+				336F1C931CDB75BD6EF54538 /* OpenTelemetryApi */,
+			);
+			productName = IntegrationTestApp;
+			productReference = A9798CD10E9571AE1EBF6C75 /* IntegrationTestApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		19E281319BD0FF65D64FA2B0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+			};
+			buildConfigurationList = 14206308B4376433FE5A449C /* Build configuration list for PBXProject "IntegrationTestApp" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C20C094A159B3BE21668FA68;
+			minimizedProjectReferenceProxies = 0;
+			packageReferences = (
+				49F6FAAD068ED83C21A15D92 /* XCLocalSwiftPackageReference ".." */,
+			);
+			preferredProjectObjectVersion = 100;
+			productRefGroup = 9DDDE0822E4303B030DAA2CF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CF4E30B7583EF0E665B19593 /* IntegrationTestApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DFF4BE6AE311572186D4A03C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5FCE11860A0BD7C5B0036B46 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3CC0E356CFA6F718CBC1A69A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0DA42B98186D4A3C04C2010F /* IntegrationTestApp.swift in Sources */,
+				259D0F61A07672C9133727D6 /* IntegrationTelemetry.swift in Sources */,
+				1E2442B4EB64F939A612BC05 /* IntegrationHomeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6C8D40EBB1A1553CE1886083 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = IntegrationTestApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.elastic.otel.ios.integration;
+				PRODUCT_NAME = "integration-test-app";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		728F1DAAF13F5A0F5D2FB296 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F714AF506E18F1EC93E64714 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F7466357AD35950EA774DB24 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = IntegrationTestApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.elastic.otel.ios.integration;
+				PRODUCT_NAME = "integration-test-app";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		14206308B4376433FE5A449C /* Build configuration list for PBXProject "IntegrationTestApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				728F1DAAF13F5A0F5D2FB296 /* Debug */,
+				F714AF506E18F1EC93E64714 /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		BC702CC7C21E177457311E92 /* Build configuration list for PBXNativeTarget "IntegrationTestApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6C8D40EBB1A1553CE1886083 /* Release */,
+				F7466357AD35950EA774DB24 /* Debug */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		49F6FAAD068ED83C21A15D92 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		336F1C931CDB75BD6EF54538 /* OpenTelemetryApi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49F6FAAD068ED83C21A15D92 /* XCLocalSwiftPackageReference ".." */;
+			productName = OpenTelemetryApi;
+		};
+		A8C6B9D7DA5F170A86F58C05 /* ElasticApm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49F6FAAD068ED83C21A15D92 /* XCLocalSwiftPackageReference ".." */;
+			productName = ElasticApm;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 19E281319BD0FF65D64FA2B0 /* Project object */;
+}

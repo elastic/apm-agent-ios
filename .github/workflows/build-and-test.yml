@@ -1,5 +1,8 @@
 name: Build and Test
 
+env:
+  ELASTIC_VERSION: 9.4.2
+
 on:
   workflow_dispatch:
   pull_request:
@@ -11,39 +14,44 @@ permissions:
   contents: read
 
 jobs:
-  should-run:
+  changes:
     runs-on: ubuntu-slim
     outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
+      code: ${{ steps.filter.outputs.code }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: Check if the workflow should run
-        id: check
+      - id: filter
+        name: Detect non-Markdown changes
+        shell: bash
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+          PUSH_HEAD_SHA: ${{ github.sha }}
         run: |
-          SHOULD_RUN=false
-
-          # github.base_ref is empty for push and workflow_dispatch; run all jobs.
-          if [ -z "${{ github.base_ref }}" ]; then
-            SHOULD_RUN=true
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            base_sha="$PR_BASE_SHA"
+            head_sha="$PR_HEAD_SHA"
           else
-            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
-
-            echo "$CHANGED_FILES" | grep -qE '^Sources/|^\.ci/' && SHOULD_RUN=true
-
-            if echo "$CHANGED_FILES" | grep -q '^Package\.swift$'; then
-              git diff origin/${{ github.base_ref }} HEAD -- Package.swift | grep -q . && SHOULD_RUN=true
-            fi
-
-            echo "$CHANGED_FILES" | grep -qE '^\.github/workflows/' && SHOULD_RUN=true
+            base_sha="$PUSH_BASE_SHA"
+            head_sha="$PUSH_HEAD_SHA"
           fi
 
-          echo "should-run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]] || \
+             ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            echo "Unable to compare with the previous revision; running code checks."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$base_sha" "$head_sha" -- . ':(exclude,glob)**/*.md'; then
+            echo "Only Markdown files changed; skipping code checks."
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Non-Markdown files changed; running code checks."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
 
   swift-lint:
-    needs: should-run
-    if: ${{ needs.should-run.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -55,8 +63,8 @@ jobs:
           DIFF_BASE: ${{ github.base_ref || github.event.repository.default_branch }}
   xcode-matrix:
     name: xcode (${{ matrix.label }})
-    needs: should-run
-    if: ${{ needs.should-run.outputs.should-run == 'true' }}
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -134,10 +142,37 @@ jobs:
         if: ${{ matrix.label == 'iphoneos-build' }}
         run: .ci/scripts/build.sh
 
+  e2e:
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: macos-latest-large
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: Cache Elastic distributions
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ci-cache
+          key: elastic-e2e-${{ env.ELASTIC_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Run end-to-end telemetry test
+        run: .github/scripts/e2e-test/e2e_test.sh
+      - name: Store end-to-end diagnostics
+        if: success() || failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: e2e-results
+          path: build/e2e/*
+          if-no-files-found: error
+
   required-status-checks:
     needs:
+      - changes
       - swift-lint
       - xcode-matrix
+      - e2e
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -150,8 +185,8 @@ jobs:
       - run: ${{ steps.check.outputs.is-success }}
 
   package:
-    needs: [should-run, required-status-checks]
-    if: ${{ needs.should-run.outputs.should-run == 'true' && needs.required-status-checks.result == 'success' }}
+    needs: [changes, required-status-checks]
+    if: ${{ needs.changes.outputs.code == 'true' && needs.required-status-checks.result == 'success' }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
