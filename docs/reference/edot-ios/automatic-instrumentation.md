@@ -125,7 +125,7 @@ EDOT iOS captures app crashes and reports them using the OpenTelemetry [Events A
 
 A crash is stored on the device when it occurs. The SDK loads and exports the report on the next app launch as a log event with:
 
-- Event name `crash`.
+- Event name `app.crash`.
 - Fatal severity.
 - Exception type, message, and stack trace.
 - The session ID from the crashed app session.

@@ -9,9 +9,9 @@ import Foundation
 import OpenTelemetryApi
 
 /// Emits the exactly-once span, log, and metric that the E2E harness asserts in Elasticsearch.
-/// There is no scenario hook and no run-id reader: the harness carries `test.run_id` through
-/// `SIMCTL_CHILD_OTEL_RESOURCE_ATTRIBUTES`, and the agent picks it up from the process
-/// environment on its own.
+/// There is no run-id reader: the harness carries `test.run_id` through
+/// `SIMCTL_CHILD_OTEL_RESOURCE_ATTRIBUTES`, and the agent picks it up from the process environment
+/// on its own.
 enum IntegrationTelemetry {
   private static let instrumentationScope = "co.elastic.otel.ios.integration"
 

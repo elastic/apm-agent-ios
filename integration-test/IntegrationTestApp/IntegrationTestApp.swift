@@ -23,8 +23,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
     ElasticApmAgent.start(with: agentConfiguration)
     IntegrationTelemetry.emitLaunchSignals()
+    runEndToEndScenarioIfRequested()
 
     return true
+  }
+
+  private func runEndToEndScenarioIfRequested() {
+    guard ProcessInfo.processInfo.environment["E2E_SCENARIO"] == "crash" else {
+      return
+    }
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+      fatalError("Intentional crash from the EDOT iOS integration test app")
+    }
   }
 }
 
