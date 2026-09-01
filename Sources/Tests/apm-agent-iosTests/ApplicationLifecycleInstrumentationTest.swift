@@ -99,4 +99,16 @@
       return try XCTUnwrap(exporter.waitForExport()?.first)
     }
   }
+#else
+  import XCTest
+
+  final class ApplicationLifecycleInstrumentationTest: XCTestCase {
+    func testUnsupportedPlatformReportsSkip() throws {
+      #if os(macOS)
+        throw XCTSkip("Application lifecycle instrumentation is unavailable on macOS without UIKit.")
+      #else
+        throw XCTSkip("Application lifecycle instrumentation is unavailable on watchOS.")
+      #endif
+    }
+  }
 #endif

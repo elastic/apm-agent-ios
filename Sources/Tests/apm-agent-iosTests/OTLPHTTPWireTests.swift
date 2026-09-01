@@ -435,4 +435,16 @@
     }
   }
 
+#else
+  import XCTest
+
+  final class OTLPHTTPWireTests: XCTestCase {
+    func testUnsupportedPlatformReportsSkip() throws {
+      #if os(tvOS)
+        throw XCTSkip("OTLP HTTP wire tests are not supported on tvOS.")
+      #else
+        throw XCTSkip("OTLP HTTP wire tests are not supported on watchOS.")
+      #endif
+    }
+  }
 #endif

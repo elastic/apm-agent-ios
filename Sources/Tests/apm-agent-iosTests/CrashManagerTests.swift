@@ -40,4 +40,12 @@
       )
     }
   }
+#else
+  import XCTest
+
+  final class CrashManagerTests: XCTestCase {
+    func testUnsupportedPlatformReportsSkip() throws {
+      throw XCTSkip("Crash reporting is not supported on watchOS.")
+    }
+  }
 #endif

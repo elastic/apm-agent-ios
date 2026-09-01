@@ -18,6 +18,14 @@ Talk about what you would like to do.
 It may be that somebody is already working on it,
 or that there are particular issues that you should know about before implementing the change.
 
+### Public API compatibility
+
+CI compares the package's macOS-buildable public API with the latest release
+tag. If a pull request intentionally breaks public API, add
+`.ci/api-breakage-allowlist.txt` in that pull request with one exact breakage
+message per line. Remove the file after the next release tag includes the
+break.
+
 ### Submitting your changes
 
 Generally, we require that you test any code you are adding or modifying.

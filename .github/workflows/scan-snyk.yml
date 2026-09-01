@@ -7,7 +7,7 @@ name: scan-snyk
 # https://securitylab.github.com/resources/github-actions-new-patterns-and-mitigations/
 #
 # - workflow_dispatch: Manual triggers (always trusted)
-# - workflow_run: Only after macos workflow completes on main branch
+# - workflow_run: Only after Build and Test completes on main branch
 #
 # The privileged (secret-accessing) workflow_run workflow is separated from
 # untrusted pull request code execution to prevent secret exfiltration attacks.
@@ -15,7 +15,7 @@ name: scan-snyk
 on:
   workflow_dispatch: ~
   workflow_run:
-    workflows: [macos]
+    workflows: ["Build and Test"]
     types: [completed]
     branches: [main]
   pull_request_target:

@@ -61,6 +61,41 @@ jobs:
           args: --strict
           # base_ref is set for pull_request; on push, diff against the default branch.
           DIFF_BASE: ${{ github.base_ref || github.event.repository.default_branch }}
+
+  api-stability:
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Resolve latest release
+        id: baseline
+        shell: bash
+        run: |
+          baseline="$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)"
+          if [[ -z "$baseline" ]]; then
+            echo "::error::No plain-semver release tag is available for the API stability baseline."
+            exit 1
+          fi
+          echo "tag=$baseline" >> "$GITHUB_OUTPUT"
+      # The macOS host compares only API that is buildable on macOS. API inside
+      # iOS-only conditional blocks is outside this gate.
+      - name: Diagnose API breaking changes
+        env:
+          BASELINE_TAG: ${{ steps.baseline.outputs.tag }}
+        shell: bash
+        run: |
+          allowlist_args=()
+          if [[ -f .ci/api-breakage-allowlist.txt ]]; then
+            allowlist_args+=(--breakage-allowlist-path .ci/api-breakage-allowlist.txt)
+          fi
+          swift package diagnose-api-breaking-changes \
+            "$BASELINE_TAG" \
+            "${allowlist_args[@]}"
+
   xcode-matrix:
     name: xcode (${{ matrix.label }})
     needs: changes
@@ -171,6 +206,7 @@ jobs:
     needs:
       - changes
       - swift-lint
+      - api-stability
       - xcode-matrix
       - e2e
     runs-on: ubuntu-latest
