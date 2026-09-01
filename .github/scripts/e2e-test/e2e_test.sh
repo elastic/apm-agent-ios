@@ -175,9 +175,33 @@ metric_query() {
   }'
 }
 
+crash_query() {
+  local filters
+  filters=$(service_filter)
+  jq -nc --argjson filters "$filters" '{
+    size: 1,
+    sort: [{"@timestamp": "desc"}],
+    query: {
+      bool: {
+        filter: ($filters + [{
+          bool: {
+            should: [
+              {term: {"event.name": "app.crash"}},
+              {term: {event_name: "app.crash"}},
+              {term: {"attributes.otel.event.name": "app.crash"}}
+            ],
+            minimum_should_match: 1
+          }
+        }])
+      }
+    }
+  }'
+}
+
 es_search() {
   local index="$1"
   local query="$2"
+  local response_file="${3:-}"
   local response
 
   response=$(curl --fail --silent --show-error \
@@ -185,6 +209,9 @@ es_search() {
     --data "$query" \
     "$ELASTICSEARCH_URL/$index/_search") || return 1
 
+  if [ -n "$response_file" ]; then
+    echo "$response" | jq . > "$response_file"
+  fi
   if [ "$(echo "$response" | jq -r '.hits.total.value // 0')" -lt 1 ]; then
     return 1
   fi
@@ -202,7 +229,9 @@ es_wait_for_item() {
   echo "$query" | jq . > "$BUILD_DIR/${artifact_name}-query.json"
   while [ "$elapsed" -lt "$timeout" ]; do
     local result
-    if result=$(es_search "$index" "$query"); then
+    if result=$(
+      es_search "$index" "$query" "$BUILD_DIR/${artifact_name}-response.json"
+    ); then
       echo "$result" | jq . > "$BUILD_DIR/${artifact_name}.json"
       echo "$result"
       return 0
@@ -244,6 +273,53 @@ assert_identity() {
     fail "$label telemetry.sdk.name: expected '$EXPECTED_SDK_NAME', got '$sdk_name'"
 }
 
+assert_not_empty() {
+  local value="$1"
+  local message="$2"
+  if [ -z "$value" ] || [ "$value" = "null" ]; then
+    fail "$message"
+  fi
+}
+
+launch_app() {
+  local scenario="$1"
+  local log_prefix="$2"
+  local launch_output
+  local pid
+
+  : > "$BUILD_DIR/${log_prefix}.stdout.log"
+  : > "$BUILD_DIR/${log_prefix}.stderr.log"
+
+  if [ -n "$scenario" ]; then
+    launch_output=$(
+      SIMCTL_CHILD_OTEL_RESOURCE_ATTRIBUTES="test.run_id=$TEST_RUN_ID" \
+      SIMCTL_CHILD_E2E_SCENARIO="$scenario" \
+        xcrun simctl launch \
+          --terminate-running-process \
+          --stdout="$BUILD_DIR/${log_prefix}.stdout.log" \
+          --stderr="$BUILD_DIR/${log_prefix}.stderr.log" \
+          "$simulator_udid" \
+          "$APP_BUNDLE_ID"
+    )
+  else
+    launch_output=$(
+      SIMCTL_CHILD_OTEL_RESOURCE_ATTRIBUTES="test.run_id=$TEST_RUN_ID" \
+        xcrun simctl launch \
+          --terminate-running-process \
+          --stdout="$BUILD_DIR/${log_prefix}.stdout.log" \
+          --stderr="$BUILD_DIR/${log_prefix}.stderr.log" \
+          "$simulator_udid" \
+          "$APP_BUNDLE_ID"
+    )
+  fi
+
+  pid="${launch_output##*: }"
+  case "$pid" in
+    '' | *[!0-9]*) fail "Could not parse app PID from simctl output: $launch_output" ;;
+  esac
+  echo "$pid"
+}
+
 print_failure_diagnostics() {
   echo "=== E2E failure diagnostics ===" >&2
   curl --silent "$ELASTICSEARCH_URL/_cluster/health?pretty" >&2 2>/dev/null || true
@@ -261,7 +337,11 @@ print_failure_diagnostics() {
     "$BUILD_DIR/elasticsearch.log" \
     "$BUILD_DIR/otel-endpoint.log" \
     "$BUILD_DIR/app.stdout.log" \
-    "$BUILD_DIR/app.stderr.log"; do
+    "$BUILD_DIR/app.stderr.log" \
+    "$BUILD_DIR/app-crash.stdout.log" \
+    "$BUILD_DIR/app-crash.stderr.log" \
+    "$BUILD_DIR/app-relaunch.stdout.log" \
+    "$BUILD_DIR/app-relaunch.stderr.log"; do
     if [ -f "$file" ]; then
       echo "--- Last 100 lines of $(basename "$file") ---" >&2
       tail -n 100 "$file" >&2 || true
@@ -399,17 +479,9 @@ APP_VERSION=$(
 [ -n "$APP_VERSION" ] || fail "Built app has no CFBundleShortVersionString"
 
 xcrun simctl install "$simulator_udid" "$app_path"
-: > "$BUILD_DIR/app.stdout.log"
-: > "$BUILD_DIR/app.stderr.log"
 
 echo "Launching integration app..."
-SIMCTL_CHILD_OTEL_RESOURCE_ATTRIBUTES="test.run_id=$TEST_RUN_ID" \
-  xcrun simctl launch \
-    --terminate-running-process \
-    --stdout="$BUILD_DIR/app.stdout.log" \
-    --stderr="$BUILD_DIR/app.stderr.log" \
-    "$simulator_udid" \
-    "$APP_BUNDLE_ID"
+launch_app "" app >/dev/null
 
 span_document=$(es_wait_for_item \
   "traces-*" \
@@ -431,5 +503,45 @@ metric_document=$(es_wait_for_item \
   "metric named 'e2e.launches'" \
   "metric-document")
 assert_identity "$metric_document" "Metric document"
+
+echo "Triggering intentional app crash..."
+xcrun simctl terminate "$simulator_udid" "$APP_BUNDLE_ID" >/dev/null 2>&1 || true
+crash_pid=$(launch_app crash app-crash)
+
+crash_detected=false
+crash_wait_seconds=0
+while [ "$crash_wait_seconds" -lt 20 ]; do
+  if ! kill -0 "$crash_pid" >/dev/null 2>&1; then
+    crash_detected=true
+    break
+  fi
+  sleep 1
+  crash_wait_seconds=$((crash_wait_seconds + 1))
+done
+[ "$crash_detected" = true ] ||
+  fail "The app did not exit after the intentional crash"
+
+echo "Relaunching app to export the persisted crash report..."
+launch_app "" app-relaunch >/dev/null
+
+crash_document=$(es_wait_for_item \
+  "logs-*" \
+  "$(crash_query)" \
+  "app.crash event" \
+  "crash-document" \
+  120)
+
+exception_type=$(
+  echo "$crash_document" |
+    jq -r '._source.attributes."exception.type" // ._source.exception.type // empty'
+)
+exception_stacktrace=$(
+  echo "$crash_document" |
+    jq -r '._source.attributes."exception.stacktrace" //
+      ._source.exception.stacktrace //
+      empty'
+)
+assert_not_empty "$exception_type" "The app.crash event has no exception.type"
+assert_not_empty "$exception_stacktrace" "The app.crash event has no exception.stacktrace"
 
 echo "E2E test succeeded for run ID $TEST_RUN_ID"

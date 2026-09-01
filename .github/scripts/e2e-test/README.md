@@ -12,11 +12,18 @@ The test:
 2. Builds the integration app in Release configuration with a dSYM.
 3. Installs and launches the app in a fresh iOS Simulator.
 4. Finds the app's span, log record, and metric in Elasticsearch.
-5. Verifies the service name, service version, and telemetry SDK name on each
-   matched document.
+5. Terminates the base launch, relaunches the app in crash mode, and verifies
+   that the process exits.
+6. Relaunches the app normally and finds the persisted `app.crash` event in
+   Elasticsearch.
+7. Verifies the service name, service version, and telemetry SDK name on each
+   base-signal document.
+8. Verifies that the crash event has non-empty `exception.type` and
+   `exception.stacktrace` attributes.
 
 Every query includes a unique `test.run_id` resource attribute. The harness
-passes that attribute at launch without adding test-only plumbing to the app.
+passes that attribute on every launch so the persisted crash event remains
+scoped to the run that produced it.
 
 ## Run locally
 
@@ -38,6 +45,8 @@ matching version.
 Results and diagnostics remain under `build/e2e/` after the run. They include:
 
 - Elasticsearch and OTLP endpoint logs.
-- App standard output, standard error, and Simulator logs on failure.
+- Base-launch, crash-launch, and relaunch standard output and standard error,
+  plus Simulator logs on failure.
 - The query for each assertion.
+- The latest Elasticsearch response for each assertion.
 - The Elasticsearch document matched by each assertion.
