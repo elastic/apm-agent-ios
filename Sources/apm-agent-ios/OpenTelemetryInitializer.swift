@@ -130,6 +130,27 @@ class OpenTelemetryInitializer {
     self.persistenceBaseDirectory = persistenceBaseDirectory
   }
 
+  static func makeGrpcMetricExporter(
+    channel: GRPCChannel,
+    config: OtlpConfiguration
+  ) -> OtlpMetricExporter {
+    OtlpMetricExporter(
+      channel: channel,
+      config: config,
+      aggregationTemporalitySelector: AggregationTemporality.deltaPreferred(),
+      logger: Logger(label: Self.logLabel))
+  }
+
+  static func makeHttpMetricExporter(
+    endpoint: URL,
+    config: OtlpConfiguration
+  ) -> OtlpHttpMetricExporter {
+    OtlpHttpMetricExporter(
+      endpoint: endpoint,
+      config: config,
+      aggregationTemporalitySelector: AggregationTemporality.deltaPreferred())
+  }
+
   // swiftlint:disable:next function_body_length
   func initialize(_ configuration: AgentConfigManager) -> LogRecordExporter {
 
@@ -172,8 +193,8 @@ class OpenTelemetryInitializer {
     let channel = OpenTelemetryHelper.makeChannel(target: channelTarget, group: group)
 
     let metricExporter = {
-      let defaultExporter = OtlpMetricExporter(
-        channel: channel, config: otlpConfiguration, logger: Logger(label: Self.logLabel))
+      let defaultExporter = Self.makeGrpcMetricExporter(
+        channel: channel, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder(
           for: .metrics,
@@ -269,7 +290,8 @@ class OpenTelemetryInitializer {
 
     let metricExporter = {
       let metricEndpoint = URL(string: endpoint.absoluteString + "/v1/metrics")
-      let defaultExporter = OtlpHttpMetricExporter(endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
+      let defaultExporter = Self.makeHttpMetricExporter(
+        endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder(
           for: .metrics,

@@ -109,10 +109,16 @@ public final class WaitingMetricExporter: MetricExporter {
   private var metricDataList = [MetricData]()
   private let condition = NSCondition()
   private let numberToWaitFor: Int
+  private let aggregationTemporalitySelector: AggregationTemporalitySelector
   public private(set) var shutdownCalled = false
 
-  public init(numberToWaitFor: Int) {
+  public init(
+    numberToWaitFor: Int,
+    aggregationTemporalitySelector: AggregationTemporalitySelector =
+      AggregationTemporality.deltaPreferred()
+  ) {
     self.numberToWaitFor = numberToWaitFor
+    self.aggregationTemporalitySelector = aggregationTemporalitySelector
   }
 
   public func waitForExport(timeout: TimeInterval = 10) -> [MetricData]? {
@@ -150,6 +156,6 @@ public final class WaitingMetricExporter: MetricExporter {
   public func getAggregationTemporality(
     for instrument: InstrumentType
   ) -> AggregationTemporality {
-    .cumulative
+    aggregationTemporalitySelector.getAggregationTemporality(for: instrument)
   }
 }
