@@ -20,6 +20,11 @@ import NetworkStatus
 
 class NetworkStatusManager {
   static private var networkStatusKey = "co.elastic.network.status"
+  
+  // Serial isolation lock to protect singleton creation and status evaluation
+  private static let lock = NSLock()
+  private static var instance: NetworkStatus?
+
   public private(set) var lastStatus: String? {
     get {
       UserDefaults.standard.object(forKey: Self.networkStatusKey) as? String
@@ -29,21 +34,23 @@ class NetworkStatusManager {
     }
   }
 
-  private static var instance: NetworkStatus?
-
   private static func shared() -> NetworkStatus? {
-    guard let existingInstance = instance else {
-      do {
-        Self.instance = try NetworkStatus()
-        return Self.instance
-      } catch {
-        return nil
-      }
+    if let existingInstance = instance {
+      return existingInstance
     }
-    return existingInstance
+    do {
+      let newInstance = try NetworkStatus()
+      Self.instance = newInstance
+      return newInstance
+    } catch {
+      return nil
+    }
   }
 
   func status() -> String {
+    Self.lock.lock()
+    defer { Self.lock.unlock() }
+
     guard let currentInstance = Self.shared() else {
       return "unavailable"
     }
