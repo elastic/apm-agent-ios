@@ -12,3 +12,24 @@ updates:
       github-actions:
         patterns:
           - "*"
+  - package-ecosystem: "swift"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      otel:
+        patterns:
+          - "github.com/open-telemetry/opentelemetry-swift"
+          - "github.com/open-telemetry/opentelemetry-swift-core"
+    ignore:
+      # opentelemetry-swift 2.5.2 requires grpc-swift exactly 1.27.5; Xcode
+      # restores that pin after any resolution attempt, so routine update PRs
+      # for grpc-swift can never be merged. Remove this rule when the adopted
+      # opentelemetry-swift release permits a newer grpc-swift.
+      # The suppression is scoped to update-types (not versions) so that a
+      # future security-only job is not affected.
+      - dependency-name: "github.com/grpc/grpc-swift"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
