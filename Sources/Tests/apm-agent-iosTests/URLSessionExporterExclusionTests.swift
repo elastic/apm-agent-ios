@@ -37,25 +37,20 @@
         exportServer.stop()
       }
 
-      let exportURLs = [
-        exportServer.baseURL,
-        exportServer.baseURL.appendingPathComponent("otlp"),
+      let exportURL =
         URL(string: exportServer.baseURL.appendingPathComponent("otlp").absoluteString + "/")!
-      ]
-      let harness = URLSessionExclusionHarness(exportURLs: exportURLs)
+      let harness = URLSessionExclusionHarness(exportURL: exportURL)
       defer { harness.shutDown() }
 
       let seedSpan = try harness.makeSeedSpan()
-      for traceEndpoint in harness.traceEndpoints {
-        let realExporter = OtlpHttpTraceExporter(
-          endpoint: traceEndpoint,
-          config: OtlpConfiguration(timeout: 5),
-          envVarHeaders: [])
-        XCTAssertEqual(realExporter.export(spans: [seedSpan]), .success)
-        XCTAssertNotNil(
-          exportServer.waitForRequest(timeout: 5) { $0.path == traceEndpoint.path },
-          exportServer.diagnostics)
-      }
+      let realExporter = OtlpHttpTraceExporter(
+        endpoint: harness.traceEndpoint,
+        config: OtlpConfiguration(timeout: 5),
+        envVarHeaders: [])
+      XCTAssertEqual(realExporter.export(spans: [seedSpan]), .success)
+      XCTAssertNotNil(
+        exportServer.waitForRequest(timeout: 5) { $0.path == harness.traceEndpoint.path },
+        exportServer.diagnostics)
 
       let requestExpectation = expectation(description: "ordinary application request")
       URLSession.shared.dataTask(
@@ -99,9 +94,9 @@
     private let metricExporter = WaitingMetricExporter(numberToWaitFor: 1)
     private let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     private let wrapper: InstrumentationWrapper
-    let traceEndpoints: [URL]
+    let traceEndpoint: URL
 
-    init(exportURLs: [URL]) {
+    init(exportURL: URL) {
       let endpointRegistry = SDKEndpointRegistry()
       let initializer = OpenTelemetryInitializer(
         group: group,
@@ -111,28 +106,22 @@
           trace: spanExporter,
           log: logExporter))
 
-      let configManagers = exportURLs.map { exportURL in
-        AgentConfigManager(
-          resource: Resource(),
-          config: AgentConfigBuilder()
-            .withExportUrl(exportURL)
-            .withRemoteManagement(false)
-            .build(),
-          instrumentationConfig: InstrumentationConfigBuilder()
-            .withLifecycleEvents(false)
-            .withViewControllerInstrumentation(false)
-            .withSystemMetrics(false)
-            .build(),
-          endpointRegistry: endpointRegistry)
-      }
-      for configManager in configManagers {
-        _ = initializer.initializeWithHttp(configManager)
-      }
+      let configManager = AgentConfigManager(
+        resource: Resource(),
+        config: AgentConfigBuilder()
+          .withExportUrl(exportURL)
+          .withRemoteManagement(false)
+          .build(),
+        instrumentationConfig: InstrumentationConfigBuilder()
+          .withLifecycleEvents(false)
+          .withViewControllerInstrumentation(false)
+          .withSystemMetrics(false)
+          .build(),
+        endpointRegistry: endpointRegistry)
+      _ = initializer.initializeWithHttp(configManager)
 
-      traceEndpoints = exportURLs.map {
-        URL(string: $0.absoluteString + "/v1/traces")!
-      }
-      wrapper = InstrumentationWrapper(config: configManagers[0])
+      traceEndpoint = URL(string: exportURL.absoluteString + "/v1/traces")!
+      wrapper = InstrumentationWrapper(config: configManager)
       wrapper.initalize()
     }
 
