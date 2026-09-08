@@ -172,6 +172,9 @@ class OpenTelemetryInitializer {
     let resources = AgentResource.get(
       useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
     ).merging(other: AgentEnvResource.get())
+    if let endpoint = OpenTelemetryHelper.getURL(with: configuration.agent) {
+      configuration.register(endpoint)
+    }
     if let exporters {
       return registerProviders(
         configuration: configuration,
@@ -272,6 +275,20 @@ class OpenTelemetryInitializer {
     let resources = AgentResource.get(
       useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
     ).merging(other: AgentEnvResource.get())
+    let endpoint = OpenTelemetryHelper.getURL(with: configuration.agent)
+    let metricEndpoint = endpoint.map {
+      URL(string: $0.absoluteString + "/v1/metrics") ?? $0
+    }
+    let traceEndpoint = endpoint.map {
+      URL(string: $0.absoluteString + "/v1/traces") ?? $0
+    }
+    let logsEndpoint = endpoint.map {
+      URL(string: $0.absoluteString + "/v1/logs") ?? $0
+    }
+    for endpoint in [metricEndpoint, traceEndpoint, logsEndpoint].compactMap({ $0 }) {
+      configuration.register(endpoint)
+    }
+
     if let exporters {
       return registerProviders(
         configuration: configuration,
@@ -279,7 +296,7 @@ class OpenTelemetryInitializer {
         exporters: exporters)
     }
 
-    guard let endpoint =  OpenTelemetryHelper.getURL(with: configuration.agent) else {
+    guard let endpoint, let metricEndpoint, let traceEndpoint, let logsEndpoint else {
       os_log("Failed to start Elastic agent: invalid collector url.")
       return NoopLogRecordExporter.instance
     }
@@ -289,9 +306,8 @@ class OpenTelemetryInitializer {
       headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
 
     let metricExporter = {
-      let metricEndpoint = URL(string: endpoint.absoluteString + "/v1/metrics")
       let defaultExporter = Self.makeHttpMetricExporter(
-        endpoint: metricEndpoint ?? endpoint, config: otlpConfiguration)
+        endpoint: metricEndpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder(
           for: .metrics,
@@ -306,9 +322,8 @@ class OpenTelemetryInitializer {
     }()
 
     let traceExporter = {
-      let traceEndpoint = URL(string: endpoint.absoluteString + "/v1/traces")
       let defaultExporter = OtlpHttpTraceExporter(
-        endpoint: traceEndpoint ?? endpoint, config: otlpConfiguration)
+        endpoint: traceEndpoint, config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder(
           for: .traces,
@@ -324,8 +339,9 @@ class OpenTelemetryInitializer {
     }()
 
     let logExporter = {
-      let logsEndpoint = URL(string: endpoint.absoluteString + "/v1/logs")
-      let defaultExporter = OtlpHttpLogExporter(endpoint: logsEndpoint ?? endpoint, config: otlpConfiguration)
+      let defaultExporter = OtlpHttpLogExporter(
+        endpoint: logsEndpoint,
+        config: otlpConfiguration)
       do {
         if let path = Self.createPersistenceFolder(
           for: .logs,

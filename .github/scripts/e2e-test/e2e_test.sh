@@ -129,6 +129,38 @@ span_query() {
   }'
 }
 
+exporter_span_query() {
+  local filters
+  local collector_base_url="http://$OTLP_HOST:$OTLP_HTTP_PORT"
+  filters=$(service_filter)
+  jq -nc \
+    --argjson filters "$filters" \
+    --arg collector_base_url "$collector_base_url" \
+    '{
+      query: {
+        bool: {
+          filter: ($filters + [{
+            bool: {
+              should: [
+                {
+                  terms: {
+                    "attributes.url.path": [
+                      "/v1/traces",
+                      "/v1/metrics",
+                      "/v1/logs"
+                    ]
+                  }
+                },
+                {prefix: {"attributes.url.full": $collector_base_url}}
+              ],
+              minimum_should_match: 1
+            }
+          }])
+        }
+      }
+    }'
+}
+
 log_query() {
   local filters
   filters=$(service_filter)
@@ -216,6 +248,35 @@ es_search() {
     return 1
   fi
   echo "$response" | jq -c '.hits.hits[0]'
+}
+
+assert_no_exporter_spans() {
+  local query
+  local response
+  local count
+  local sample_response
+
+  echo "Waiting for any follow-up exporter spans..."
+  sleep 15
+  query=$(exporter_span_query)
+  echo "$query" | jq . > "$BUILD_DIR/exporter-span-count-query.json"
+  response=$(curl --fail --silent --show-error \
+    -H "Content-Type: application/json" \
+    --data "$query" \
+    "$ELASTICSEARCH_URL/traces-*/_count")
+  echo "$response" | jq . > "$BUILD_DIR/exporter-span-count-response.json"
+  count=$(echo "$response" | jq -r '.count // 0')
+
+  if [ "$count" -gt 0 ]; then
+    sample_response=$(curl --fail --silent --show-error \
+      -H "Content-Type: application/json" \
+      --data "$(echo "$query" | jq '. + {size: 1}')" \
+      "$ELASTICSEARCH_URL/traces-*/_search")
+    echo "$sample_response" | jq . > "$BUILD_DIR/exporter-span-sample.json"
+    fail "Found $count SDK exporter span(s). Sample: $(echo "$sample_response" | jq -c '.hits.hits[0]')"
+  fi
+
+  echo "Verified zero SDK exporter spans"
 }
 
 es_wait_for_item() {
@@ -503,6 +564,7 @@ metric_document=$(es_wait_for_item \
   "metric named 'e2e.launches'" \
   "metric-document")
 assert_identity "$metric_document" "Metric document"
+assert_no_exporter_spans
 
 echo "Triggering intentional app crash..."
 xcrun simctl terminate "$simulator_udid" "$APP_BUNDLE_ID" >/dev/null 2>&1 || true

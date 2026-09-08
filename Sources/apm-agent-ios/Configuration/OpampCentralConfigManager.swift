@@ -31,6 +31,7 @@ public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallbac
     resource: Resource,
     agent: AgentConfiguration,
     instrumentationConfig: InstrumentationConfiguration,
+    endpointRegistry: SDKEndpointRegistry,
     logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfig.opamp") { _ in
       SwiftLogNoOpLogHandler()
     }
@@ -72,19 +73,23 @@ public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallbac
     builder.enableRemoteConfig()
     builder.enableEffectiveConfigReporting()
 
-    let httpClient = {
+    let configuredManagementURL = agent.managementUrlComponents().url.flatMap {
+      URLTarget($0) == nil ? nil : $0
+    }
+    let managementURL =
+      configuredManagementURL ?? URL(string: "http://localhost:4320/v1/opamp")!
+    endpointRegistry.register(managementURL)
 
-      if let url = agent.managementUrlComponents().url {
-        return OpampHttpSender(
-          url: url,
-          headers: OpenTelemetryHelper.generateExporterHeaders(agent.auth)
-        )
-      } else
-      {
-        logger.error("Unable to parse manament url; using default: http://localhost:4320/v1/opamp")
-        return OpampHttpSender(url: URL(string: "http://localhost:4320/v1/opamp")!)
-      }
-    }()
+    let httpClient: OpampHttpSender
+    if configuredManagementURL != nil {
+      httpClient = OpampHttpSender(
+        url: managementURL,
+        headers: OpenTelemetryHelper.generateExporterHeaders(agent.auth)
+      )
+    } else {
+      logger.error("Unable to parse manament url; using default: http://localhost:4320/v1/opamp")
+      httpClient = OpampHttpSender(url: managementURL)
+    }
 
     let requestService = OpampHttpRequestService(
       httpClient: httpClient
