@@ -468,6 +468,11 @@ The available upstream presets are:
 
 EDOT iOS detects app, device, operating system, process, and telemetry SDK resource attributes. It also reads custom resource attributes from `OTEL_RESOURCE_ATTRIBUTES`.
 
+The resource includes `app.installation.id`, a random UUID created on first
+launch and persisted in `UserDefaults` for the lifetime of the installation.
+The value resets when the app is uninstalled and is never derived from a device
+identifier.
+
 You can provide this value through the process environment or your app's `Info.plist`:
 
 ```xml
