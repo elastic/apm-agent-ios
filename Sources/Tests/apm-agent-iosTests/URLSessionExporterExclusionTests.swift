@@ -39,7 +39,8 @@
 
       let exportURLs = [
         exportServer.baseURL,
-        exportServer.baseURL.appendingPathComponent("otlp")
+        exportServer.baseURL.appendingPathComponent("otlp"),
+        URL(string: exportServer.baseURL.appendingPathComponent("otlp").absoluteString + "/")!
       ]
       let harness = URLSessionExclusionHarness(exportURLs: exportURLs)
       defer { harness.shutDown() }

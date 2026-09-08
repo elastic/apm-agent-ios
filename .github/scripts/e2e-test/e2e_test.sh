@@ -131,7 +131,7 @@ span_query() {
 
 exporter_span_query() {
   local filters
-  local collector_base_url="http://$OTLP_HOST:$OTLP_HTTP_PORT"
+  local collector_base_url="http://$OTLP_HOST:$OTLP_HTTP_PORT/"
   filters=$(service_filter)
   jq -nc \
     --argjson filters "$filters" \
@@ -139,23 +139,18 @@ exporter_span_query() {
     '{
       query: {
         bool: {
-          filter: ($filters + [{
-            bool: {
-              should: [
-                {
-                  terms: {
-                    "attributes.url.path": [
-                      "/v1/traces",
-                      "/v1/metrics",
-                      "/v1/logs"
-                    ]
-                  }
-                },
-                {prefix: {"attributes.url.full": $collector_base_url}}
-              ],
-              minimum_should_match: 1
+          filter: ($filters + [
+            {prefix: {"attributes.url.full": $collector_base_url}},
+            {
+              terms: {
+                "attributes.url.path": [
+                  "/v1/traces",
+                  "/v1/metrics",
+                  "/v1/logs"
+                ]
+              }
             }
-          }])
+          ])
         }
       }
     }'

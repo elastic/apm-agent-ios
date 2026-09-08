@@ -87,7 +87,7 @@ public class OpampCentralConfigManager: CentralConfigManager, OpampClientCallbac
         headers: OpenTelemetryHelper.generateExporterHeaders(agent.auth)
       )
     } else {
-      logger.error("Unable to parse manament url; using default: http://localhost:4320/v1/opamp")
+      logger.error("Unable to parse management url; using default: http://localhost:4320/v1/opamp")
       httpClient = OpampHttpSender(url: managementURL)
     }
 
