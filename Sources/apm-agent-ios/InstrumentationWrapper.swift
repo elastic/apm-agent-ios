@@ -87,9 +87,14 @@ class InstrumentationWrapper {
 
   func makeURLSessionInstrumentationConfiguration()
     -> URLSessionInstrumentationConfiguration {
-    URLSessionInstrumentationConfiguration(
+    return URLSessionInstrumentationConfiguration(
       shouldRecordPayload: nil,
-      shouldInstrument: nil,
+      shouldInstrument: { request in
+        guard let url = request.url else {
+          return nil
+        }
+        return self.config.isRegistered(url) ? false : nil
+      },
 
       nameSpan: { request in
         if let host = request.url?.host,
@@ -99,15 +104,7 @@ class InstrumentationWrapper {
         return nil
       },
       shouldInjectTracingHeaders: nil,
-      createdRequest: { request, span in
-        print(
-          "request to: ",
-          request.httpMethod ?? "n/a",
-          request.url?.absoluteString ?? "n/a"
-        )
-        print("span", span.context.traceId)
-        print("span", span.context.spanId)
-
+      createdRequest: { _, span in
         #if os(iOS) && !targetEnvironment(macCatalyst)
           if let injector = self.netstatInjector {
             injector.inject(span: span)
