@@ -18,6 +18,44 @@ import XCTest
 @testable import ElasticApm
 
 final class InstallationIdProviderTests: XCTestCase {
+  func testResourceOverridePreservesFallbackInstallationId() throws {
+    let userDefaults = UserDefaults.standard
+    let storageKey = InstallationIdProvider.storageKey
+    let previousValue = userDefaults.object(forKey: storageKey)
+    defer {
+      if let previousValue = previousValue {
+        userDefaults.set(previousValue, forKey: storageKey)
+      } else {
+        userDefaults.removeObject(forKey: storageKey)
+      }
+    }
+
+    let override = "configured-installation-id"
+    let environment = [
+      AgentEnvResource.otelResourceAttributesEnv: "app.installation.id=\(override)"
+    ]
+
+    for useLegacyAttributeNames in [false, true] {
+      userDefaults.removeObject(forKey: storageKey)
+      let resource = AgentResource.get(
+        useLegacyAttributeNames: useLegacyAttributeNames
+      ).merging(other: AgentEnvResource.get(environment))
+
+      XCTAssertEqual(resource.attributes["app.installation.id"], .string(override))
+      // Read storage directly so the assertion cannot generate a missing fallback.
+      let fallback = try XCTUnwrap(userDefaults.string(forKey: storageKey))
+      XCTAssertNotNil(UUID(uuidString: fallback))
+      XCTAssertNotEqual(fallback, override)
+
+      let resourceWithoutOverride = AgentResource.get(
+        useLegacyAttributeNames: useLegacyAttributeNames
+      ).merging(other: AgentEnvResource.get([:]))
+
+      XCTAssertEqual(resourceWithoutOverride.attributes["app.installation.id"], .string(fallback))
+      XCTAssertEqual(userDefaults.string(forKey: storageKey), fallback)
+    }
+  }
+
   func testConcurrentFirstReadsReturnSameInstallationId() throws {
     let suiteName = "InstallationIdProviderTests.\(UUID().uuidString)"
     let userDefaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
