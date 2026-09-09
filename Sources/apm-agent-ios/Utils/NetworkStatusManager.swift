@@ -12,7 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-
 #if os(iOS) && !targetEnvironment(macCatalyst)
 
 import Foundation
@@ -29,22 +28,10 @@ class NetworkStatusManager {
     }
   }
 
-  private static var instance: NetworkStatus?
-
-  private static func shared() -> NetworkStatus? {
-    guard let existingInstance = instance else {
-      do {
-        Self.instance = try NetworkStatus()
-        return Self.instance
-      } catch {
-        return nil
-      }
-    }
-    return existingInstance
-  }
+  private static let instance: NetworkStatus? = try? NetworkStatus()
 
   func status() -> String {
-    guard let currentInstance = Self.shared() else {
+    guard let currentInstance = Self.instance else {
       return "unavailable"
     }
 
