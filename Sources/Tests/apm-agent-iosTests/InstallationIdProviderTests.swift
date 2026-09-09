@@ -18,6 +18,29 @@ import XCTest
 @testable import ElasticApm
 
 final class InstallationIdProviderTests: XCTestCase {
+  func testConcurrentFirstReadsReturnSameInstallationId() throws {
+    let suiteName = "InstallationIdProviderTests.\(UUID().uuidString)"
+    let userDefaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    userDefaults.removePersistentDomain(forName: suiteName)
+    defer {
+      userDefaults.removePersistentDomain(forName: suiteName)
+    }
+
+    let valuesLock = NSLock()
+    var values = [String]()
+
+    DispatchQueue.concurrentPerform(iterations: 100) { _ in
+      let value = InstallationIdProvider(userDefaults: userDefaults).get()
+      valuesLock.lock()
+      values.append(value)
+      valuesLock.unlock()
+    }
+
+    let persistedValue = try XCTUnwrap(
+      userDefaults.string(forKey: InstallationIdProvider.storageKey))
+    XCTAssertEqual(Set(values), [persistedValue])
+  }
+
   func testPersistsAndRegeneratesInstallationId() throws {
     let suiteName = "InstallationIdProviderTests.\(UUID().uuidString)"
     let userDefaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))

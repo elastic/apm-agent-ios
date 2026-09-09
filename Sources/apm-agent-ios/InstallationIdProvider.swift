@@ -16,6 +16,7 @@ import Foundation
 
 struct InstallationIdProvider {
   static let storageKey = "elastic.app.installation.id"
+  private static let storageLock = NSLock()
 
   private let userDefaults: UserDefaults
 
@@ -24,9 +25,11 @@ struct InstallationIdProvider {
   }
 
   func get() -> String {
+    Self.storageLock.lock()
+    defer { Self.storageLock.unlock() }
+
     if let storedValue = userDefaults.string(forKey: Self.storageKey),
-      UUID(uuidString: storedValue) != nil
-    {
+      UUID(uuidString: storedValue) != nil {
       return storedValue
     }
 
