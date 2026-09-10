@@ -83,7 +83,7 @@ public class OpampClientImplTests: XCTestCase {
       let config_json = """
         {
           "recording" : true,
-          "sampleRate": 0.9
+          "session_sample_rate": 0.9
         }
         """
       var agentConfigFile = Opamp_Proto_AgentConfigFile()

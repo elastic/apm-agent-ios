@@ -21,7 +21,7 @@ public struct CentralConfigData: Codable {
 
   enum CodingKeys: String, CodingKey {
     case recording
-    case sampleRate
+    case sampleRate = "session_sample_rate"
   }
 
   public init(from decoder: Decoder) throws {

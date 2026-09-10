@@ -23,13 +23,13 @@ class CentralConfigTests: XCTestCase {
   let withRecording = """
     {
         "recording": "true",
-        "sampleRate": 1.0
+        "session_sample_rate": 1.0
     }
     """
   let withoutRecording = """
     {
         "recording": "false",
-        "sampleRate": 0.5
+        "session_sample_rate": 0.5
     }
     """
 
@@ -37,7 +37,7 @@ class CentralConfigTests: XCTestCase {
     {
         "recording" : "false",
         "new" : "new",
-      "sampleRate" : 0.0
+      "session_sample_rate" : 0.0
     }
     """
 
@@ -101,6 +101,19 @@ class CentralConfigTests: XCTestCase {
     let three = CentralConfig()
 
     XCTAssertFalse(three.data.recording)
+  }
+
+  func testLegacySampleRateKeyIsIgnored() throws {
+    let legacyConfig = """
+      {
+          "sampleRate": 0.5
+      }
+      """
+
+    let data = try XCTUnwrap(legacyConfig.data(using: .utf8))
+    let config = try JSONDecoder().decode(CentralConfigData.self, from: data)
+
+    XCTAssertNil(config.sampleRate)
   }
 
   func testMaxAgeParse() {
