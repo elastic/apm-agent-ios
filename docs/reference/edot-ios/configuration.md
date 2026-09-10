@@ -149,7 +149,7 @@ Refer to [APM secret tokens](docs-content://solutions/observability/apm/secret-t
 
 ### Remote management connectivity [remote-management-connectivity]
 
-EDOT iOS retrieves central configuration from Elastic's OpAMP endpoint.
+EDOT iOS retrieves central configuration from a central configuration (OpAMP) endpoint.
 
 #### `withManagementUrl(_:)` [withManagementUrl]
 
@@ -524,9 +524,9 @@ product:
   edot_ios: preview 1.4.0
 ```
 
-EDOT iOS receives central configuration from Elastic through OpAMP.
+EDOT iOS receives central configuration from a central configuration (OpAMP) endpoint.
 
-To use an Elastic OpAMP endpoint:
+To use an OpAMP endpoint:
 
 ```swift
 let configuration = AgentConfigBuilder()
