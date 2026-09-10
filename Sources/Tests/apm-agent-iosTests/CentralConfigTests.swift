@@ -23,13 +23,13 @@ class CentralConfigTests: XCTestCase {
   let withRecording = """
     {
         "recording": "true",
-        "session_sample_rate": 1.0
+        "session_sample_rate": "1.0"
     }
     """
   let withoutRecording = """
     {
         "recording": "false",
-        "session_sample_rate": 0.5
+        "session_sample_rate": "0.5"
     }
     """
 
@@ -37,7 +37,7 @@ class CentralConfigTests: XCTestCase {
     {
         "recording" : "false",
         "new" : "new",
-      "session_sample_rate" : 0.0
+      "session_sample_rate" : "0.0"
     }
     """
 
@@ -114,6 +114,19 @@ class CentralConfigTests: XCTestCase {
     let config = try JSONDecoder().decode(CentralConfigData.self, from: data)
 
     XCTAssertNil(config.sampleRate)
+  }
+
+  func testNumericSessionSampleRateValue() throws {
+    let numericConfig = """
+      {
+          "session_sample_rate": 0.5
+      }
+      """
+
+    let data = try XCTUnwrap(numericConfig.data(using: .utf8))
+    let config = try JSONDecoder().decode(CentralConfigData.self, from: data)
+
+    XCTAssertEqual(config.sampleRate, 0.5)
   }
 
   func testMaxAgeParse() {

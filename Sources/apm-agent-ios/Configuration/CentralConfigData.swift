@@ -33,9 +33,13 @@ public struct CentralConfigData: Codable {
       recording = true
     }
 
-    do {
-      sampleRate = try values.decode(Double.self, forKey: .sampleRate)
-    } catch {}
+    if let numericValue = try? values.decode(Double.self, forKey: .sampleRate) {
+      sampleRate = numericValue
+    } else if let stringValue = try? values.decode(String.self, forKey: .sampleRate) {
+      sampleRate = Double(stringValue)
+    } else {
+      sampleRate = nil
+    }
   }
 
   init() {}

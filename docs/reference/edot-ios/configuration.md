@@ -545,9 +545,9 @@ Refer to [Central configuration for EDOT SDKs](opentelemetry://reference/central
 
 ### Available settings [central-configuration-settings]
 
-{applies_to}`edot_ios: ga 2.1.0` The OpAMP `elastic` config map uses the JSON keys shown below.
+{applies_to}`edot_ios: ga 2.1.0` The OpAMP `elastic` config map uses these keys.
 
-| Setting | JSON key | Description | Type |
+| Setting | Key | Description | Type |
 | --- | --- | --- | --- |
 | Recording | `recording` | Whether EDOT iOS processes and exports log records. | Dynamic |
 | Session sample rate | `session_sample_rate` | The probability that spans from a new session are sampled. | Dynamic |
