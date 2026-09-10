@@ -39,6 +39,7 @@ final class ResourceAttributeSmokeTests: XCTestCase {
       XCTAssertEqual(span.resource.attributes, expected)
       XCTAssertEqual(log.resource.attributes, expected)
       XCTAssertEqual(metric.resource.attributes, expected)
+      XCTAssertNotNil(span.resource.attributes["app.installation.id"])
       XCTAssertNil(span.resource.attributes["service.build"])
       XCTAssertNotEqual(
         span.resource.attributes["telemetry.sdk.version"],
@@ -240,8 +241,10 @@ private func expectedResourceAttributes(
 ) throws -> [String: AttributeValue] {
   let application = ApplicationDataSource()
   let device = DeviceDataSource()
+  let installationId = InstallationIdProvider().get()
   let operatingSystem = OperatingSystemDataSource()
   var expected: [String: AttributeValue] = [
+    "app.installation.id": .string(installationId),
     "service.name": .string(
       application.name ?? "unknown_service:\(ProcessInfo.processInfo.processName)"),
     "deployment.environment.name": .string("default"),
