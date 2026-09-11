@@ -30,6 +30,27 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-ios-agent-versionext-fixes]
 
+## 2.1.0 [elastic-apm-210-release-notes]
+
+**Release date:** September 11, 2026
+
+### Features and enhancements [elastic-apm-ios-agent-210-features-enhancements]
+
+* Emit `app.installation.id` as a UUID persisted for the lifetime of the install [#388](https://github.com/elastic/apm-agent-ios/pull/388)
+* Update default telemetry names to current OpenTelemetry semantic conventions, and add `useLegacyAttributeNames` to restore the previous names [#377](https://github.com/elastic/apm-agent-ios/pull/377)
+* Default the OTLP transport to HTTP. gRPC remains available through `useConnectionType(.grpc)` [#372](https://github.com/elastic/apm-agent-ios/pull/372)
+* Deprecate the `ElasticAttributes` constants in favor of OpenTelemetry semantic-convention constants [#377](https://github.com/elastic/apm-agent-ios/pull/377)
+* Raise the OpenTelemetry-Swift dependency floor to 2.4.1
+* Require an explicit OTLP export URL with an `http` or `https` scheme and a host before an enabled agent starts. Do not fall back to a localhost endpoint [#372](https://github.com/elastic/apm-agent-ios/pull/372)
+
+### Fixes [elastic-apm-ios-agent-210-fixes]
+
+* Decode central configuration sample rate from `session_sample_rate` [#391](https://github.com/elastic/apm-agent-ios/pull/391)
+* Exclude SDK-owned export and management requests from URLSession tracing [#387](https://github.com/elastic/apm-agent-ios/pull/387)
+* Prefer delta aggregation temporality for counters and histograms [#384](https://github.com/elastic/apm-agent-ios/pull/384)
+* Isolate persisted traces, metrics, and logs by signal [#376](https://github.com/elastic/apm-agent-ios/pull/376)
+* Harden network connection status initialization [#389](https://github.com/elastic/apm-agent-ios/pull/389)
+
 ## 2.0.2 [elastic-apm-202-release-notes]
 
 **Release date:** July 28, 2026
