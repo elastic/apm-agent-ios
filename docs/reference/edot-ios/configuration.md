@@ -55,7 +55,7 @@ let configuration = AgentConfigBuilder()
 | --- | --- |
 | `URL` | Yes |
 
-Sets the required OTLP endpoint provided by an Elastic Agent or EDOT Collector gateway.
+Sets the required OTLP endpoint provided by an Elastic Agent OTLP endpoint or the Elastic Cloud Managed OTLP Endpoint.
 An enabled agent does not start without a valid `http` or `https` URL with a host.
 
 When the connection type is `.http`, EDOT iOS appends `/v1/traces`, `/v1/metrics`, or `/v1/logs` to the configured path for each signal. When the connection type is `.grpc`, all signals use the configured gRPC endpoint.
@@ -74,8 +74,8 @@ Selects the OTLP transport:
 OTLP/HTTP is the default. Use `.useConnectionType(.grpc)` only when the OTLP
 endpoint requires gRPC. The export URL controls security: `https` enables TLS
 and `http` uses plaintext. Make sure the endpoint supports the selected
-transport. EDOT Collector commonly listens on port `4317` for gRPC and `4318`
-for HTTP.
+transport. An Elastic OTLP endpoint commonly listens on port `4317` for
+gRPC and `4318` for HTTP.
 
 #### `withServerUrl(_:)` [withServerUrl]
 
@@ -149,7 +149,7 @@ Refer to [APM secret tokens](docs-content://solutions/observability/apm/secret-t
 
 ### Remote management connectivity [remote-management-connectivity]
 
-EDOT iOS retrieves central configuration from an EDOT Collector through an OpAMP endpoint.
+EDOT iOS retrieves central configuration from a central configuration (OpAMP) endpoint.
 
 #### `withManagementUrl(_:)` [withManagementUrl]
 
@@ -163,7 +163,7 @@ Sets the OpAMP endpoint used for central configuration. Set it explicitly and en
 let configuration = AgentConfigBuilder()
   .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .withManagementUrl(
-    URL(string: "https://your-edot-collector:4320/v1/opamp")!
+    URL(string: "https://your-opamp-endpoint:4320/v1/opamp")!
   )
   .useOpAMP()
   .build()
@@ -524,15 +524,15 @@ product:
   edot_ios: preview 1.4.0
 ```
 
-EDOT iOS receives central configuration from an EDOT Collector through OpAMP.
+EDOT iOS receives central configuration from a central configuration (OpAMP) endpoint.
 
-To use an EDOT Collector OpAMP endpoint:
+To use an OpAMP endpoint:
 
 ```swift
 let configuration = AgentConfigBuilder()
   .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .withManagementUrl(
-    URL(string: "https://your-edot-collector:4320/v1/opamp")!
+    URL(string: "https://your-opamp-endpoint:4320/v1/opamp")!
   )
   .withApiKey("your-api-key")
   .useOpAMP()
@@ -541,7 +541,7 @@ let configuration = AgentConfigBuilder()
 ElasticApmAgent.start(with: configuration)
 ```
 
-Refer to [Central configuration for EDOT SDKs](opentelemetry://reference/central-configuration.md) for EDOT Collector and {{kib}} setup.
+Refer to [Central configuration for EDOT SDKs](opentelemetry://reference/central-configuration.md) for Elastic Agent and {{kib}} setup.
 
 ### Available settings [central-configuration-settings]
 

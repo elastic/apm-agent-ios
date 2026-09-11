@@ -1,6 +1,6 @@
-# Contributing to the APM Agent
+# Contributing to EDOT iOS
 
-The APM Agent is open source and we love to receive contributions from our community — you!
+EDOT iOS is open source and we love to receive contributions from our community — you!
 
 There are many ways to contribute,
 from writing tutorials or blog posts,

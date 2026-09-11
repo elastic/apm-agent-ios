@@ -154,20 +154,30 @@ Crash reports are sent on the next app launch, not at the time of the crash.
 
 ### System metrics [system-metrics]
 
+```{applies_to}
+product:
+  edot_ios: ga 2.1.0
+```
+
 EDOT iOS records app CPU and memory usage:
 
-| Metric | Description | Unit |
-| --- | --- | --- |
-| `system.cpu.usage` | CPU used by the app's active threads | Percentage |
-| `system.memory.usage` | Physical memory footprint of the app process | Bytes |
+| Metric | Description | Instrument | Unit | Attributes |
+| --- | --- | --- | --- | --- |
+| `process.cpu.utilization` | Sum of the app's per-thread CPU percentages divided by 100 and by the active processor count, clamped to 0–1 | Observable gauge | `1` | `cpu.mode=total` |
+| `process.memory.usage` | Physical memory footprint of the app process | Observable up-down counter | `By` | None |
 
-Both metrics include the attribute `state=app`.
+To restore the legacy metric names and output, see [`useLegacyAttributeNames(_:)`](configuration.md#useLegacyAttributeNames).
 
 ### Application lifecycle events [app-lifecycle-events]
 
-EDOT iOS creates `lifecycle` log events when the app changes state.
+```{applies_to}
+product:
+  edot_ios: ga 2.1.0
+```
 
-The `lifecycle.state` attribute can have the following values:
+EDOT iOS creates `device.app.lifecycle` log events when the app changes state.
+
+The `ios.app.state` attribute can have the following values:
 
 | Value | App transition |
 | --- | --- |
@@ -176,6 +186,8 @@ The `lifecycle.state` attribute can have the following values:
 | `background` | The app entered the background. |
 | `foreground` | The app is about to enter the foreground. |
 | `terminate` | The app is about to terminate. |
+
+To restore the legacy event name and attribute, see [`useLegacyAttributeNames(_:)`](configuration.md#useLegacyAttributeNames).
 
 ## Understanding automatic-instrumentation scope [automatic-instrumentation-scope]
 
