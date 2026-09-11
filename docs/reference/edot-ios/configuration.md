@@ -545,7 +545,9 @@ Refer to [Central configuration for EDOT SDKs](opentelemetry://reference/central
 
 ### Available settings [central-configuration-settings]
 
-| Setting | Description | Type |
-| --- | --- | --- |
-| Recording | Whether EDOT iOS processes and exports log records. | Dynamic |
-| Session sample rate | The probability that spans from a new session are sampled. | Dynamic |
+{applies_to}`edot_ios: ga 2.1.0` The OpAMP `elastic` config map uses these keys.
+
+| Setting | Key | Description | Type |
+| --- | --- | --- | --- |
+| Recording | `recording` | Whether EDOT iOS processes and exports log records. | Dynamic |
+| Session sample rate | `session_sample_rate` | The probability that spans from a new session are sampled. | Dynamic |
