@@ -204,4 +204,4 @@ If your app uses code that is not covered by automatic instrumentation, use one 
 
 ## SDK compatibility [supported-technologies]
 
-EDOT iOS currently uses OpenTelemetry-Swift `2.2.1` or later and OpenTelemetry-Swift Core `2.3.0` or later.
+EDOT iOS currently uses OpenTelemetry-Swift `2.4.1` or later and OpenTelemetry-Swift Core `2.3.0` or later.
