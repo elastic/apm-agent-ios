@@ -49,6 +49,20 @@
       assertImageReferencesAreComplete(in: excerpt)
     }
 
+    func testMultilineReasonIsCapped() throws {
+      let fixture = try fixture("plcrash-ios-simulator-nsexception")
+      let reason = String(repeating: "R", count: 5_000)
+      let multilineReason = Array(repeating: String(repeating: "R", count: 100), count: 50).joined(separator: "\n")
+      let report = fixture.replacingOccurrences(of: reason, with: multilineReason)
+
+      let excerpt = CrashReportExcerpt.compose(report)
+      let information = section(startingWith: "Application Specific Information:", in: excerpt)
+
+      XCTAssertTrue(information.hasSuffix(" [truncated]'"))
+      XCTAssertLessThanOrEqual(information.filter { $0 == "R" }.count, 1_000)
+      XCTAssertTrue(excerpt.contains("Thread 0 Crashed:"))
+    }
+
     func testLongCrashedThreadKeepsHeadAndTenTailFrames() {
       // 512 is the per-thread frame cap of the crash reporter.
       for frameCount in [200, 512] {
@@ -96,7 +110,6 @@
       let report = """
       Incident Identifier: fallback
       Exception Type: SIGABRT
-      Crashed Thread:  8
 
       Thread 8:
       0   Demo                                0x0000000100000010 0x100000000 + 16

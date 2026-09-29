@@ -121,7 +121,8 @@
 
           switch marker.kind {
           case .applicationInformation:
-            applicationInformation = section.map(Self.truncatingApplicationReason)
+            applicationInformation = Self.truncatingApplicationReason(section.joined(separator: "\n"))
+              .components(separatedBy: "\n")
           case .lastExceptionBacktrace:
             lastExceptionBacktrace = FrameSection(lines: section)
           case let .thread(isCrashed):
@@ -171,23 +172,24 @@
         return result
       }
 
-      private static func truncatingApplicationReason(_ line: String) -> String {
+      /// Caps the quoted reason in the application information text, which can span several lines.
+      private static func truncatingApplicationReason(_ text: String) -> String {
         let marker = "reason: '"
-        guard let markerRange = line.range(of: marker) else {
-          return line
+        guard let markerRange = text.range(of: marker) else {
+          return text
         }
         let reasonStart = markerRange.upperBound
-        guard let reasonEnd = line[reasonStart...].lastIndex(of: "'") else {
-          return line
+        guard let reasonEnd = text[reasonStart...].lastIndex(of: "'") else {
+          return text
         }
-        let reason = line[reasonStart ..< reasonEnd]
+        let reason = text[reasonStart ..< reasonEnd]
         guard reason.count > 1_000 else {
-          return line
+          return text
         }
-        return String(line[..<reasonStart])
+        return String(text[..<reasonStart])
           + String(reason.prefix(1_000))
           + " [truncated]"
-          + String(line[reasonEnd...])
+          + String(text[reasonEnd...])
       }
     }
 
