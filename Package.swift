@@ -88,7 +88,8 @@ let package = Package(
         .product(name: "ResourceExtension", package: "opentelemetry-swift"),
         .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift")
       ],
-      path: "Sources/Tests/apm-agent-iosTests"),
+      path: "Sources/Tests/apm-agent-iosTests",
+      resources: [.copy("Fixtures")]),
     .testTarget(
       name: "MemorySamplerTests",
       dependencies: [
