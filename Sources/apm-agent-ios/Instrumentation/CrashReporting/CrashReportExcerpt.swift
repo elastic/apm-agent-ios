@@ -28,141 +28,45 @@
         return String(normalized.prefix(budget))
       }
 
-      let fixedSections = parsed.fixedSections
-      let fixedReferences = frameReferences(in: fixedSections)
-      var keptThreads = [parsed.crashedThread]
-      var references = fixedReferences.union(parsed.crashedThread.frameReferences)
-
-      var excerpt = render(
-        fixedSections: fixedSections,
-        threads: keptThreads,
-        imageReferences: references,
-        images: parsed.images,
-        hasBinaryImagesSection: parsed.hasBinaryImagesSection
-      )
-
-      if excerpt.count > budget {
-        guard let truncated = truncateCrashedThread(
-          parsed.crashedThread,
-          fixedSections: fixedSections,
-          fixedReferences: fixedReferences,
-          images: parsed.images,
-          hasBinaryImagesSection: parsed.hasBinaryImagesSection,
-          budget: budget
-        ) else {
-          return String(normalized.prefix(budget))
-        }
-
-        keptThreads = [truncated.thread]
-        references = fixedReferences.union(truncated.thread.frameReferences)
-        excerpt = render(
-          fixedSections: fixedSections,
-          threads: keptThreads,
-          imageReferences: references,
-          images: parsed.images,
-          hasBinaryImagesSection: parsed.hasBinaryImagesSection
-        )
+      guard let frameLimit = largestFrameLimit(for: parsed, budget: budget) else {
+        return String(parsed.render(frameLimit: 1).prefix(budget))
       }
 
+      var secondaryThreads = [FrameSection]()
+      var excerpt = parsed.render(frameLimit: frameLimit)
       for thread in parsed.secondaryThreads {
-        let candidateThreads = keptThreads + [thread]
-        let candidateReferences = references.union(thread.frameReferences)
-        let candidate = render(
-          fixedSections: fixedSections,
-          threads: candidateThreads,
-          imageReferences: candidateReferences,
-          images: parsed.images,
-          hasBinaryImagesSection: parsed.hasBinaryImagesSection
-        )
+        let candidate = parsed.render(frameLimit: frameLimit, secondaryThreads: secondaryThreads + [thread])
         guard candidate.count <= budget else {
           break
         }
-        keptThreads = candidateThreads
-        references = candidateReferences
+        secondaryThreads.append(thread)
         excerpt = candidate
       }
 
-      return String(excerpt.prefix(budget))
+      return excerpt
     }
 
-    private static func truncateCrashedThread(_ thread: ThreadSection,
-                                              fixedSections: [[String]],
-                                              fixedReferences: Set<UInt64>,
-                                              images: [ImageLine],
-                                              hasBinaryImagesSection: Bool,
-                                              budget: Int) -> (thread: ThreadSection, excerpt: String)? {
-      let frames = thread.frames
-      guard frames.count > 1 else {
-        return nil
+    /// Returns the largest frame limit whose excerpt fits the budget, or `nil` when even one frame does not fit.
+    /// The excerpt grows with the limit, so a binary search keeps the number of renders logarithmic.
+    private static func largestFrameLimit(for report: ParsedReport, budget: Int) -> Int? {
+      let fullFrameLimit = report.shortenableSections.map(\.frames.count).max() ?? 0
+      guard report.render(frameLimit: fullFrameLimit).count > budget else {
+        return fullFrameLimit
       }
 
-      let preferredTailCount = min(10, frames.count - 1)
-      let minimumHeadCount = min(20, frames.count - preferredTailCount - 1)
-
-      for tailCount in stride(from: preferredTailCount, through: 0, by: -1) {
-        let maximumHeadCount = frames.count - tailCount - 1
-        guard maximumHeadCount > 0 else {
-          continue
-        }
-
-        let lowestHeadCount = tailCount == preferredTailCount ? minimumHeadCount : 1
-        guard maximumHeadCount >= lowestHeadCount else {
-          continue
-        }
-
-        for headCount in stride(from: maximumHeadCount, through: lowestHeadCount, by: -1) {
-          let omittedCount = frames.count - headCount - tailCount
-          guard omittedCount > 0 else {
-            continue
-          }
-
-          let shortened = thread.replacingFrames(
-            headCount: headCount,
-            tailCount: tailCount,
-            omittedCount: omittedCount
-          )
-          let references = fixedReferences.union(shortened.frameReferences)
-          let excerpt = render(
-            fixedSections: fixedSections,
-            threads: [shortened],
-            imageReferences: references,
-            images: images,
-            hasBinaryImagesSection: hasBinaryImagesSection
-          )
-          if excerpt.count <= budget {
-            return (shortened, excerpt)
-          }
+      var fittingLimit: Int?
+      var lowerLimit = 1
+      var upperLimit = fullFrameLimit - 1
+      while lowerLimit <= upperLimit {
+        let limit = (lowerLimit + upperLimit) / 2
+        if report.render(frameLimit: limit).count <= budget {
+          fittingLimit = limit
+          lowerLimit = limit + 1
+        } else {
+          upperLimit = limit - 1
         }
       }
-
-      return nil
-    }
-
-    private static func render(fixedSections: [[String]],
-                               threads: [ThreadSection],
-                               imageReferences: Set<UInt64>,
-                               images: [ImageLine],
-                               hasBinaryImagesSection: Bool) -> String {
-      var sections = fixedSections
-      sections.append(contentsOf: threads.map(\.lines))
-
-      if hasBinaryImagesSection {
-        let keptImages = images
-          .filter { imageReferences.contains($0.startAddress) }
-          .map(\.line)
-        sections.append(["Binary Images:"] + keptImages)
-      }
-
-      return sections
-        .filter { !$0.isEmpty }
-        .map { $0.joined(separator: "\n") }
-        .joined(separator: "\n\n") + "\n"
-    }
-
-    private static func frameReferences(in sections: [[String]]) -> Set<UInt64> {
-      Set(sections.flatMap { section in
-        section.compactMap(Frame.init(line:)).compactMap(\.baseAddress)
-      })
+      return fittingLimit
     }
   }
 
@@ -170,14 +74,14 @@
     struct ParsedReport {
       let header: [String]
       let applicationInformation: [String]?
-      let lastExceptionBacktrace: [String]?
-      let crashedThread: ThreadSection
-      let secondaryThreads: [ThreadSection]
-      let images: [ImageLine]
-      let hasBinaryImagesSection: Bool
+      let lastExceptionBacktrace: FrameSection?
+      let crashedThread: FrameSection
+      let secondaryThreads: [FrameSection]
+      let images: [ImageLine]?
 
-      var fixedSections: [[String]] {
-        [header, applicationInformation, lastExceptionBacktrace].compactMap { $0 }
+      /// The sections shortened by the frame limit: the last exception backtrace and the crashed thread.
+      var shortenableSections: [FrameSection] {
+        [lastExceptionBacktrace, crashedThread].compactMap { $0 }
       }
 
       init?(_ report: String) {
@@ -189,8 +93,8 @@
           if line == "Last Exception Backtrace:" {
             return Marker(index: index, kind: .lastExceptionBacktrace)
           }
-          if let thread = ThreadSection.header(line) {
-            return Marker(index: index, kind: .thread(thread))
+          if let isCrashed = FrameSection.threadHeader(line) {
+            return Marker(index: index, kind: .thread(isCrashed: isCrashed))
           }
           if line.hasPrefix("Thread "), line.contains(" crashed with "), line.hasSuffix(" Thread State:") {
             return Marker(index: index, kind: .registerState)
@@ -207,27 +111,24 @@
 
         header = Self.trimmed(Array(lines[..<firstMarker.index]))
         var applicationInformation: [String]?
-        var lastExceptionBacktrace: [String]?
-        var threads = [ThreadSection]()
-        var images = [ImageLine]()
-        var hasBinaryImagesSection = false
+        var lastExceptionBacktrace: FrameSection?
+        var threads = [(isCrashed: Bool, section: FrameSection)]()
+        var images: [ImageLine]?
 
         for (position, marker) in markers.enumerated() {
           let end = position + 1 < markers.count ? markers[position + 1].index : lines.count
-          var section = Self.trimmed(Array(lines[marker.index ..< end]))
+          let section = Self.trimmed(Array(lines[marker.index ..< end]))
 
           switch marker.kind {
           case .applicationInformation:
-            section = section.map(Self.truncatingApplicationReason)
-            applicationInformation = section
+            applicationInformation = section.map(Self.truncatingApplicationReason)
           case .lastExceptionBacktrace:
-            lastExceptionBacktrace = section
-          case let .thread(header):
-            threads.append(ThreadSection(header: header, lines: section))
+            lastExceptionBacktrace = FrameSection(lines: section)
+          case let .thread(isCrashed):
+            threads.append((isCrashed, FrameSection(lines: section)))
           case .registerState:
             break
           case .binaryImages:
-            hasBinaryImagesSection = true
             images = section.dropFirst().compactMap(ImageLine.init(line:))
           }
         }
@@ -237,14 +138,26 @@
         }
 
         let crashedIndex = threads.firstIndex(where: \.isCrashed) ?? threads.startIndex
-        crashedThread = threads[crashedIndex]
-        secondaryThreads = threads.enumerated().compactMap { index, thread in
-          index == crashedIndex ? nil : thread
-        }
+        crashedThread = threads[crashedIndex].section
+        secondaryThreads = threads.indices.filter { $0 != crashedIndex }.map { threads[$0].section }
         self.applicationInformation = applicationInformation
         self.lastExceptionBacktrace = lastExceptionBacktrace
         self.images = images
-        self.hasBinaryImagesSection = hasBinaryImagesSection
+      }
+
+      func render(frameLimit: Int, secondaryThreads: [FrameSection] = []) -> String {
+        let frameSections = shortenableSections.map { $0.limited(toFrames: frameLimit) } + secondaryThreads
+        var sections = [header, applicationInformation].compactMap { $0 } + frameSections.map(\.lines)
+
+        if let images {
+          let references = Set(frameSections.flatMap(\.frames).compactMap(\.baseAddress))
+          sections.append(["Binary Images:"] + images.filter { references.contains($0.startAddress) }.map(\.line))
+        }
+
+        return sections
+          .filter { !$0.isEmpty }
+          .map { $0.joined(separator: "\n") }
+          .joined(separator: "\n\n") + "\n"
       }
 
       private static func trimmed(_ lines: [String]) -> [String] {
@@ -282,7 +195,7 @@
       enum Kind {
         case applicationInformation
         case lastExceptionBacktrace
-        case thread(ThreadSection.Header)
+        case thread(isCrashed: Bool)
         case registerState
         case binaryImages
       }
@@ -291,28 +204,19 @@
       let kind: Kind
     }
 
-    struct ThreadSection {
-      struct Header {
-        let number: Int
-        let isCrashed: Bool
-      }
+    /// A section headed by one line and followed by frame lines: a thread or the last exception backtrace.
+    struct FrameSection {
+      static let tailFrameCount = 10
+      static let minimumHeadFrameCount = 20
 
-      let header: Header
       let lines: [String]
-
-      var isCrashed: Bool {
-        header.isCrashed
-      }
 
       var frames: [Frame] {
         lines.dropFirst().compactMap(Frame.init(line:))
       }
 
-      var frameReferences: Set<UInt64> {
-        Set(frames.compactMap(\.baseAddress))
-      }
-
-      static func header(_ line: String) -> Header? {
+      /// Returns whether a `Thread N Crashed:` or `Thread N:` line marks a crashed thread, or `nil` for any other line.
+      static func threadHeader(_ line: String) -> Bool? {
         guard line.hasPrefix("Thread ") else {
           return nil
         }
@@ -331,42 +235,45 @@
 
         let numberStart = line.index(line.startIndex, offsetBy: "Thread ".count)
         let numberEnd = line.index(line.endIndex, offsetBy: -suffix.count)
-        guard numberStart < numberEnd, let number = Int(line[numberStart ..< numberEnd]) else {
+        guard numberStart < numberEnd, Int(line[numberStart ..< numberEnd]) != nil else {
           return nil
         }
-        return Header(number: number, isCrashed: isCrashed)
+        return isCrashed
       }
 
-      func replacingFrames(headCount: Int, tailCount: Int, omittedCount: Int) -> ThreadSection {
-        let keptHead = frames.prefix(headCount).map(\.line)
-        let keptTail = tailCount == 0 ? [] : frames.suffix(tailCount).map(\.line)
-        let marker = "... \(omittedCount) frames omitted"
-        return ThreadSection(
-          header: header,
-          lines: [lines[0]] + keptHead + [marker] + keptTail
+      /// Keeps at most `limit` frames. The tail grows to `tailFrameCount` frames only once the head has
+      /// `minimumHeadFrameCount` frames, and one marker line replaces the omitted middle.
+      func limited(toFrames limit: Int) -> FrameSection {
+        let frames = self.frames
+        guard frames.count > limit else {
+          return self
+        }
+
+        let tailCount = min(Self.tailFrameCount, max(0, limit - Self.minimumHeadFrameCount))
+        let headCount = limit - tailCount
+        return FrameSection(
+          lines: [lines[0]]
+            + frames.prefix(headCount).map(\.line)
+            + ["... \(frames.count - limit) frames omitted"]
+            + frames.suffix(tailCount).map(\.line)
         )
       }
     }
 
     struct Frame {
       let line: String
-      let imageName: String
       let baseAddress: UInt64?
 
       init?(line: String) {
         let addresses = hexadecimalValues(in: line)
-        guard addresses.count >= 2 else {
+        guard addresses.count >= 2,
+              let frameNumber = line.split(whereSeparator: \.isWhitespace).first,
+              Int(frameNumber) != nil else {
           return nil
         }
 
         self.line = line
         baseAddress = addresses[1] == 0 ? nil : addresses[1]
-
-        let components = line.split(whereSeparator: \.isWhitespace)
-        guard components.count >= 2, Int(components[0]) != nil else {
-          return nil
-        }
-        imageName = String(components[1])
       }
     }
 

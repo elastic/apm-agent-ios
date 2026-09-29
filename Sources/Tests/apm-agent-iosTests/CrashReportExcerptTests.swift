@@ -50,25 +50,46 @@
     }
 
     func testLongCrashedThreadKeepsHeadAndTenTailFrames() {
-      let report = syntheticReport(frameCount: 200)
+      // 512 is the per-thread frame cap of the crash reporter.
+      for frameCount in [200, 512] {
+        let report = syntheticReport(frameCount: frameCount)
+        let excerpt = CrashReportExcerpt.compose(report)
+        let lines = thread(number: 0, in: excerpt).split(separator: "\n").map(String.init)
+
+        XCTAssertLessThanOrEqual(excerpt.count, CrashReportExcerpt.maxCharacterCount)
+        let tailCount = assertShortened(section: thread(number: 0, in: excerpt), originalFrameCount: frameCount)
+        XCTAssertEqual(tailCount, 10)
+        XCTAssertTrue(lines.last?.hasPrefix("\(frameCount - 1) ") == true)
+        assertImageReferencesAreComplete(in: excerpt)
+      }
+    }
+
+    func testLongLastExceptionBacktraceIsShortenedAndCrashedThreadKept() throws {
+      let fixture = try fixture("plcrash-ios-simulator-nsexception")
+      let report = replacingFrames(of: "Last Exception Backtrace:", in: fixture, frameCount: 100)
       let excerpt = CrashReportExcerpt.compose(report)
-      let lines = thread(number: 0, in: excerpt).split(separator: "\n").map(String.init)
 
       XCTAssertLessThanOrEqual(excerpt.count, CrashReportExcerpt.maxCharacterCount)
-      guard let markerIndex = lines.firstIndex(where: { $0.hasPrefix("... ") }) else {
-        return XCTFail("Expected an omitted-frames marker")
-      }
-      let marker = lines[markerIndex].split(separator: " ")
-      guard marker.count >= 2, let omitted = Int(marker[1]) else {
-        return XCTFail("Expected the marker to contain an omitted frame count")
-      }
-      let headCount = markerIndex - 1
-      let tailCount = lines.count - markerIndex - 1
-      XCTAssertGreaterThanOrEqual(headCount, 20)
-      XCTAssertEqual(tailCount, 10)
-      XCTAssertEqual(headCount + omitted + tailCount, 200)
-      XCTAssertTrue(lines.last?.hasPrefix("199 ") == true)
+      assertShortened(section: section(startingWith: "Last Exception Backtrace:", in: excerpt), originalFrameCount: 100)
+      XCTAssertTrue(excerpt.contains("Thread 0 Crashed:"))
+      XCTAssertTrue(excerpt.contains(String(repeating: "R", count: 1_000) + " [truncated]"))
+      XCTAssertFalse(excerpt.contains(String(repeating: "R", count: 1_001)))
       assertImageReferencesAreComplete(in: excerpt)
+    }
+
+    func testOverBudgetFallbackCutsParsedExcerpt() throws {
+      let report = try fixture("plcrash-ios-simulator-nsexception")
+      let unbounded = CrashReportExcerpt.compose(report, budget: .max)
+      let truncatedReason = try XCTUnwrap(unbounded.range(of: " [truncated]"))
+      // Too small for one frame per section, large enough to reach past the capped reason.
+      let budget = unbounded.distance(from: unbounded.startIndex, to: truncatedReason.upperBound) + 20
+
+      let excerpt = CrashReportExcerpt.compose(report, budget: budget)
+
+      XCTAssertLessThanOrEqual(excerpt.count, budget)
+      XCTAssertTrue(excerpt.contains(" [truncated]"))
+      XCTAssertFalse(excerpt.contains(String(repeating: "R", count: 1_001)))
+      XCTAssertFalse(excerpt.contains("Thread 0 Crashed:"))
     }
 
     func testFirstThreadIsFallbackWhenNoThreadIsMarkedCrashed() {
@@ -143,19 +164,58 @@
 
     private func thread(number: Int, in report: String) -> String {
       let crashedMarker = "Thread \(number) Crashed:"
-      let regularMarker = "Thread \(number):"
-      let marker = report.contains(crashedMarker) ? crashedMarker : regularMarker
-      guard let start = report.range(of: marker) else {
+      let marker = report.contains(crashedMarker) ? crashedMarker : "Thread \(number):"
+      return section(startingWith: marker, in: report)
+    }
+
+    /// Returns the section that starts with the marker line and ends before the next blank line.
+    private func section(startingWith marker: String, in report: String) -> String {
+      guard let start = report.range(of: "\(marker)\n") else {
         return ""
       }
       let remainder = report[start.lowerBound...]
-      let boundaries = [
-        remainder.range(of: "\n\nThread ", options: [], range: remainder.index(after: start.lowerBound) ..< remainder.endIndex),
-        remainder.range(of: "\n\nBinary Images:"),
-        remainder.range(of: "\n\nThread \(number) crashed with ")
-      ].compactMap { $0?.lowerBound }
-      let end = boundaries.min() ?? remainder.endIndex
+      let end = remainder.range(of: "\n\n")?.lowerBound ?? remainder.endIndex
       return String(remainder[..<end])
+    }
+
+    /// Asserts a head of at least 20 frames, a tail of at most 10 that is full before the head grows past 20,
+    /// and one marker accounting for the omitted frames. Returns the tail frame count.
+    @discardableResult
+    private func assertShortened(section: String,
+                                 originalFrameCount: Int,
+                                 file: StaticString = #filePath,
+                                 line: UInt = #line) -> Int? {
+      let lines = section.split(separator: "\n").map(String.init)
+      guard let markerIndex = lines.firstIndex(where: { $0.hasPrefix("... ") }) else {
+        XCTFail("Expected an omitted-frames marker", file: file, line: line)
+        return nil
+      }
+      let marker = lines[markerIndex].split(separator: " ")
+      guard marker.count >= 2, let omitted = Int(marker[1]) else {
+        XCTFail("Expected the marker to contain an omitted frame count", file: file, line: line)
+        return nil
+      }
+      let headCount = markerIndex - 1
+      let tailCount = lines.count - markerIndex - 1
+      XCTAssertGreaterThanOrEqual(headCount, 20, file: file, line: line)
+      XCTAssertLessThanOrEqual(tailCount, 10, file: file, line: line)
+      XCTAssertTrue(headCount == 20 || tailCount == 10, file: file, line: line)
+      XCTAssertEqual(headCount + omitted + tailCount, originalFrameCount, file: file, line: line)
+      return tailCount
+    }
+
+    /// Replaces the frames of the section that starts with the marker by `frameCount` renumbered copies of them.
+    private func replacingFrames(of marker: String, in report: String, frameCount: Int) -> String {
+      let original = section(startingWith: marker, in: report)
+      let frames = original.split(separator: "\n").dropFirst().map(String.init)
+      let replacement = (0 ..< frameCount).map { index in
+        String(format: "%-4ld", index) + frames[index % frames.count].dropFirst(4)
+      }
+      var result = report
+      if let range = result.range(of: original) {
+        result.replaceSubrange(range, with: ([marker] + replacement).joined(separator: "\n"))
+      }
+      return result
     }
 
     private func assertImageReferencesAreComplete(in report: String) {
