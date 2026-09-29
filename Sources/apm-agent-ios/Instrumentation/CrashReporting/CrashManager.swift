@@ -107,13 +107,14 @@ struct CrashManager {
         // We could send the report from here, but we'll just print out some debugging info instead.
         if let text = PLCrashReportTextFormatter.stringValue(
           for: report, with: PLCrashReportTextFormatiOS) {
-          os_log("%@", log:self.logger, type: .debug, text)
+          let excerpt = CrashReportExcerpt.compose(text)
+          os_log("%@", log: self.logger, type: .debug, excerpt)
           // notes : branching code needed for signal vs mach vs nsexception for event generation
           //
           var attributes = [
             SemanticConventions.Exception.type.rawValue: AttributeValue
               .string(report.signalInfo.name),
-            SemanticConventions.Exception.stacktrace.rawValue: AttributeValue.string(text)
+            SemanticConventions.Exception.stacktrace.rawValue: AttributeValue.string(excerpt)
           ]
 
           if let lastSessionId = configuration.sessionId {

@@ -127,9 +127,17 @@ A crash is stored on the device when it occurs. The SDK loads and exports the re
 
 - Event name `app.crash`.
 - Fatal severity.
-- Exception type, message, and stack trace.
+- Exception type and message containing the signal name, code, and address.
+- Stack trace containing an excerpt of the PLCrashReporter iOS text report.
 - The session ID from the crashed app session.
 - The last known network connection type on supported iOS devices.
+
+```{applies_to}
+product:
+  edot_ios: ga 2.2.0
+```
+
+The crash report excerpt is at most 7,500 characters. It always contains the report header, exception information, and crashed thread. It lists only binary images that appear in included frames, adds further threads in report order while they fit, omits the remaining threads, and contains no register state. If the crashed thread alone is too long, EDOT iOS replaces its middle frames with a `... N frames omitted` line. Addresses remain unsymbolicated; the retained image UUIDs and load addresses allow you to symbolicate the excerpt with the app's dSYM.
 
 Crash reporting is enabled by default.
 
