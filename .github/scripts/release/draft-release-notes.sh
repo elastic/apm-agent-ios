@@ -25,12 +25,14 @@ jq 'def has_label($name):
       any(.labels[]?; ascii_downcase == $name);
     def item:
       {message: .title, prId: (.number | tostring)};
-    # Title with version numbers removed, so "Bump foo from 1.2 to 1.3" and
-    # "Bump foo from 1.3 to 1.4" dedupe to one entry.
+    # Title with every standalone number removed, so "Bump foo from 1.2 to
+    # 1.3" and "Bump foo from 1.3 to 1.4" dedupe to one entry, and so do
+    # "from 4 to 5" / "from 5 to 6" and "with 2 updates" / "with 4 updates".
+    # Digits inside a name (log4j, junit5) are kept.
     def dependency_key:
       .title
       | ascii_downcase
-      | gsub("v?[0-9]+(\\.[0-9]+)+([-+][0-9a-z.-]+)?"; "")
+      | gsub("\\bv?[0-9]+(\\.[0-9]+)*([-+][0-9a-z.-]+)?\\b"; "")
       | gsub("[[:space:]]+"; " ")
       | gsub("^[[:space:]]+|[[:space:]]+$"; "");
     .pullRequests as $included
