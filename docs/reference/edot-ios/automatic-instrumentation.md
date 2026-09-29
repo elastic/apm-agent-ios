@@ -128,7 +128,7 @@ A crash is stored on the device when it occurs. The SDK loads and exports the re
 - Event name `app.crash`.
 - Fatal severity.
 - Exception type and message containing the signal name, code, and address.
-- Stack trace containing an excerpt of the PLCrashReporter iOS text report. {applies_to}`edot_ios: ga 2.2.0`
+- {applies_to}`edot_ios: ga 2.2.0` Stack trace containing an excerpt of the PLCrashReporter iOS text report.
 - The session ID from the crashed app session.
 - The last known network connection type on supported iOS devices.
 
