@@ -1,0 +1,26 @@
+{
+  "dependencies": [
+    {
+      "message": "Update OpenTelemetry-Swift",
+      "prId": "401"
+    }
+  ],
+  "featuresEnhancements": [
+    {
+      "message": "Improve automatic instrumentation",
+      "prId": "402"
+    },
+    {
+      "message": "Remove a deprecated configuration option",
+      "prId": "403",
+      "breaking": true
+    }
+  ],
+  "fixes": [
+    {
+      "message": "Fix offline span delivery",
+      "prId": "404"
+    }
+  ],
+  "uncategorized": []
+}

@@ -8,6 +8,8 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "22:00"
+    labels:
+      - dependencies
     groups:
       github-actions:
         patterns:
@@ -16,6 +18,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    labels:
+      - dependencies
     groups:
       otel:
         patterns:
