@@ -30,7 +30,7 @@ class InterceptorTests : XCTestCase {
     )
     XCTAssert(nestedMultiInterceptor.interceptors.count == 1)
     XCTAssertFalse(
-      nestedMultiInterceptor.interceptors[0] is MultiInterceptor<String>
+      nestedMultiInterceptor.interceptors[0].base is MultiInterceptor<String>
     )
     XCTAssertEqual(nestedMultiInterceptor.intercept(""), "true")
   }

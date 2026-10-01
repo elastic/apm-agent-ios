@@ -1,5 +1,4 @@
-//
-//  Copyright © 2025  Elasticsearch BV
+// Copyright © 2026 Elasticsearch BV
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -15,13 +14,18 @@
 
 import Foundation
 
-public struct SequenceNumberAppender: AgentToServerAppender {
-  private let sequenceNumber: AnySupplier<UInt64>
-  public init(sequenceNumber: some Supplier<UInt64>) {
-    self.sequenceNumber = AnySupplier(sequenceNumber)
+/// A type-erased `Supplier`.
+///
+/// Stores any supplier of a given `Supply` type without a constrained
+/// existential (`any Supplier<Supply>`), which needs iOS 16 at runtime.
+struct AnySupplier<Supply>: Supplier {
+  private let getSupply: () -> Supply
+
+  init<S: Supplier>(_ base: S) where S.Supply == Supply {
+    getSupply = base.get
   }
 
-  public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
-    agentToServer.sequenceNum = sequenceNumber.get()
+  func get() -> Supply {
+    return getSupply()
   }
 }

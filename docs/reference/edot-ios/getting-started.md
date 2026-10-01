@@ -24,7 +24,7 @@ Set up the Elastic Distribution of OpenTelemetry iOS (EDOT iOS) in your app and 
 | Requirement | Minimum version |
 | --- | --- |
 | Swift | 5.10 |
-| iOS | 16 |
+| iOS | 15 {applies_to}`edot_ios: ga 2.2.0` |
 
 You also need a reachable OpenTelemetry Protocol (OTLP) endpoint provided by an [Elastic Agent OTLP endpoint](elastic-agent://reference/edot-collector/modes.md#edot-collector-as-gateway).
 

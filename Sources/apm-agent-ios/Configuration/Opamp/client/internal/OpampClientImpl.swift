@@ -26,6 +26,7 @@ public class OpampClientImpl : OpampClientInterface, RequestServiceCallback, Sup
     FieldType.REMOTE_CONFIG_STATUS,
   ]
   public typealias Supply = OpampRequest
+  public typealias Client = OpampClientImpl
   private let requestService: RequestService
   private let recipeManager: RecipeManager
   private let clientState: OpampClientState
@@ -33,7 +34,7 @@ public class OpampClientImpl : OpampClientInterface, RequestServiceCallback, Sup
   private let runningLock = NSLock()
   private var isRunning = false
   private var isStopped = false
-  private var callback: (any OpampClientCallback<OpampClientImpl>)?
+  private var callback: AnyOpampClientCallback<OpampClientImpl>?
   public static func create(
     requestService: RequestService,
     clientState: OpampClientState
@@ -84,12 +85,12 @@ public class OpampClientImpl : OpampClientInterface, RequestServiceCallback, Sup
     }
   }
 
-  public func start(_ callback: any OpampClientCallback<OpampClientImpl>) {
+  public func start(_ callback: some OpampClientCallback<OpampClientImpl>) {
     runningLock.lock()
     defer { runningLock.unlock() }
     
     if(!isRunning) {
-      self.callback = callback
+      self.callback = AnyOpampClientCallback(callback)
       NotificationCenter.default.addObserver(
 self,
 selector: #selector(onStateForFieldChanged),

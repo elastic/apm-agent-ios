@@ -13,19 +13,25 @@
 //   limitations under the License.
 
 public struct MultiInterceptor<T>: Interceptor {
-  var interceptors: [any Interceptor<T>] = []
+  var interceptors: [AnyInterceptor<T>] = []
 
-  public init(_ interceptors: [any Interceptor<T>]) {
-    interceptors.filter { $0 is MultiInterceptor<T> }.forEach {
-      if let multiInterceptor = $0 as? MultiInterceptor<T> {
+  public init(_ interceptors: [AnyInterceptor<T>]) {
+    interceptors.filter { $0.base is MultiInterceptor<T> }.forEach {
+      if let multiInterceptor = $0.base as? MultiInterceptor<T> {
         self.interceptors.append(contentsOf: multiInterceptor.interceptors)
       }
     }
     interceptors
-      .filter { !($0 is MultiInterceptor<T> || $0 is NoopInterceptor<T>) }
+      .filter { !($0.base is MultiInterceptor<T> || $0.base is NoopInterceptor<T>) }
       .forEach {
         self.interceptors.append($0)
     }
+  }
+
+  @_disfavoredOverload
+  @available(iOS 16, *)
+  public init(_ interceptors: [any Interceptor<T>]) {
+    self.init(interceptors.map { AnyInterceptor($0) })
   }
 
   public func intercept(_ item: T) -> T {

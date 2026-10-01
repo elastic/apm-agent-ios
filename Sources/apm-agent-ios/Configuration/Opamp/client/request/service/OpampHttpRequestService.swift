@@ -26,7 +26,7 @@ public class OpampHttpRequestService: RequestService {
   private let requestTimer: RequestTimer
 
   private var callback: RequestServiceCallback?
-  private var request: (any Supplier<OpampRequest>)?
+  private var request: AnySupplier<OpampRequest>?
 
   public private(set) var isRunning = false
   public private(set) var isStopped = false
@@ -59,7 +59,7 @@ public class OpampHttpRequestService: RequestService {
       )
   }
 
-  public func start(callback: RequestServiceCallback, request: any Supplier<OpampRequest>) {
+  public func start(callback: RequestServiceCallback, request: some Supplier<OpampRequest>) {
     lock.lock()
     defer { lock.unlock() }
     if isStopped {
@@ -71,7 +71,7 @@ public class OpampHttpRequestService: RequestService {
       return
     }
     self.callback = callback
-    self.request = request
+    self.request = AnySupplier(request)
     self.requestTimer.activate()
     isRunning = true
   }

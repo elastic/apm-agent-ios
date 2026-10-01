@@ -141,11 +141,11 @@ class SessionSpanProcessorTest: XCTestCase {
   func testSpanInterceptors() {
     let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
     var config = AgentConfiguration()
-    config.spanAttributeInterceptor = ClosureInterceptor<[String:AttributeValue]> { attribute in
+    config.spanAttributeInterceptor = AnyInterceptor(ClosureInterceptor<[String:AttributeValue]> { attribute in
       var newAttributes = attribute
       newAttributes["foo"] = .string("bar")
       return newAttributes
-    }
+    })
     tracerSdkFactory
       .addSpanProcessor(
         ElasticSpanProcessor(
@@ -158,5 +158,35 @@ class SessionSpanProcessorTest: XCTestCase {
     let exported = waitingSpanExporter.waitForExport()
 
     XCTAssertTrue(exported?[0].attributes["foo"]?.description == "bar")
+  }
+
+  // Keep the body in sync with the addSpanAttributeInterceptor(_:) example in
+  // docs/reference/edot-ios/configuration.md.
+  func testDocumentedSpanAttributeInterceptorCall() {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
+
+    let interceptor = ClosureInterceptor<[String: AttributeValue]> { attributes in
+      var updatedAttributes = attributes
+      updatedAttributes["app.release_channel"] = .string("beta")
+      return updatedAttributes
+    }
+
+    let configuration = AgentConfigBuilder()
+      .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+      .addSpanAttributeInterceptor(interceptor)
+      .build()
+
+    tracerSdkFactory
+      .addSpanProcessor(
+        ElasticSpanProcessor(
+          spanExporter: waitingSpanExporter,
+          agentConfiguration: configuration,
+          scheduleDelay: maxScheduleDelay
+        )
+      )
+    _ = createSampledEndedSpan(spanName: spanName1)
+    let exported = waitingSpanExporter.waitForExport()
+
+    XCTAssertEqual(exported?[0].attributes["app.release_channel"]?.description, "beta")
   }
 }

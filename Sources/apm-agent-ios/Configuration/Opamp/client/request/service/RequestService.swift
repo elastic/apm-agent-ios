@@ -16,7 +16,7 @@
 import Foundation
 
 public protocol RequestService {
-  func start(callback: RequestServiceCallback, request: any Supplier<OpampRequest>)
+  func start(callback: RequestServiceCallback, request: some Supplier<OpampRequest>)
   func sendRequest()
   func stop()
 }

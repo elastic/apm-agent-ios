@@ -16,9 +16,9 @@
 import Foundation
 
 public struct RemoteConfigStatusAppender: AgentToServerAppender {
-  private let config: any Supplier<Opamp_Proto_RemoteConfigStatus>
-  public init(config: any Supplier<Opamp_Proto_RemoteConfigStatus>) {
-    self.config = config
+  private let config: AnySupplier<Opamp_Proto_RemoteConfigStatus>
+  public init(config: some Supplier<Opamp_Proto_RemoteConfigStatus>) {
+    self.config = AnySupplier(config)
   }
 
   public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {

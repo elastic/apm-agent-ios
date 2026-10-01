@@ -34,8 +34,8 @@ public class AgentConfigBuilder {
   private var spanFilters = [SignalFilter<ReadableSpan>]()
   private var logFilters = [SignalFilter<ReadableLogRecord>]()
 
-  private var spanAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
-  private var logRecordAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
+  private var spanAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
+  private var logRecordAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
   public init() {}
 
   public func disableAgent() -> Self {
@@ -109,14 +109,26 @@ public class AgentConfigBuilder {
     return self
   }
 
-  public func addSpanAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
-    self.spanAttributeInterceptors.append(interceptor)
+  public func addSpanAttributeInterceptor(_ interceptor: some Interceptor<[String: AttributeValue]>) -> Self {
+    self.spanAttributeInterceptors.append(AnyInterceptor(interceptor))
     return self
   }
 
-  public func addLogRecordAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
-    self.logRecordAttributeInterceptors.append(interceptor)
+  @_disfavoredOverload
+  @available(iOS 16, *)
+  public func addSpanAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
+    return addSpanAttributeInterceptor(AnyInterceptor(interceptor))
+  }
+
+  public func addLogRecordAttributeInterceptor(_ interceptor: some Interceptor<[String: AttributeValue]>) -> Self {
+    self.logRecordAttributeInterceptors.append(AnyInterceptor(interceptor))
     return self
+  }
+
+  @_disfavoredOverload
+  @available(iOS 16, *)
+  public func addLogRecordAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
+    return addLogRecordAttributeInterceptor(AnyInterceptor(interceptor))
   }
 
   public func build() -> AgentConfiguration {
@@ -132,7 +144,7 @@ public class AgentConfigBuilder {
 
     if !self.spanAttributeInterceptors.isEmpty {
       if self.spanAttributeInterceptors.count > 1 {
-        config.spanAttributeInterceptor = MultiInterceptor(self.spanAttributeInterceptors)
+        config.spanAttributeInterceptor = AnyInterceptor(MultiInterceptor(self.spanAttributeInterceptors))
       } else {
         config.spanAttributeInterceptor = self.spanAttributeInterceptors[0]
       }
@@ -140,7 +152,7 @@ public class AgentConfigBuilder {
 
     if !self.logRecordAttributeInterceptors.isEmpty {
       if self.logRecordAttributeInterceptors.count > 1 {
-        config.logRecordAttributeInterceptor = MultiInterceptor(self.logRecordAttributeInterceptors)
+        config.logRecordAttributeInterceptor = AnyInterceptor(MultiInterceptor(self.logRecordAttributeInterceptors))
       } else {
         config.logRecordAttributeInterceptor = self.logRecordAttributeInterceptors[0]
       }

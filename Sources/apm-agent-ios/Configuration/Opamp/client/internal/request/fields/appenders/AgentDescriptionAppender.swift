@@ -16,9 +16,9 @@
 import Foundation
 
 public struct AgentDescriptionAppender : AgentToServerAppender {
-  private let agentDescriptor: any Supplier<Opamp_Proto_AgentDescription>
-  init(agentDescriptor: any Supplier<Opamp_Proto_AgentDescription>) {
-    self.agentDescriptor = agentDescriptor
+  private let agentDescriptor: AnySupplier<Opamp_Proto_AgentDescription>
+  init(agentDescriptor: some Supplier<Opamp_Proto_AgentDescription>) {
+    self.agentDescriptor = AnySupplier(agentDescriptor)
   }
   
   public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
