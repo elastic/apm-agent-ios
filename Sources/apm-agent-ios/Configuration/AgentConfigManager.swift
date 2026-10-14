@@ -90,6 +90,9 @@ class AgentConfigManager {
   public let agent: AgentConfiguration
   public let central: CentralConfig
   public let instrumentation: InstrumentationConfiguration
+  /// The agent's resource, built once per start; central configuration and
+  /// every provider use this same value.
+  let resource: Resource
   let centralConfigManager: CentralConfigManager
   private let endpointRegistry: SDKEndpointRegistry
 
@@ -102,6 +105,7 @@ class AgentConfigManager {
       SwiftLogNoOpLogHandler()
     }
   ) {
+    self.resource = resource
     agent = config
     instrumentation = instrumentationConfig
     central = CentralConfig()

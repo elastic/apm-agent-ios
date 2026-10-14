@@ -320,7 +320,7 @@ import OpenTelemetryApi
 
 let interceptor = ClosureInterceptor<[String: AttributeValue]> { attributes in
   var updatedAttributes = attributes
-  updatedAttributes["app.release_channel"] = .string("beta")
+  updatedAttributes["myapp.release_channel"] = .string("beta")
   return updatedAttributes
 }
 
@@ -340,7 +340,7 @@ import OpenTelemetryApi
 
 let interceptor = ClosureInterceptor<[String: AttributeValue]> { attributes in
   var updatedAttributes = attributes
-  updatedAttributes["app.release_channel"] = .string("beta")
+  updatedAttributes["myapp.release_channel"] = .string("beta")
   return updatedAttributes
 }
 
@@ -351,6 +351,40 @@ let configuration = AgentConfigBuilder()
 ```
 
 You can add multiple interceptors. EDOT iOS runs them in the order they were added.
+
+#### `addResourceInterceptor(_:)` [addResourceInterceptor]
+
+```{applies_to}
+product:
+  edot_ios: ga 2.2.0
+```
+
+| Type | Default |
+| --- | --- |
+| `any Interceptor<Resource>` | Not set |
+
+Adds an interceptor for the resource. When EDOT iOS starts, resource interceptors receive the detected resource attributes merged with `OTEL_RESOURCE_ATTRIBUTES`. Their output is the resource on every exported span, log record, and metric.
+
+```swift
+import ElasticApm
+import OpenTelemetryApi
+import OpenTelemetrySdk
+
+let interceptor = ClosureInterceptor<Resource> { resource in
+  resource.merging(other: Resource(attributes: [
+    "myapp.release_channel": .string("beta")
+  ]))
+}
+
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .addResourceInterceptor(interceptor)
+  .build()
+```
+
+If you add more than one resource interceptor, each one receives the output of the interceptor added before it.
+
+Resource attribute keys must be non-empty, at most 255 characters long, and printable ASCII. When any key breaks these rules, `Resource(attributes:)` keeps none of the attributes passed to it. If the resource returned by the interceptors has no attributes, EDOT iOS ignores it, keeps the resource the interceptors received, and logs an error.
 
 ### Disable the SDK [disable-sdk]
 
@@ -484,6 +518,8 @@ To override this identifier or provide other custom resource attributes, set
 ```
 
 The format is a comma-separated list of `key=value` pairs. Values from the process environment override matching values from `Info.plist`.
+
+{applies_to}`edot_ios: ga 2.2.0` To set resource attributes in code, use [`addResourceInterceptor(_:)`](#addResourceInterceptor). Values set in code take precedence over `OTEL_RESOURCE_ATTRIBUTES` from both the process environment and `Info.plist`.
 
 Resource attributes affect how {{kib}} identifies and groups telemetry. Take care when overriding attributes such as `service.name`, `service.version`, and `deployment.environment.name`.
 

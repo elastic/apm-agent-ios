@@ -15,16 +15,15 @@
 public struct MultiInterceptor<T>: Interceptor {
   var interceptors: [any Interceptor<T>] = []
 
+  /// Runs `interceptors` in the given order. A nested `MultiInterceptor` is
+  /// flattened at its position, and `NoopInterceptor`s are dropped.
   public init(_ interceptors: [any Interceptor<T>]) {
-    interceptors.filter { $0 is MultiInterceptor<T> }.forEach {
-      if let multiInterceptor = $0 as? MultiInterceptor<T> {
+    for interceptor in interceptors {
+      if let multiInterceptor = interceptor as? MultiInterceptor<T> {
         self.interceptors.append(contentsOf: multiInterceptor.interceptors)
+      } else if !(interceptor is NoopInterceptor<T>) {
+        self.interceptors.append(interceptor)
       }
-    }
-    interceptors
-      .filter { !($0 is MultiInterceptor<T> || $0 is NoopInterceptor<T>) }
-      .forEach {
-        self.interceptors.append($0)
     }
   }
 

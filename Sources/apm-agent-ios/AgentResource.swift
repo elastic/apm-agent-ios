@@ -16,10 +16,38 @@ import Foundation
 import ResourceExtension
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import os.log
 
 public class AgentResource {
   public static func get() -> Resource {
     get(useLegacyAttributeNames: false)
+  }
+
+  static let emptyInterceptedResourceMessage =
+    "addResourceInterceptor: an interceptor returned a resource with no attributes; "
+    + "EDOT iOS keeps the resource from before interception. Resource attribute keys must be "
+    + "non-empty, at most 255 characters, and printable ASCII; one invalid key leaves a "
+    + "Resource with no attributes."
+
+  private static let logger = OSLog(subsystem: "co.elastic.ElasticApm", category: "Resource")
+
+  /// The resource the agent installs on every provider and passes to central
+  /// configuration: the detected attributes merged with
+  /// `OTEL_RESOURCE_ATTRIBUTES`, then passed through the configured resource
+  /// interceptors. Their output is final unless it has no attributes while
+  /// the input had some; then the input is kept and an error is logged.
+  static func get(
+    configuration: AgentConfiguration,
+    environmentResource: Resource = AgentEnvResource.get()
+  ) -> Resource {
+    let resource = get(useLegacyAttributeNames: configuration.useLegacyAttributeNames)
+      .merging(other: environmentResource)
+    let intercepted = configuration.resourceInterceptor.intercept(resource)
+    if intercepted.attributes.isEmpty, !resource.attributes.isEmpty {
+      os_log("%{public}@", log: logger, type: .error, emptyInterceptedResourceMessage)
+      return resource
+    }
+    return intercepted
   }
 
   static func get(useLegacyAttributeNames: Bool) -> Resource {

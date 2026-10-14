@@ -75,6 +75,85 @@ final class ResourceAttributeSmokeTests: XCTestCase {
       }
     }
   }
+
+  func testResourceInterceptorOutputOnSpansLogsMetricsAndCentralConfiguration() throws {
+    // Keys and values that the OTEL_RESOURCE_ATTRIBUTES parser would split or trim.
+    let custom: [String: AttributeValue] = [
+      "custom.list": .string("a,b"),
+      "custom.pair": .string("k=v"),
+      "custom.quoted": .string("\"quoted\""),
+      "custom.edges": .string("^|value|$"),
+      "custom,key": .string("value"),
+      "service.name": .string("intercepted-service")
+    ]
+    let interceptor = ClosureInterceptor<Resource> { resource in
+      resource.merging(other: Resource(attributes: custom))
+    }
+
+    try withSmokeTelemetry(
+      useLegacyAttributeNames: false,
+      resourceInterceptor: interceptor
+    ) { harness in
+      let expected = try expectedResourceAttributes(useLegacyAttributeNames: false)
+        .merging(custom) { _, intercepted in intercepted }
+      harness.emitSpanAndLog()
+      let metric = try harness.emitMetric()
+      let span = try harness.waitForSpan()
+      let log = try harness.waitForLog()
+
+      XCTAssertEqual(span.resource.attributes, expected)
+      XCTAssertEqual(log.resource.attributes, expected)
+      XCTAssertEqual(metric.resource.attributes, expected)
+
+      let centralConfigManager = try XCTUnwrap(
+        harness.configManager.centralConfigManager as? ElasticAgentConfigManager)
+      XCTAssertEqual(centralConfigManager.serviceName, "intercepted-service")
+    }
+  }
+
+  func testResourceInterceptorOutputWithoutAttributesKeepsTheDetectedResource() throws {
+    try withSmokeTelemetry(
+      useLegacyAttributeNames: false,
+      resourceInterceptor: addingInvalidKey()
+    ) { harness in
+      let expected = try expectedResourceAttributes(useLegacyAttributeNames: false)
+      harness.emitSpanAndLog()
+      let metric = try harness.emitMetric()
+      let span = try harness.waitForSpan()
+      let log = try harness.waitForLog()
+
+      XCTAssertEqual(span.resource.attributes, expected)
+      XCTAssertEqual(log.resource.attributes, expected)
+      XCTAssertEqual(metric.resource.attributes, expected)
+    }
+  }
+
+  func testResourceInterceptorRunsOncePerStartAndAllConsumersShareItsOutput() throws {
+    var invocations = 0
+    // A different value on every call exposes a second invocation.
+    let interceptor = ClosureInterceptor<Resource> { resource in
+      invocations += 1
+      return resource.merging(
+        other: Resource(attributes: ["custom.invocation": .string(UUID().uuidString)]))
+    }
+
+    try withSmokeTelemetry(
+      useLegacyAttributeNames: false,
+      resourceInterceptor: interceptor
+    ) { harness in
+      harness.emitSpanAndLog()
+      let metric = try harness.emitMetric()
+      let span = try harness.waitForSpan()
+      let log = try harness.waitForLog()
+
+      XCTAssertEqual(invocations, 1)
+      let resource = harness.configManager.resource
+      XCTAssertNotNil(resource.attributes["custom.invocation"])
+      XCTAssertEqual(span.resource, resource)
+      XCTAssertEqual(log.resource, resource)
+      XCTAssertEqual(metric.resource, resource)
+    }
+  }
 }
 
 final class GlobalSignalAttributeSmokeTests: XCTestCase {
@@ -103,18 +182,21 @@ private final class SmokeTelemetryHarness {
   let logExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
   let metricExporter = WaitingMetricExporter(numberToWaitFor: 1)
 
+  let configManager: AgentConfigManager
+
   private let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-  init(useLegacyAttributeNames: Bool) {
-    let configuration = AgentConfigBuilder()
+  init(useLegacyAttributeNames: Bool, resourceInterceptor: (any Interceptor<Resource>)?) {
+    var builder = AgentConfigBuilder()
       .withExportUrl(URL(string: "https://unused.invalid")!)
       .withRemoteManagement(false)
       .useLegacyAttributeNames(useLegacyAttributeNames)
-      .build()
-    let resource = AgentResource.get(
-      useLegacyAttributeNames: useLegacyAttributeNames
-    ).merging(other: AgentEnvResource.get())
-    let configManager = AgentConfigManager(
+    if let resourceInterceptor {
+      builder = builder.addResourceInterceptor(resourceInterceptor)
+    }
+    let configuration = builder.build()
+    let resource = AgentResource.get(configuration: configuration)
+    configManager = AgentConfigManager(
       resource: resource,
       config: configuration,
       instrumentationConfig: InstrumentationConfigBuilder().build())
@@ -203,6 +285,7 @@ private struct DirectorySnapshot: Equatable {
 
 private func withSmokeTelemetry(
   useLegacyAttributeNames: Bool,
+  resourceInterceptor: (any Interceptor<Resource>)? = nil,
   _ test: (SmokeTelemetryHarness) throws -> Void
 ) throws {
   XCTAssertNil(ProcessInfo.processInfo.environment[AgentEnvResource.otelResourceAttributesEnv])
@@ -222,7 +305,8 @@ private func withSmokeTelemetry(
     .appendingPathComponent("elastic", isDirectory: true)
   let initialCaches = DirectorySnapshot(at: cachesDirectory)
   let harness = SmokeTelemetryHarness(
-    useLegacyAttributeNames: useLegacyAttributeNames)
+    useLegacyAttributeNames: useLegacyAttributeNames,
+    resourceInterceptor: resourceInterceptor)
 
   defer {
     harness.shutDown()

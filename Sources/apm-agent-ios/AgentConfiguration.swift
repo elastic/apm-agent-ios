@@ -98,6 +98,7 @@ public struct AgentConfiguration {
 
   var spanAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
   var logRecordAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
+  var resourceInterceptor: any Interceptor<Resource> = NoopInterceptor<Resource>()
 
   mutating func setFullExportUrl(_ url: URL?) {
     fullExportUrl = url

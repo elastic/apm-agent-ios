@@ -36,6 +36,7 @@ public class AgentConfigBuilder {
 
   private var spanAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
   private var logRecordAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
+  private var resourceInterceptors: [any Interceptor<Resource>] = []
   public init() {}
 
   public func disableAgent() -> Self {
@@ -119,6 +120,11 @@ public class AgentConfigBuilder {
     return self
   }
 
+  public func addResourceInterceptor(_ interceptor: any Interceptor<Resource>) -> Self {
+    self.resourceInterceptors.append(interceptor)
+    return self
+  }
+
   public func build() -> AgentConfiguration {
 
     var config = AgentConfiguration()
@@ -130,20 +136,14 @@ public class AgentConfigBuilder {
     config.enableRemoteManagement = enableRemoteManagement
     config.useLegacyAttributeNames = legacyAttributeNames
 
-    if !self.spanAttributeInterceptors.isEmpty {
-      if self.spanAttributeInterceptors.count > 1 {
-        config.spanAttributeInterceptor = MultiInterceptor(self.spanAttributeInterceptors)
-      } else {
-        config.spanAttributeInterceptor = self.spanAttributeInterceptors[0]
-      }
+    if let interceptor = Self.combine(spanAttributeInterceptors) {
+      config.spanAttributeInterceptor = interceptor
     }
-
-    if !self.logRecordAttributeInterceptors.isEmpty {
-      if self.logRecordAttributeInterceptors.count > 1 {
-        config.logRecordAttributeInterceptor = MultiInterceptor(self.logRecordAttributeInterceptors)
-      } else {
-        config.logRecordAttributeInterceptor = self.logRecordAttributeInterceptors[0]
-      }
+    if let interceptor = Self.combine(logRecordAttributeInterceptors) {
+      config.logRecordAttributeInterceptor = interceptor
+    }
+    if let interceptor = Self.combine(resourceInterceptors) {
+      config.resourceInterceptor = interceptor
     }
 
     let endpointUrl = self.exportUrl ?? self.serverUrl
@@ -160,5 +160,20 @@ public class AgentConfigBuilder {
     }
     config.enableOpAMP = enableOpAPM
     return config
+  }
+
+  /// Returns `nil` when no interceptor was added, the single interceptor
+  /// itself, or a `MultiInterceptor` that runs them in the order they were added.
+  private static func combine<Item>(
+    _ interceptors: [any Interceptor<Item>]
+  ) -> (any Interceptor<Item>)? {
+    switch interceptors.count {
+    case 0:
+      return nil
+    case 1:
+      return interceptors[0]
+    default:
+      return MultiInterceptor(interceptors)
+    }
   }
 }
