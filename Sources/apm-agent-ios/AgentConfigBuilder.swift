@@ -142,9 +142,7 @@ public class AgentConfigBuilder {
     if let interceptor = Self.combine(logRecordAttributeInterceptors) {
       config.logRecordAttributeInterceptor = interceptor
     }
-    if let interceptor = Self.combine(resourceInterceptors) {
-      config.resourceInterceptor = interceptor
-    }
+    config.resourceInterceptors = resourceInterceptors
 
     let endpointUrl = self.exportUrl ?? self.serverUrl
     config.setFullExportUrl(endpointUrl)

@@ -23,10 +23,10 @@ import XCTest
 final class ResourceInterceptorTests: XCTestCase {
   private let emptyEnvironment = AgentEnvResource.get([:])
 
-  func testBuilderWithoutResourceInterceptorKeepsTheNoopDefault() {
+  func testBuilderWithoutResourceInterceptorConfiguresNone() {
     let configuration = AgentConfigBuilder().build()
 
-    XCTAssertTrue(configuration.resourceInterceptor is NoopInterceptor<Resource>)
+    XCTAssertTrue(configuration.resourceInterceptors.isEmpty)
   }
 
   func testBuilderInstallsASingleResourceInterceptor() {
@@ -34,7 +34,8 @@ final class ResourceInterceptorTests: XCTestCase {
       .addResourceInterceptor(setting("custom.single", to: "set"))
       .build()
 
-    let resource = configuration.resourceInterceptor.intercept(Resource(attributes: [:]))
+    XCTAssertEqual(configuration.resourceInterceptors.count, 1)
+    let resource = configuration.resourceInterceptors[0].intercept(Resource(attributes: [:]))
 
     XCTAssertEqual(resource.attributes, ["custom.single": .string("set")])
   }
@@ -157,6 +158,26 @@ final class ResourceInterceptorTests: XCTestCase {
 
     XCTAssertEqual(resource, detected)
     XCTAssertNil(resource.attributes["custom.valid"])
+    XCTAssertEqual(try emptyInterceptedResourceErrorCount() - errorsBefore, 1)
+  }
+
+  func testAnEmptyStageIsSkippedAndLaterStagesStillApply() throws {
+    let detected = AgentResource.get(
+      configuration: AgentConfigBuilder().build(),
+      environmentResource: emptyEnvironment)
+    let configuration = AgentConfigBuilder()
+      .addResourceInterceptor(addingInvalidKey())
+      .addResourceInterceptor(setting("custom.valid", to: "second"))
+      .build()
+    let errorsBefore = try emptyInterceptedResourceErrorCount()
+
+    let resource = AgentResource.get(
+      configuration: configuration,
+      environmentResource: emptyEnvironment)
+
+    XCTAssertEqual(
+      resource.attributes,
+      detected.attributes.merging(["custom.valid": .string("second")]) { _, new in new })
     XCTAssertEqual(try emptyInterceptedResourceErrorCount() - errorsBefore, 1)
   }
 

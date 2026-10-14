@@ -34,20 +34,24 @@ public class AgentResource {
   /// The resource the agent installs on every provider and passes to central
   /// configuration: the detected attributes merged with
   /// `OTEL_RESOURCE_ATTRIBUTES`, then passed through the configured resource
-  /// interceptors. Their output is final unless it has no attributes while
-  /// the input had some; then the input is kept and an error is logged.
+  /// interceptors one at a time. A stage's output is final unless it has no
+  /// attributes while its input had some; then that stage is skipped with a
+  /// logged error and the next stage receives the resource from before it.
   static func get(
     configuration: AgentConfiguration,
     environmentResource: Resource = AgentEnvResource.get()
   ) -> Resource {
-    let resource = get(useLegacyAttributeNames: configuration.useLegacyAttributeNames)
+    var resource = get(useLegacyAttributeNames: configuration.useLegacyAttributeNames)
       .merging(other: environmentResource)
-    let intercepted = configuration.resourceInterceptor.intercept(resource)
-    if intercepted.attributes.isEmpty, !resource.attributes.isEmpty {
-      os_log("%{public}@", log: logger, type: .error, emptyInterceptedResourceMessage)
-      return resource
+    for interceptor in configuration.resourceInterceptors {
+      let intercepted = interceptor.intercept(resource)
+      if intercepted.attributes.isEmpty, !resource.attributes.isEmpty {
+        os_log("%{public}@", log: logger, type: .error, emptyInterceptedResourceMessage)
+        continue
+      }
+      resource = intercepted
     }
-    return intercepted
+    return resource
   }
 
   static func get(useLegacyAttributeNames: Bool) -> Resource {

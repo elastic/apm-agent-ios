@@ -384,7 +384,7 @@ let configuration = AgentConfigBuilder()
 
 If you add more than one resource interceptor, each one receives the output of the interceptor added before it.
 
-Resource attribute keys must be non-empty, at most 255 characters long, and printable ASCII. When any key breaks these rules, `Resource(attributes:)` keeps none of the attributes passed to it. If the resource returned by the interceptors has no attributes, EDOT iOS ignores it, keeps the resource the interceptors received, and logs an error.
+Resource attribute keys must be non-empty, at most 255 characters long, and printable ASCII. When any key breaks these rules, `Resource(attributes:)` keeps none of the attributes passed to it. If the resource returned by an interceptor has no attributes, EDOT iOS ignores that interceptor's output, passes the resource it received on to the next interceptor, and logs an error.
 
 ### Disable the SDK [disable-sdk]
 
