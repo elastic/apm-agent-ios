@@ -34,7 +34,8 @@ protocol SNTPTransport: AnyObject {
 import Network
 
 /// SNTP over one `Network.framework` UDP exchange. The deadline covers name resolution,
-/// connection setup, and the reply.
+/// connection setup, and the reply. A connection that is waiting for a usable network keeps
+/// waiting until it becomes ready, fails, is cancelled, or reaches the deadline.
 final class SNTPUDPTransport: SNTPTransport {
   private let host: NWEndpoint.Host
   private let port: NWEndpoint.Port
@@ -93,7 +94,7 @@ final class SNTPUDPTransport: SNTPTransport {
         switch state {
         case .ready:
           send(makeRequest())
-        case .failed, .waiting:
+        case .failed:
           finish(.failure(.connectionFailed))
         default:
           break
