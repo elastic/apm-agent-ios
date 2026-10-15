@@ -101,4 +101,4 @@ Refer to [Automatic instrumentation](automatic-instrumentation.md) for supported
 
 ## Try it out [try-it-out]
 
-If you're ready to use EDOT iOS in your own app, continue with [Get started](getting-started.md).
+You can follow the [Demo application guide](https://github.com/elastic/ios-agent-demo) to set up a test environment and take a quick look at the agent's functionalities. Or if you're ready to use EDOT iOS in your own app, continue with [Get started](getting-started.md).
