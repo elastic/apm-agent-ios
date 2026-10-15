@@ -78,9 +78,7 @@ public class ElasticApmAgent {
   private init(
     configuration: AgentConfiguration, instrumentationConfiguration: InstrumentationConfiguration
   ) {
-    let resource = AgentResource.get(
-      useLegacyAttributeNames: configuration.useLegacyAttributeNames
-    ).merging(other: AgentEnvResource.get())
+    let resource = AgentResource.get(configuration: configuration)
 
     crashConfig.sessionId = SessionManager.instance.session(false)
     #if os(iOS) && !targetEnvironment(macCatalyst)

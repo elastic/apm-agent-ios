@@ -169,9 +169,7 @@ class OpenTelemetryInitializer {
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
 
-    let resources = AgentResource.get(
-      useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
-    ).merging(other: AgentEnvResource.get())
+    let resources = configuration.resource
     if let endpoint = OpenTelemetryHelper.getURL(with: configuration.agent) {
       configuration.register(endpoint)
     }
@@ -272,9 +270,7 @@ class OpenTelemetryInitializer {
     traceSampleFilter.append(contentsOf: configuration.agent.spanFilters)
     logSampleFliter.append(contentsOf: configuration.agent.logFilters)
 
-    let resources = AgentResource.get(
-      useLegacyAttributeNames: configuration.agent.useLegacyAttributeNames
-    ).merging(other: AgentEnvResource.get())
+    let resources = configuration.resource
     let endpoint = OpenTelemetryHelper.getURL(with: configuration.agent)
     let metricEndpoint = endpoint.map {
       URL(string: $0.absoluteString + "/v1/metrics") ?? $0
