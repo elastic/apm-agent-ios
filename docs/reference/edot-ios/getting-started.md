@@ -182,14 +182,57 @@ EDOT iOS can also generate telemetry on your behalf. For example, [URLSession in
 
 ### Visualize telemetry [visualize-telemetry]
 
-After your app sends spans:
+The [iOS OpenTelemetry Assets](integration-docs://reference/otel_ios_dashboards.md) integration provides {{kib}} dashboards designed for telemetry from iOS applications. These dashboards provide an overview of application health and dedicated views for spans, crashes, sessions, and other iOS telemetry.
 
-1. In {{kib}}, go to **Observability** → **Applications** → **Services**.
-2. Set the time range to include the telemetry you generated.
-3. Select your app from the [Services inventory](docs-content://solutions/observability/apm/services.md).
-4. Open its traces and select a span to inspect its duration, attributes, events, and related spans.
+After your app has sent telemetry data, either [manually](manual-instrumentation.md) or [automatically](automatic-instrumentation.md), install the integration's content package to visualize it in {{kib}}.
 
-You can also use [Discover](docs-content://explore-analyze/discover.md) to search raw spans and log records, including mobile attributes such as `session.id`.
+#### Install the content package
+
+1. In {{kib}}, search for **iOS OpenTelemetry Assets** in the [global search field](docs-content://explore-analyze/find-and-organize/find-apps-and-objects.md).
+2. Open it and click **Install** to add the iOS dashboards to your {{kib}} instance.
+
+#### Explore your data in the dashboard
+
+Once the content package is installed, open the **[iOS OTel] Application Overview** dashboard:
+
+1. In {{kib}}, search for **Dashboards** in the [global search field](docs-content://explore-analyze/find-and-organize/find-apps-and-objects.md).
+2. Search for **iOS OTel** and open the **[iOS OTel] Application Overview** dashboard.
+3. Select your application by clicking its name in the **Applications** table of the **Overview** section.
+
+:::{image} images/span-visualization/application-overview-dashboard.png
+:alt: Application Overview Dashboard
+:screenshot:
+:::
+
+The dashboard provides a high-level view of your app's health, including span performance, crash analysis, and session-level insights.
+
+#### View trace waterfall details
+
+To inspect individual span traces in detail, go to a panel that shows a list of spans in the dashboard and click its **Explore in Discover** button.
+
+:::{image} images/span-visualization/explore-spans-in-discover.png
+:alt: Explore in Discover
+:screenshot:
+:::
+
+In Discover, expand the details for one of the spans by clicking the expand icon on the left.
+
+:::{image} images/span-visualization/open-span-details.png
+:alt: Open span details
+:screenshot:
+:::
+
+You'll see the trace waterfall UI, showing the full span hierarchy and timing. You can expand it to fullscreen and drill down into further details from there.
+
+:::{image} images/span-visualization/trace-waterfall-ui.png
+:alt: Trace waterfall UI
+:screenshot:
+:::
+
+#### Learn more
+
+- [View crash details](integration-docs://reference/otel_ios_dashboards.md#viewing-details-from-a-crash) — Learn how to visualize and drill into iOS crash reports in the dashboard.
+- [Troubleshoot dashboard issues](integration-docs://reference/otel_ios_dashboards.md#troubleshooting) — Find solutions to common issues with the {{kib}} dashboard experience.
 
 ## What's next? [whats-next]
 
