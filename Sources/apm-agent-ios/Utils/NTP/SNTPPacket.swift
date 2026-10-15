@@ -111,7 +111,8 @@ struct SNTPPacket: Equatable {
     if reply.originateTime / nanosPerSecond != t1 / nanosPerSecond {
       return .failure(.originateTimeMismatch)
     }
-    if reply.leapIndicator == 3 || reply.stratum == 0 {
+    // Stratum 0 is a kiss-o'-death reply; strata above 15 are unsynchronized or reserved.
+    if reply.leapIndicator == 3 || reply.stratum == 0 || reply.stratum > 15 {
       return .failure(.serverUnsynchronized)
     }
     if reply.version != version {

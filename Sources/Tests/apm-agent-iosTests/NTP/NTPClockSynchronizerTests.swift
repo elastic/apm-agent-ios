@@ -93,6 +93,37 @@ final class NTPClockSynchronizerTests: XCTestCase {
     XCTAssertEqual(transport.requests.count, 1 + rejected.count + 3)
   }
 
+  func testReplyLaterThanTheDeadlineAfterSendingIsRejected() {
+    let deadline = Int64(SNTPAttempt.deadline * 1e9)
+    var roundTrip = deadline + 1
+    let transport = ScriptedSNTPTransport { [continuousClock] request in
+      continuousClock.advance(by: roundTrip)
+      return .success(sntpReply(to: request, serverAhead: 30 * nanosPerSecond))
+    }
+    let synchronizer = NTPClockSynchronizer(
+      transport: transport, continuousClock: continuousClock.read)
+
+    synchronizer.synchronize()
+
+    XCTAssertNil(synchronizer.anchor)
+    assertSystemClock(synchronizer)
+
+    roundTrip = deadline
+    synchronizer.synchronize()
+
+    XCTAssertNotNil(synchronizer.anchor)
+  }
+
+  func testConnectionSetupBeforeSendingDoesNotChangeTheAnchor() {
+    let setupDelay = 3 * nanosPerSecond
+
+    let delayed = anchorAfterExchange(startingAfter: 0, setupDelay: setupDelay)
+    let immediate = anchorAfterExchange(startingAfter: setupDelay, setupDelay: 0)
+
+    XCTAssertNotNil(delayed)
+    XCTAssertEqual(delayed, immediate)
+  }
+
   func testOnlyOneAttemptRunsAtATime() {
     let transport = ScriptedSNTPTransport { _ in nil }
     let synchronizer = makeSynchronizer(transport: transport)
@@ -161,6 +192,34 @@ final class NTPClockSynchronizerTests: XCTestCase {
       continuousClock.advance(by: 200_000_000)
       return .success(sntpReply(to: request, serverAhead: 30_100_000_000))
     }
+  }
+
+  /// Runs one exchange with both clocks starting `start` after the fixture time. Connection
+  /// setup advances both clocks by `setupDelay`; the reply arrives 0.2 s after sending.
+  private func anchorAfterExchange(
+    startingAfter start: Int64,
+    setupDelay: Int64
+  ) -> NTPClockSynchronizer.Anchor? {
+    let continuous = ManualContinuousClock()
+    continuous.advance(by: start)
+    var currentWallTime = wallTime.addingTimeInterval(Double(start) / 1e9)
+    let transport = ScriptedSNTPTransport(
+      beforeRequest: {
+        continuous.advance(by: setupDelay)
+        currentWallTime = currentWallTime.addingTimeInterval(Double(setupDelay) / 1e9)
+      },
+      reply: { request in
+        continuous.advance(by: 200_000_000)
+        return .success(sntpReply(to: request, serverAhead: 30_100_000_000))
+      })
+    let synchronizer = NTPClockSynchronizer(
+      transport: transport,
+      continuousClock: continuous.read,
+      wallClock: { currentWallTime })
+
+    synchronizer.synchronize()
+
+    return synchronizer.anchor
   }
 
   private func makeSynchronizer(transport: SNTPTransport) -> NTPClockSynchronizer {

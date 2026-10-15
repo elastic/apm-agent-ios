@@ -14,9 +14,18 @@
 
 import Foundation
 
+/// The longest one SNTP attempt may take. The transport applies it to the whole exchange, and
+/// the clock owner rejects a reply that arrives later than this after the request was sent.
+enum SNTPAttempt {
+  static let deadline: TimeInterval = 5
+}
+
 /// Sends one SNTP request and reports exactly one result.
 protocol SNTPTransport: AnyObject {
-  func exchange(_ request: Data, completion: @escaping (Result<Data, SNTPFailure>) -> Void)
+  /// Calls `makeRequest` immediately before sending, so the request carries the send time.
+  func exchange(
+    _ makeRequest: @escaping () -> Data,
+    completion: @escaping (Result<Data, SNTPFailure>) -> Void)
 }
 
 // Ordinary watchOS apps cannot use low-level UDP networking (Apple TN3135), so watchOS keeps the
@@ -31,25 +40,32 @@ final class SNTPUDPTransport: SNTPTransport {
   private let port: NWEndpoint.Port
   private let deadline: TimeInterval
 
-  init(host: String = "time.apple.com", port: UInt16 = 123, deadline: TimeInterval = 5) {
+  init(
+    host: String = "time.apple.com",
+    port: UInt16 = 123,
+    deadline: TimeInterval = SNTPAttempt.deadline
+  ) {
     self.host = NWEndpoint.Host(host)
     self.port = NWEndpoint.Port(rawValue: port) ?? 123
     self.deadline = deadline
   }
 
-  func exchange(_ request: Data, completion: @escaping (Result<Data, SNTPFailure>) -> Void) {
-    start(request, completion: completion)
+  func exchange(
+    _ makeRequest: @escaping () -> Data,
+    completion: @escaping (Result<Data, SNTPFailure>) -> Void
+  ) {
+    start(makeRequest, completion: completion)
   }
 
   @discardableResult
   func start(
-    _ request: Data,
+    _ makeRequest: @escaping () -> Data,
     completion: @escaping (Result<Data, SNTPFailure>) -> Void
   ) -> Exchange {
     let exchange = Exchange(
       connection: NWConnection(host: host, port: port, using: .udp),
       completion: completion)
-    exchange.start(request, deadline: deadline)
+    exchange.start(makeRequest, deadline: deadline)
     return exchange
   }
 
@@ -72,11 +88,11 @@ final class SNTPUDPTransport: SNTPTransport {
       queue.async { self.finish(.failure(.cancelled)) }
     }
 
-    fileprivate func start(_ request: Data, deadline: TimeInterval) {
+    fileprivate func start(_ makeRequest: @escaping () -> Data, deadline: TimeInterval) {
       connection.stateUpdateHandler = { [self] state in
         switch state {
         case .ready:
-          send(request)
+          send(makeRequest())
         case .failed, .waiting:
           finish(.failure(.connectionFailed))
         default:

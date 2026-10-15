@@ -59,6 +59,8 @@ func rejectedSNTPReplies(to request: Data) -> [(SNTPFailure, Data)] {
     ),
     (.serverUnsynchronized, valid(3, 4, 4, 1)),
     (.serverUnsynchronized, valid(0, 4, 4, 0)),
+    (.serverUnsynchronized, valid(0, 4, 4, 16)),
+    (.serverUnsynchronized, valid(0, 4, 4, 200)),
     (.invalidVersion, valid(0, 3, 4, 1)),
     (.invalidMode, valid(0, 4, 3, 1)),
     (.invalidTransmitTime, sntpReply(to: request, serverAhead: 0, transmitTime: 0))
@@ -88,13 +90,19 @@ final class ManualContinuousClock {
 }
 
 /// A transport that answers each request through `reply`, or holds it when `reply` returns `nil`.
+/// `beforeRequest` runs before the request is built, like connection setup.
 final class ScriptedSNTPTransport: SNTPTransport {
   private let lock = NSLock()
+  private let beforeRequest: () -> Void
   private let reply: (Data) -> Result<Data, SNTPFailure>?
   private var recordedRequests: [Data] = []
   private var held: [(Result<Data, SNTPFailure>) -> Void] = []
 
-  init(reply: @escaping (Data) -> Result<Data, SNTPFailure>?) {
+  init(
+    beforeRequest: @escaping () -> Void = {},
+    reply: @escaping (Data) -> Result<Data, SNTPFailure>?
+  ) {
+    self.beforeRequest = beforeRequest
     self.reply = reply
   }
 
@@ -104,7 +112,12 @@ final class ScriptedSNTPTransport: SNTPTransport {
     return recordedRequests
   }
 
-  func exchange(_ request: Data, completion: @escaping (Result<Data, SNTPFailure>) -> Void) {
+  func exchange(
+    _ makeRequest: @escaping () -> Data,
+    completion: @escaping (Result<Data, SNTPFailure>) -> Void
+  ) {
+    beforeRequest()
+    let request = makeRequest()
     lock.lock()
     recordedRequests.append(request)
     lock.unlock()

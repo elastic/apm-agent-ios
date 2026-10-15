@@ -34,6 +34,7 @@ final class NTPClockSynchronizer {
   #endif
 
   private static let logger = OSLog(subsystem: "co.elastic.ElasticApm", category: "NTPClock")
+  private static let deadlineNanos = UInt64(SNTPAttempt.deadline * 1e9)
 
   private let transport: SNTPTransport?
   private let continuousClock: () -> UInt64
@@ -80,25 +81,41 @@ final class NTPClockSynchronizer {
     attemptInFlight = true
     lock.unlock()
 
-    let requestUnixNanos = Int64((wallClock().timeIntervalSince1970 * 1e9).rounded())
-    let requestContinuous = continuousClock()
-    let request = SNTPPacket(transmitTime: SNTPPacket.ntpTime(unixNanos: requestUnixNanos))
-
-    transport.exchange(request.encoded()) { [self] result in
-      let replyContinuous = continuousClock()
-      // Measure the reply time from the request's wall-clock reference so that a wall-clock
-      // change during the exchange cannot shift it.
-      let replyUnixNanos =
-        requestUnixNanos + Int64(bitPattern: replyContinuous &- requestContinuous)
-      let offset = result.flatMap {
-        SNTPPacket.offset(
-          request: request,
-          reply: $0,
-          receiveTime: SNTPPacket.ntpTime(unixNanos: replyUnixNanos))
-      }
-      finishAttempt(offset.map {
-        Anchor(unixNanos: replyUnixNanos + $0, continuousNanos: replyContinuous)
+    // The transport builds the request when it sends it, so the references exclude name
+    // resolution and connection setup. It calls the builder before the completion.
+    var sent: SentRequest?
+    transport.exchange(
+      { [self] in
+        let request = SentRequest(
+          unixNanos: Int64((wallClock().timeIntervalSince1970 * 1e9).rounded()),
+          continuousNanos: continuousClock())
+        sent = request
+        return request.packet.encoded()
+      },
+      completion: { [self] result in
+        finishAttempt(result.flatMap { makeAnchor(reply: $0, request: sent) })
       })
+  }
+
+  /// Validates a reply against the request references and derives the anchor.
+  private func makeAnchor(reply: Data, request: SentRequest?) -> Result<Anchor, SNTPFailure> {
+    let replyContinuous = continuousClock()
+    guard let request else {
+      return .failure(.connectionFailed)
+    }
+    let elapsed = replyContinuous &- request.continuousNanos
+    guard elapsed <= Self.deadlineNanos else {
+      return .failure(.timeout)
+    }
+    // Measure the reply time from the request's wall-clock reference so that a wall-clock
+    // change during the exchange cannot shift it.
+    let replyUnixNanos = request.unixNanos + Int64(elapsed)
+    return SNTPPacket.offset(
+      request: request.packet,
+      reply: reply,
+      receiveTime: SNTPPacket.ntpTime(unixNanos: replyUnixNanos)
+    ).map {
+      Anchor(unixNanos: replyUnixNanos + $0, continuousNanos: replyContinuous)
     }
   }
 
@@ -120,6 +137,16 @@ final class NTPClockSynchronizer {
         type: .info,
         String(describing: failure))
     }
+  }
+}
+
+/// The send-time references of one SNTP request.
+private struct SentRequest {
+  let unixNanos: Int64
+  let continuousNanos: UInt64
+
+  var packet: SNTPPacket {
+    SNTPPacket(transmitTime: SNTPPacket.ntpTime(unixNanos: unixNanos))
   }
 }
 

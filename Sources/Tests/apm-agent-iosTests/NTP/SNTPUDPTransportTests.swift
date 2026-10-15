@@ -86,11 +86,13 @@
       let done = expectation(description: "exchange completed")
       var result: Result<Data, SNTPFailure>?
 
-      let exchange = transport.start(request) {
-        result = $0
-        completions.increment()
-        done.fulfill()
-      }
+      let exchange = transport.start(
+        { self.request },
+        completion: {
+          result = $0
+          completions.increment()
+          done.fulfill()
+        })
       waitUntil { server.receivedRequestCount == 1 }
       exchange.cancel()
       wait(for: [done], timeout: 2)
@@ -123,12 +125,14 @@
       var result: Result<Data, SNTPFailure>?
       var elapsed: TimeInterval = 0
       let start = Date()
-      let exchange = transport.start(request) {
-        elapsed = Date().timeIntervalSince(start)
-        result = $0
-        counter.increment()
-        done.fulfill()
-      }
+      let exchange = transport.start(
+        { self.request },
+        completion: {
+          elapsed = Date().timeIntervalSince(start)
+          result = $0
+          counter.increment()
+          done.fulfill()
+        })
       wait(for: [done], timeout: timeout)
       return Outcome(
         result: result ?? .failure(.connectionFailed), elapsed: elapsed, exchange: exchange)
