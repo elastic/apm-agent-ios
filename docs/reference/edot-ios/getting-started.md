@@ -215,7 +215,7 @@ To inspect individual span traces in detail, go to a panel that shows a list of 
 :screenshot:
 :::
 
-In Discover, expand the details for one of the spans by clicking the expand icon on the left.
+In Discover, expand the details for one of the spans by clicking its expand icon.
 
 :::{image} images/span-visualization/open-span-details.png
 :alt: Open span details
