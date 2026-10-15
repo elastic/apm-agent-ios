@@ -30,6 +30,18 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-ios-agent-versionext-fixes]
 
+## 2.2.0 [elastic-apm-220-release-notes]
+
+**Release date:** October 15, 2026
+
+### Features and enhancements [elastic-apm-ios-agent-220-features-enhancements]
+
+* Add `addResourceInterceptor(_:)` to `AgentConfigBuilder` to set resource attributes from code. Values set in code take precedence over `OTEL_RESOURCE_ATTRIBUTES` [#399](https://github.com/elastic/apm-agent-ios/pull/399)
+
+### Fixes [elastic-apm-ios-agent-220-fixes]
+
+* Store a bounded, indexable excerpt of the crash report in `exception.stacktrace` instead of the full report text [#395](https://github.com/elastic/apm-agent-ios/pull/395)
+
 ## 2.1.0 [elastic-apm-210-release-notes]
 
 **Release date:** September 11, 2026
