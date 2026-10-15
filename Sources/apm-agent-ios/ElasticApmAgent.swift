@@ -1,6 +1,5 @@
 #if !os(watchOS)
 import CrashReporter
-import Kronos
 #endif
 import Foundation
 import NIO
@@ -15,6 +14,14 @@ public class ElasticApmAgent {
   public static func start(
     with configuration: AgentConfiguration,
     _ instrumentationConfiguration: InstrumentationConfiguration = InstrumentationConfiguration()
+  ) {
+    start(with: configuration, instrumentationConfiguration, clockSynchronizer: .shared)
+  }
+
+  static func start(
+    with configuration: AgentConfiguration,
+    _ instrumentationConfiguration: InstrumentationConfiguration,
+    clockSynchronizer: NTPClockSynchronizer
   ) {
     var configuration = configuration
     if !configuration.enableAgent {
@@ -34,9 +41,7 @@ public class ElasticApmAgent {
       return
     }
     configuration.setResolvedExportUrl(endpoint)
-    #if !os(watchOS)
-    Kronos.Clock.sync()
-    #endif
+    clockSynchronizer.synchronize()
 
     instance = ElasticApmAgent(
       configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)

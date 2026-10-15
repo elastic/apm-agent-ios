@@ -43,6 +43,7 @@ class OpenTelemetryInitializer {
   let sessionSampler: SessionSampler
   let exporters: Exporters?
   let persistenceBaseDirectory: URL?
+  let clockSynchronizer: NTPClockSynchronizer
 
   static func createPersistenceFolder(
     for signal: PersistenceSignal,
@@ -122,8 +123,10 @@ class OpenTelemetryInitializer {
     group: EventLoopGroup,
     sessionSampler: SessionSampler,
     exporters: Exporters? = nil,
-    persistenceBaseDirectory: URL? = nil
+    persistenceBaseDirectory: URL? = nil,
+    clockSynchronizer: NTPClockSynchronizer = .shared
   ) {
+    self.clockSynchronizer = clockSynchronizer
     self.group = group
     self.sessionSampler = sessionSampler
     self.exporters = exporters
@@ -383,6 +386,7 @@ class OpenTelemetryInitializer {
           ).build()
         ).build())
 
+    let clock = NTPClock(synchronizer: clockSynchronizer)
     OpenTelemetry.registerTracerProvider(
       tracerProvider: TracerProviderBuilder()
         .add(
@@ -391,12 +395,12 @@ class OpenTelemetryInitializer {
         )
         .with(sampler: sessionSampler as Sampler)
         .with(resource: resources)
-        .with(clock: NTPClock())
+        .with(clock: clock)
         .build())
 
     OpenTelemetry.registerLoggerProvider(
       loggerProvider: LoggerProviderBuilder()
-        .with(clock: NTPClock())
+        .with(clock: clock)
         .with(resource: resources)
         .with(processors: [
           ElasticLogRecordProcessor(

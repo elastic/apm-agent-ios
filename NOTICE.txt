@@ -17,7 +17,6 @@ This product includes software licensed under Apache 2.0 from the following sour
 - swift-protobuf (https://github.com/apple/swift-protobuf.git)
 - Thrift-Swift (https://github.com/undefinedlabs/Thrift-Swift)
 - PLCrashReporter (https://github.com/microsoft/plcrashreporter)
-- Kronos (https://github.com/MobileNativeFoundation/Kronos)
 
 ------------------------------------------------------------------------------
 

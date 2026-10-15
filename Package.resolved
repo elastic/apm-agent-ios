@@ -1,5 +1,5 @@
 {
-  "originHash" : "c298856aa4fbee7c4fd6895cc9920e758958c2911445bf5f7620f46394958ac3",
+  "originHash" : "69ff49affdba8d7d31c994224b8ddad0e3223e6b2748087287668aadcb1806db",
   "pins" : [
     {
       "identity" : "grpc-swift",
@@ -8,15 +8,6 @@
       "state" : {
         "revision" : "6a8927df5a91710b414caba4f8a088dead4633db",
         "version" : "1.27.5"
-      }
-    },
-    {
-      "identity" : "kronos",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/MobileNativeFoundation/Kronos.git",
-      "state" : {
-        "revision" : "f331821314f9b35867a18c5c8fc2f918536d79ac",
-        "version" : "4.3.1"
       }
     },
     {
