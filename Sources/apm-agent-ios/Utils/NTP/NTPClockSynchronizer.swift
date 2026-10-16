@@ -83,7 +83,11 @@ final class NTPClockSynchronizer {
       return wallClock()
     }
     let elapsed = Int64(bitPattern: continuousClock() &- anchor.continuousNanos)
-    return Date(timeIntervalSince1970: Double(anchor.unixNanos + elapsed) / 1e9)
+    let (unixNanos, overflow) = anchor.unixNanos.addingReportingOverflow(elapsed)
+    guard !overflow else {
+      return wallClock()
+    }
+    return Date(timeIntervalSince1970: Double(unixNanos) / 1e9)
   }
 
   /// Restores the saved anchor, starts an attempt when it is missing or stale, and starts the age

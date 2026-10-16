@@ -292,6 +292,21 @@ final class NTPClockRefreshTests: XCTestCase {
     assertNow(synchronizer, equals: wallClock.read())
   }
 
+  func testAnchorThatOverflowsFallsBackToTheSystemClock() throws {
+    let anchor = NTPClockSynchronizer.Anchor(
+      unixNanos: .max, continuousNanos: continuousClock.read() - UInt64(nanosPerSecond))
+    // Saved in this boot: wall clock minus continuous clock, as the synchronizer derives it.
+    let bootNanos = Int64(wallClock.read().timeIntervalSince1970 * 1e9) - Int64(continuousClock.read())
+    store.save(.init(anchor: anchor, bootNanos: bootNanos))
+    let synchronizer = makeSynchronizer(ScriptedSNTPTransport { _ in nil })
+
+    synchronizer.start()
+    advanceBothClocks(by: 60)
+
+    XCTAssertEqual(synchronizer.anchor, anchor)
+    assertNow(synchronizer, equals: wallClock.read())
+  }
+
   func testStartWithoutATransportReadsNoSavedAnchorAndStartsNoTick() throws {
     _ = try synchronizedLaunch()
     let saved = store.load()
