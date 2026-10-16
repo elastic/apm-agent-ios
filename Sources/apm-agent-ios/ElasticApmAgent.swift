@@ -41,7 +41,7 @@ public class ElasticApmAgent {
       return
     }
     configuration.setResolvedExportUrl(endpoint)
-    clockSynchronizer.synchronize()
+    clockSynchronizer.start()
 
     instance = ElasticApmAgent(
       configuration: configuration, instrumentationConfiguration: instrumentationConfiguration)

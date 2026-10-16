@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 import Foundation
+import XCTest
 
 @testable import ElasticApm
 
@@ -137,4 +138,72 @@ final class ScriptedSNTPTransport: SNTPTransport {
     lock.unlock()
     completions.forEach { $0(result) }
   }
+}
+
+/// A wall clock that tests set by hand.
+final class ManualWallClock {
+  private let lock = NSLock()
+  private var date: Date
+
+  init(_ date: Date = Date(timeIntervalSince1970: 1_800_000_000)) {
+    self.date = date
+  }
+
+  func read() -> Date {
+    lock.lock()
+    defer { lock.unlock() }
+    return date
+  }
+
+  func advance(by seconds: TimeInterval) {
+    lock.lock()
+    date = date.addingTimeInterval(seconds)
+    lock.unlock()
+  }
+}
+
+/// A tick that tests fire by hand.
+final class ManualTick: RepeatingTick {
+  private let lock = NSLock()
+  private var handler: (() -> Void)?
+
+  var isStarted: Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    return handler != nil
+  }
+
+  func start(_ handler: @escaping () -> Void) {
+    lock.lock()
+    self.handler = handler
+    lock.unlock()
+  }
+
+  func fire() {
+    lock.lock()
+    let handler = handler
+    lock.unlock()
+    handler?()
+  }
+}
+
+/// A `UserDefaults` suite that is empty when returned, so tests never touch the standard defaults.
+func emptyDefaults(suiteName: String) -> UserDefaults {
+  let defaults = UserDefaults(suiteName: suiteName)!
+  defaults.removePersistentDomain(forName: suiteName)
+  return defaults
+}
+
+/// Anchor storage writes run asynchronously. Waits up to 2 s for `condition`, then asserts it.
+func waitUntil(
+  _ message: @autoclosure () -> String = "",
+  file: StaticString = #filePath,
+  line: UInt = #line,
+  _ condition: () -> Bool
+) {
+  let deadline = Date().addingTimeInterval(2)
+  while !condition(), Date() < deadline {
+    Thread.sleep(forTimeInterval: 0.001)
+  }
+  XCTAssertTrue(condition(), message(), file: file, line: line)
 }
