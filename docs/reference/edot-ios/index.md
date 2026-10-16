@@ -87,6 +87,8 @@ You can remotely manage supported EDOT iOS settings through {{kib}}. Refer to [C
 
 Accurate timestamps are important when you compare telemetry from an app with telemetry from backend services. EDOT iOS synchronizes signal timestamps with a network time source and falls back to the device clock when a synchronized value is unavailable.
 
+{applies_to}`edot_ios: ga 2.3.0` When the agent starts, EDOT iOS reuses the synchronized time from an earlier app launch if it is less than 24 hours old and the device has not restarted since. It synchronizes when no synchronized time is available or the current one is one hour old or more, and retries once a minute while the app runs until a synchronization succeeds. A synchronized time expires after 24 hours, and timestamps then use the device clock until the next synchronization succeeds.
+
 ### Sessions [sessions]
 
 A session groups spans and log records from a period of app activity by adding a `session.id` attribute. You can also make one sampling decision per session, which preserves the relationship between sampled spans.

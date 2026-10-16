@@ -21,6 +21,11 @@ import os.log
 /// One SNTP attempt sets an anchor: the synchronized time and the continuous-clock value at
 /// the reply. Reads extrapolate from the anchor with the continuous clock, which advances during
 /// sleep and ignores wall-clock changes. Without an anchor, reads use the wall clock.
+///
+/// Each anchor is saved, and `start()` restores it in a later launch of the same boot. The anchor's
+/// age is measured on the continuous clock: at 1 hour a new attempt starts, at 24 hours the anchor
+/// is discarded. A tick checks the age every minute while the process runs, which also retries
+/// once a minute until the first attempt succeeds.
 final class NTPClockSynchronizer {
   struct Anchor: Equatable {
     let unixNanos: Int64
@@ -35,21 +40,31 @@ final class NTPClockSynchronizer {
 
   private static let logger = OSLog(subsystem: "co.elastic.ElasticApm", category: "NTPClock")
   private static let deadlineNanos = UInt64(SNTPAttempt.deadline * 1e9)
+  private static let refreshAgeNanos: UInt64 = 3_600 * 1_000_000_000
+  private static let maxAgeNanos: UInt64 = 24 * refreshAgeNanos
+  private static let bootTimeToleranceNanos: UInt64 = 1_000_000_000
 
   private let transport: SNTPTransport?
+  private let store: NTPAnchorStore
+  private let tick: RepeatingTick
   private let continuousClock: () -> UInt64
   private let wallClock: () -> Date
   private let lock = NSLock()
   // Guarded by `lock`.
   private var currentAnchor: Anchor?
   private var attemptInFlight = false
+  private var started = false
 
   init(
     transport: SNTPTransport?,
+    userDefaults: UserDefaults = .standard,
+    tick: RepeatingTick = DispatchRepeatingTick(interval: .seconds(60), leeway: .seconds(10)),
     continuousClock: @escaping () -> UInt64 = ContinuousTime.nanoseconds,
     wallClock: @escaping () -> Date = Date.init
   ) {
     self.transport = transport
+    self.store = NTPAnchorStore(userDefaults: userDefaults)
+    self.tick = tick
     self.continuousClock = continuousClock
     self.wallClock = wallClock
   }
@@ -66,6 +81,92 @@ final class NTPClockSynchronizer {
     }
     let elapsed = Int64(bitPattern: continuousClock() &- anchor.continuousNanos)
     return Date(timeIntervalSince1970: Double(anchor.unixNanos + elapsed) / 1e9)
+  }
+
+  /// Restores the saved anchor, starts an attempt when it is missing or stale, and starts the age
+  /// check tick. Runs once, and does nothing without a transport.
+  func start() {
+    guard transport != nil else {
+      return
+    }
+    lock.lock()
+    guard !started else {
+      lock.unlock()
+      return
+    }
+    started = true
+    let rejection = restoreSavedAnchor()
+    lock.unlock()
+
+    if let rejection {
+      os_log(
+        "Saved network time not restored (%{public}@).",
+        log: Self.logger,
+        type: .info,
+        String(describing: rejection))
+    } else {
+      os_log("Saved network time restored for signal timestamps.", log: Self.logger, type: .info)
+    }
+    refreshIfDue()
+    tick.start { [weak self] in self?.refreshIfDue() }
+  }
+
+  /// Discards an anchor that is 24 hours or older, then starts an attempt when there is no anchor
+  /// or it is 1 hour or older.
+  private func refreshIfDue() {
+    lock.lock()
+    let continuous = continuousClock()
+    var expired = false
+    if let anchor = currentAnchor, continuous &- anchor.continuousNanos >= Self.maxAgeNanos {
+      currentAnchor = nil
+      store.remove()
+      expired = true
+    }
+    let due = currentAnchor.map { continuous &- $0.continuousNanos >= Self.refreshAgeNanos } ?? true
+    lock.unlock()
+
+    if expired {
+      os_log(
+        "Network time expired; signal timestamps use the system clock.", log: Self.logger, type: .info)
+    }
+    if due {
+      synchronize()
+    }
+  }
+
+  /// Installs the saved anchor when it was saved in this boot less than 24 hours ago. Otherwise
+  /// removes it and returns the reason. Requires `lock`.
+  private func restoreSavedAnchor() -> RestoreRejection? {
+    let saved: NTPAnchorStore.Saved
+    switch store.load() {
+    case .absent:
+      return .absent
+    case .malformed:
+      store.remove()
+      return .malformed
+    case let .saved(value):
+      saved = value
+    }
+    let continuous = continuousClock()
+    let bootShift = bootNanos(continuous: continuous).subtractingReportingOverflow(saved.bootNanos)
+    let rejection: RestoreRejection
+    if saved.anchor.continuousNanos > continuous || bootShift.overflow
+      || bootShift.partialValue.magnitude > Self.bootTimeToleranceNanos {
+      rejection = .rebooted
+    } else if continuous - saved.anchor.continuousNanos >= Self.maxAgeNanos {
+      rejection = .expired
+    } else {
+      currentAnchor = saved.anchor
+      return nil
+    }
+    store.remove()
+    return rejection
+  }
+
+  /// The boot time derived from the wall clock and `continuous`. The wall clock is used only here,
+  /// to detect a reboot.
+  private func bootNanos(continuous: UInt64) -> Int64 {
+    Int64((wallClock().timeIntervalSince1970 * 1e9).rounded()) &- Int64(bitPattern: continuous)
   }
 
   /// Starts one SNTP attempt unless one is already in flight. Never blocks on the network.
@@ -123,6 +224,7 @@ final class NTPClockSynchronizer {
     lock.lock()
     if case let .success(anchor) = result {
       currentAnchor = anchor
+      store.save(.init(anchor: anchor, bootNanos: bootNanos(continuous: continuousClock())))
     }
     attemptInFlight = false
     lock.unlock()
@@ -138,6 +240,13 @@ final class NTPClockSynchronizer {
         String(describing: failure))
     }
   }
+}
+
+private enum RestoreRejection {
+  case absent
+  case malformed
+  case rebooted
+  case expired
 }
 
 /// The send-time references of one SNTP request.

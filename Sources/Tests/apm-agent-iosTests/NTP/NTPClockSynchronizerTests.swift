@@ -22,11 +22,19 @@ import XCTest
 @testable import ElasticApm
 
 final class NTPClockSynchronizerTests: XCTestCase {
+  private static let suiteName = "co.elastic.apm.tests.NTPClockSynchronizerTests"
+  private let defaults = emptyDefaults(suiteName: suiteName)
   private let wallTime = Date(timeIntervalSince1970: 1_800_000_000)
   private let continuousClock = ManualContinuousClock()
 
+  override func tearDown() {
+    defaults.removePersistentDomain(forName: Self.suiteName)
+    super.tearDown()
+  }
+
   func testTimestampsUseTheSystemClockBeforeSynchronization() {
-    let synchronizer = NTPClockSynchronizer(transport: ScriptedSNTPTransport { _ in nil })
+    let synchronizer = NTPClockSynchronizer(
+      transport: ScriptedSNTPTransport { _ in nil }, userDefaults: defaults)
 
     synchronizer.synchronize()
 
@@ -35,7 +43,7 @@ final class NTPClockSynchronizerTests: XCTestCase {
 
   func testTimestampsUseTheSystemClockAfterAFailedAttempt() {
     let synchronizer = NTPClockSynchronizer(
-      transport: ScriptedSNTPTransport { _ in .failure(.timeout) })
+      transport: ScriptedSNTPTransport { _ in .failure(.timeout) }, userDefaults: defaults)
 
     synchronizer.synchronize()
 
@@ -62,6 +70,7 @@ final class NTPClockSynchronizerTests: XCTestCase {
     }
     let synchronizer = NTPClockSynchronizer(
       transport: transport,
+      userDefaults: defaults,
       continuousClock: continuousClock.read,
       wallClock: { currentWallTime })
 
@@ -101,7 +110,7 @@ final class NTPClockSynchronizerTests: XCTestCase {
       return .success(sntpReply(to: request, serverAhead: 30 * nanosPerSecond))
     }
     let synchronizer = NTPClockSynchronizer(
-      transport: transport, continuousClock: continuousClock.read)
+      transport: transport, userDefaults: defaults, continuousClock: continuousClock.read)
 
     synchronizer.synchronize()
 
@@ -138,9 +147,20 @@ final class NTPClockSynchronizerTests: XCTestCase {
     XCTAssertEqual(transport.requests.count, 2)
   }
 
-  func testDisabledAgentAndInvalidEndpointStartNoAttempt() {
+  func testDisabledAgentAndInvalidEndpointStartNoAttempt() throws {
+    // A saved anchor from this boot that a restore would install.
+    let saved = makeSynchronizer(
+      transport: ScriptedSNTPTransport { .success(sntpReply(to: $0, serverAhead: 30 * nanosPerSecond)) })
+    saved.synchronize()
+    let savedAnchor = try XCTUnwrap(saved.anchor)
     let transport = ScriptedSNTPTransport { _ in nil }
-    let synchronizer = NTPClockSynchronizer(transport: transport)
+    let tick = ManualTick()
+    let synchronizer = NTPClockSynchronizer(
+      transport: transport,
+      userDefaults: defaults,
+      tick: tick,
+      continuousClock: continuousClock.read,
+      wallClock: { [wallTime] in wallTime })
 
     ElasticApmAgent.start(
       with: AgentConfigBuilder().disableAgent().build(),
@@ -153,7 +173,12 @@ final class NTPClockSynchronizerTests: XCTestCase {
 
     XCTAssertNil(ElasticApmAgent.shared())
     XCTAssertTrue(transport.requests.isEmpty)
-    // Control: the same synchronizer records an attempt when one starts.
+    XCTAssertNil(synchronizer.anchor)
+    XCTAssertFalse(tick.isStarted)
+    // Control: starting the same synchronizer restores the anchor and starts the tick.
+    synchronizer.start()
+    XCTAssertEqual(synchronizer.anchor, savedAnchor)
+    XCTAssertTrue(tick.isStarted)
     synchronizer.synchronize()
     XCTAssertEqual(transport.requests.count, 1)
   }
@@ -166,7 +191,8 @@ final class NTPClockSynchronizerTests: XCTestCase {
       }
       defer { server.close() }
       let synchronizer = NTPClockSynchronizer(
-        transport: SNTPUDPTransport(host: "127.0.0.1", port: server.port, deadline: 0.2))
+        transport: SNTPUDPTransport(host: "127.0.0.1", port: server.port, deadline: 0.2),
+        userDefaults: defaults)
 
       synchronizer.synchronize()
       Thread.sleep(forTimeInterval: 1.0)
@@ -214,6 +240,7 @@ final class NTPClockSynchronizerTests: XCTestCase {
       })
     let synchronizer = NTPClockSynchronizer(
       transport: transport,
+      userDefaults: defaults,
       continuousClock: continuous.read,
       wallClock: { currentWallTime })
 
@@ -225,6 +252,7 @@ final class NTPClockSynchronizerTests: XCTestCase {
   private func makeSynchronizer(transport: SNTPTransport) -> NTPClockSynchronizer {
     NTPClockSynchronizer(
       transport: transport,
+      userDefaults: defaults,
       continuousClock: continuousClock.read,
       wallClock: { [wallTime] in wallTime })
   }
