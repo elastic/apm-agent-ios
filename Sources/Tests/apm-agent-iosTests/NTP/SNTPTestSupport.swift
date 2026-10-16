@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 import Foundation
+import XCTest
 
 @testable import ElasticApm
 
@@ -191,4 +192,18 @@ func emptyDefaults(suiteName: String) -> UserDefaults {
   let defaults = UserDefaults(suiteName: suiteName)!
   defaults.removePersistentDomain(forName: suiteName)
   return defaults
+}
+
+/// Anchor storage writes run asynchronously. Waits up to 2 s for `condition`, then asserts it.
+func waitUntil(
+  _ message: @autoclosure () -> String = "",
+  file: StaticString = #filePath,
+  line: UInt = #line,
+  _ condition: () -> Bool
+) {
+  let deadline = Date().addingTimeInterval(2)
+  while !condition(), Date() < deadline {
+    Thread.sleep(forTimeInterval: 0.001)
+  }
+  XCTAssertTrue(condition(), message(), file: file, line: line)
 }

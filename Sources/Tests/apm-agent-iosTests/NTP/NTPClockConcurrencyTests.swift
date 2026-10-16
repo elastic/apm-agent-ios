@@ -118,7 +118,14 @@
       // A previous launch in this boot saves the anchor that the next start restores.
       let previousLaunch = makeSynchronizer(ManualTick())
       previousLaunch.synchronize()
-      XCTAssertNotNil(previousLaunch.anchor)
+      let previousAnchor = try XCTUnwrap(previousLaunch.anchor)
+      let store = NTPAnchorStore(userDefaults: defaults)
+      waitUntil {
+        if case let .saved(record) = store.load() {
+          return record.anchor == previousAnchor
+        }
+        return false
+      }
       let tick = ManualTick()
       let synchronizer = makeSynchronizer(tick)
       let day = 24 * 3_600 * nanosPerSecond
@@ -142,7 +149,13 @@
 
       XCTAssertTrue(tick.isStarted)
       XCTAssertEqual(transport.requests.count, 1 + iterations)
-      XCTAssertNotNil(synchronizer.anchor)
+      let finalAnchor = try XCTUnwrap(synchronizer.anchor)
+      waitUntil {
+        if case let .saved(record) = store.load() {
+          return record.anchor == finalAnchor
+        }
+        return false
+      }
     }
   }
 

@@ -38,8 +38,9 @@ final class NTPClockRefreshTests: XCTestCase {
     let anchor = try XCTUnwrap(synchronizer.anchor)
     XCTAssertEqual(Double(anchor.unixNanos) / 1e9, 1_800_000_030.2, accuracy: 1e-6)
     XCTAssertEqual(anchor.continuousNanos, 1_000_200_000_000)
-    XCTAssertEqual(
-      store.load(), .saved(.init(anchor: anchor, bootNanos: 1_799_998_999_800_000_000)))
+    waitUntil {
+      store.load() == .saved(.init(anchor: anchor, bootNanos: 1_799_998_999_800_000_000))
+    }
     XCTAssertTrue(tick.isStarted)
   }
 
@@ -70,7 +71,7 @@ final class NTPClockRefreshTests: XCTestCase {
     let rebooted = makeSynchronizer(transport)
     rebooted.start()
     XCTAssertNil(rebooted.anchor)
-    XCTAssertEqual(store.load(), .absent)
+    waitUntil { store.load() == .absent }
     XCTAssertEqual(transport.requests.count, 1)
     assertNow(rebooted, equals: wallClock.read())
   }
@@ -85,7 +86,7 @@ final class NTPClockRefreshTests: XCTestCase {
     synchronizer.start()
 
     XCTAssertNil(synchronizer.anchor)
-    XCTAssertEqual(store.load(), .absent)
+    waitUntil { store.load() == .absent }
   }
 
   func testMalformedSavedValuesAreRejectedAndRemoved() throws {
@@ -102,7 +103,7 @@ final class NTPClockRefreshTests: XCTestCase {
       synchronizer.start()
 
       XCTAssertNil(synchronizer.anchor, "\(value)")
-      XCTAssertNil(defaults.object(forKey: NTPAnchorStore.key), "\(value)")
+      waitUntil("\(value)") { defaults.object(forKey: NTPAnchorStore.key) == nil }
     }
   }
 
@@ -121,7 +122,7 @@ final class NTPClockRefreshTests: XCTestCase {
     let expired = makeSynchronizer(ScriptedSNTPTransport { _ in nil })
     expired.start()
     XCTAssertNil(expired.anchor)
-    XCTAssertEqual(store.load(), .absent)
+    waitUntil { store.load() == .absent }
   }
 
   func testFailedRefreshKeepsTheAnchorUntilATickDiscardsIt() throws {
@@ -137,6 +138,7 @@ final class NTPClockRefreshTests: XCTestCase {
     let synchronizer = makeSynchronizer(transport, tick: tick)
     synchronizer.start()
     let anchor = try XCTUnwrap(synchronizer.anchor)
+    waitForSaved(anchor)
     let saved = store.load()
     replies = false
 
@@ -150,7 +152,7 @@ final class NTPClockRefreshTests: XCTestCase {
     tick.fire()
     XCTAssertEqual(transport.requests.count, 3)
     XCTAssertNil(synchronizer.anchor)
-    XCTAssertEqual(store.load(), .absent)
+    waitUntil { store.load() == .absent }
     assertNow(synchronizer, equals: wallClock.read())
   }
 
@@ -164,9 +166,10 @@ final class NTPClockRefreshTests: XCTestCase {
 
     XCTAssertNil(synchronizer.anchor)
     assertNow(synchronizer, equals: wallClock.read())
+    waitUntil { store.load() == .absent }
   }
 
-  func testTickRefreshesWhenTheAnchorIsAnHourOld() {
+  func testTickRefreshesWhenTheAnchorIsAnHourOld() throws {
     let tick = ManualTick()
     let transport = answeringTransport()
     let synchronizer = makeSynchronizer(transport, tick: tick)
@@ -180,9 +183,10 @@ final class NTPClockRefreshTests: XCTestCase {
     advanceBothClocks(by: 60)
     tick.fire()
     XCTAssertEqual(transport.requests.count, 2)
+    waitForSaved(try XCTUnwrap(synchronizer.anchor))
   }
 
-  func testTickRetriesUntilTheFirstSuccess() {
+  func testTickRetriesUntilTheFirstSuccess() throws {
     var replies = false
     let transport = ScriptedSNTPTransport { request in
       replies ? .success(sntpReply(to: request, serverAhead: 30 * nanosPerSecond)) : .failure(.timeout)
@@ -206,6 +210,7 @@ final class NTPClockRefreshTests: XCTestCase {
     advanceBothClocks(by: 60)
     tick.fire()
     XCTAssertEqual(transport.requests.count, 5)
+    waitForSaved(try XCTUnwrap(synchronizer.anchor))
   }
 
   func testFailedRefreshRetriesEveryTickUntilItSucceeds() throws {
@@ -239,6 +244,39 @@ final class NTPClockRefreshTests: XCTestCase {
     advanceBothClocks(by: 60)
     tick.fire()
     XCTAssertEqual(transport.requests.count, 4)
+    waitForSaved(refreshedAnchor)
+  }
+
+  func testDefaultsObserversThatReadTheClockDoNotDeadlock() throws {
+    let tick = ManualTick()
+    let synchronizer = makeSynchronizer(answeringTransport(), tick: tick)
+    // `queue: nil` runs the observer synchronously on the thread that changes the defaults.
+    let observer = NotificationCenter.default.addObserver(
+      forName: UserDefaults.didChangeNotification, object: defaults, queue: nil
+    ) { _ in
+      _ = synchronizer.now
+      _ = synchronizer.anchor
+    }
+    defer { NotificationCenter.default.removeObserver(observer) }
+    let finished = expectation(description: "synchronizations and expiry finish")
+
+    DispatchQueue.global().async { [self] in
+      synchronizer.start()
+      // A day later the tick discards the anchor, removes it, and synchronizes again.
+      advanceBothClocks(by: 24 * 3_600)
+      tick.fire()
+      finished.fulfill()
+    }
+
+    guard XCTWaiter.wait(for: [finished], timeout: 2) == .completed else {
+      // The worker still holds the clock lock, so reading the anchor here would hang.
+      XCTFail("A defaults observer that reads the clock deadlocked")
+      return
+    }
+    // The anchor from the synchronization after the expiry, saved after the removal.
+    let anchor = try XCTUnwrap(synchronizer.anchor)
+    XCTAssertEqual(anchor.continuousNanos, continuousClock.read())
+    waitForSaved(anchor)
   }
 
   func testOverlappingTicksStartOneAttemptAndReadsDoNotWait() {
@@ -276,7 +314,22 @@ final class NTPClockRefreshTests: XCTestCase {
   private func synchronizedLaunch() throws -> NTPClockSynchronizer.Anchor {
     let synchronizer = makeSynchronizer(answeringTransport())
     synchronizer.start()
-    return try XCTUnwrap(synchronizer.anchor)
+    let anchor = try XCTUnwrap(synchronizer.anchor)
+    waitForSaved(anchor)
+    return anchor
+  }
+
+  private func waitForSaved(
+    _ anchor: NTPClockSynchronizer.Anchor,
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) {
+    waitUntil(file: file, line: line) {
+      if case let .saved(saved) = store.load() {
+        return saved.anchor == anchor
+      }
+      return false
+    }
   }
 
   /// Answers after 0.2 s of continuous time, from a server clock 30.1 s ahead of the request.

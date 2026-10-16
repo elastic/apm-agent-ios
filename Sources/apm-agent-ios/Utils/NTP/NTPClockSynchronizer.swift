@@ -50,6 +50,9 @@ final class NTPClockSynchronizer {
   private let continuousClock: () -> UInt64
   private let wallClock: () -> Date
   private let lock = NSLock()
+  // Storage writes run here, never while `lock` is held: `UserDefaults` notifies its observers
+  // synchronously on the writing thread, and an observer may read the clock.
+  private let storageQueue = DispatchQueue(label: "co.elastic.ntp.storage")
   // Guarded by `lock`.
   private var currentAnchor: Anchor?
   private var attemptInFlight = false
@@ -119,7 +122,7 @@ final class NTPClockSynchronizer {
     var expired = false
     if let anchor = currentAnchor, continuous &- anchor.continuousNanos >= Self.maxAgeNanos {
       currentAnchor = nil
-      store.remove()
+      persist { $0.remove() }
       expired = true
     }
     let due = currentAnchor.map { continuous &- $0.continuousNanos >= Self.refreshAgeNanos } ?? true
@@ -142,7 +145,7 @@ final class NTPClockSynchronizer {
     case .absent:
       return .absent
     case .malformed:
-      store.remove()
+      persist { $0.remove() }
       return .malformed
     case let .saved(value):
       saved = value
@@ -159,8 +162,13 @@ final class NTPClockSynchronizer {
       currentAnchor = saved.anchor
       return nil
     }
-    store.remove()
+    persist { $0.remove() }
     return rejection
+  }
+
+  /// Queues a storage write. Writes run in the order they are queued.
+  private func persist(_ write: @escaping (NTPAnchorStore) -> Void) {
+    storageQueue.async { [store] in write(store) }
   }
 
   /// The boot time derived from the wall clock and `continuous`. The wall clock is used only here,
@@ -224,7 +232,9 @@ final class NTPClockSynchronizer {
     lock.lock()
     if case let .success(anchor) = result {
       currentAnchor = anchor
-      store.save(.init(anchor: anchor, bootNanos: bootNanos(continuous: continuousClock())))
+      let saved = NTPAnchorStore.Saved(
+        anchor: anchor, bootNanos: bootNanos(continuous: continuousClock()))
+      persist { $0.save(saved) }
     }
     attemptInFlight = false
     lock.unlock()

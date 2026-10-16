@@ -153,6 +153,12 @@ final class NTPClockSynchronizerTests: XCTestCase {
       transport: ScriptedSNTPTransport { .success(sntpReply(to: $0, serverAhead: 30 * nanosPerSecond)) })
     saved.synchronize()
     let savedAnchor = try XCTUnwrap(saved.anchor)
+    waitUntil {
+      if case let .saved(record) = NTPAnchorStore(userDefaults: defaults).load() {
+        return record.anchor == savedAnchor
+      }
+      return false
+    }
     let transport = ScriptedSNTPTransport { _ in nil }
     let tick = ManualTick()
     let synchronizer = NTPClockSynchronizer(
