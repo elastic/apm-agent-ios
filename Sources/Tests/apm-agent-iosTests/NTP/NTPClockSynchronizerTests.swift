@@ -22,13 +22,14 @@ import XCTest
 @testable import ElasticApm
 
 final class NTPClockSynchronizerTests: XCTestCase {
-  private static let suiteName = "co.elastic.apm.tests.NTPClockSynchronizerTests"
-  private let defaults = emptyDefaults(suiteName: suiteName)
+  // One suite per test, so a storage write that lands after a test ends cannot reach the next one.
+  private let suiteName = "co.elastic.apm.tests.NTPClockSynchronizerTests." + UUID().uuidString
+  private lazy var defaults = emptyDefaults(suiteName: suiteName)
   private let wallTime = Date(timeIntervalSince1970: 1_800_000_000)
   private let continuousClock = ManualContinuousClock()
 
   override func tearDown() {
-    defaults.removePersistentDomain(forName: Self.suiteName)
+    defaults.removePersistentDomain(forName: suiteName)
     super.tearDown()
   }
 

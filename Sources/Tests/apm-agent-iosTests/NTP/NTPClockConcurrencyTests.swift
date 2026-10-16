@@ -26,12 +26,13 @@
   @testable import ElasticApm
 
   final class NTPClockConcurrencyTests: XCTestCase {
-    private static let suiteName = "co.elastic.apm.tests.NTPClockConcurrencyTests"
-    private let defaults = emptyDefaults(suiteName: suiteName)
+    // One suite per test, so a storage write that lands after a test ends cannot reach the next one.
+    private let suiteName = "co.elastic.apm.tests.NTPClockConcurrencyTests." + UUID().uuidString
+    private lazy var defaults = emptyDefaults(suiteName: suiteName)
     private let iterations = 200
 
     override func tearDown() {
-      defaults.removePersistentDomain(forName: Self.suiteName)
+      defaults.removePersistentDomain(forName: suiteName)
       super.tearDown()
     }
 
