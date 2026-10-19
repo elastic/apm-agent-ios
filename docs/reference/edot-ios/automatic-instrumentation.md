@@ -134,7 +134,9 @@ A crash is stored on the device when it occurs. The SDK loads and exports the re
 
 Crash reporting is enabled by default.
 
-These events can be viewed from {{kib}}'s iOS dashboard under the "Crashes" section. Refer to [Visualize telemetry](getting-started.md#visualize-telemetry) for instructions to install and open the dashboard.
+These events can be viewed from {{kib}}'s iOS dashboard in the **Crashes** section. Refer to
+[Visualize telemetry](getting-started.md#visualize-telemetry) for instructions to install and
+open the dashboard.
 
 #### Test crash reporting [test-crash-reporting]
 
