@@ -67,7 +67,8 @@ final class ResourceInterceptorTests: XCTestCase {
     let configuration = AgentConfigBuilder()
       .addResourceInterceptor(appendingOrder("a"))
       .addResourceInterceptor(
-        MultiInterceptor<Resource>([appendingOrder("b"), appendingOrder("c")]))
+        MultiInterceptor<Resource>(
+          [AnyInterceptor(appendingOrder("b")), AnyInterceptor(appendingOrder("c"))]))
       .build()
 
     let resource = AgentResource.get(

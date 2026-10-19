@@ -19,14 +19,19 @@ import XCTest
 @testable import ElasticApm
 class InterceptorTests : XCTestCase {
   func testNoNoopInMultiInterceptors() {
-    let multiInterceptor = MultiInterceptor<String>([NoopInterceptor<String>(), NoopInterceptor<String>()])
+    let multiInterceptor = MultiInterceptor<String>(
+      [AnyInterceptor(NoopInterceptor<String>()), AnyInterceptor(NoopInterceptor<String>())]
+    )
     XCTAssert(multiInterceptor.interceptors.count == 0)
   }
 
   func testNoNestedMultiInterceptors() {
     let myInterceptor = ClosureInterceptor<String> { s in return "true" }
     let nestedMultiInterceptor = MultiInterceptor<String>(
-      [NoopInterceptor<String>(), MultiInterceptor<String>([myInterceptor])]
+      [
+        AnyInterceptor(NoopInterceptor<String>()),
+        AnyInterceptor(MultiInterceptor<String>([AnyInterceptor(myInterceptor)])),
+      ]
     )
     XCTAssert(nestedMultiInterceptor.interceptors.count == 1)
     XCTAssertFalse(
@@ -41,10 +46,28 @@ class InterceptorTests : XCTestCase {
     let c = ClosureInterceptor<String> { s in return s + "c" }
     let d = ClosureInterceptor<String> { s in return s + "d" }
     let multiInterceptor = MultiInterceptor<String>(
-      [a, MultiInterceptor<String>([b, c]), d]
+      [
+        AnyInterceptor(a),
+        AnyInterceptor(MultiInterceptor<String>([AnyInterceptor(b), AnyInterceptor(c)])),
+        AnyInterceptor(d),
+      ]
     )
     XCTAssertEqual(multiInterceptor.intercept(""), "abcd")
     XCTAssertEqual(multiInterceptor.interceptors.count, 4)
+  }
+
+  func testExistentialArrayInitializerMatchesTypeErasedInitializer() throws {
+    guard #available(iOS 16, tvOS 16, watchOS 9, *) else {
+      throw XCTSkip("The [any Interceptor<T>] initializer requires iOS 16, tvOS 16, or watchOS 9.")
+    }
+    let a = ClosureInterceptor<String> { s in return s + "a" }
+    let b = ClosureInterceptor<String> { s in return s + "b" }
+    let interceptors: [any Interceptor<String>] = [
+      a, NoopInterceptor<String>(), MultiInterceptor<String>([AnyInterceptor(b)]),
+    ]
+    let multiInterceptor = MultiInterceptor<String>(interceptors)
+    XCTAssertEqual(multiInterceptor.intercept(""), "ab")
+    XCTAssertEqual(multiInterceptor.interceptors.count, 2)
   }
 
   func testSeveralInterceptors() {
