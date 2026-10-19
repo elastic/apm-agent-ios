@@ -7,6 +7,11 @@ The Elastic Distribution of OpenTelemetry iOS (EDOT iOS) is the OpenTelemetry-ba
 
 Read the [EDOT iOS documentation](https://www.elastic.co/docs/reference/opentelemetry/edot-sdks/ios).
 
+## Try it out
+
+Follow the [Demo application guide](https://github.com/elastic/ios-agent-demo) to set up a test environment and take a quick
+look at the agent's functionalities.
+
 ## Notes
 
 ### disabling noisy logs
