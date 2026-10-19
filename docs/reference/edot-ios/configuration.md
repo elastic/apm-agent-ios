@@ -361,7 +361,7 @@ product:
 
 | Type | Default |
 | --- | --- |
-| `any Interceptor<Resource>` | Not set |
+| `some Interceptor<Resource>` | Not set |
 
 Adds an interceptor for the resource. When EDOT iOS starts, resource interceptors receive the detected resource attributes merged with `OTEL_RESOURCE_ATTRIBUTES`. Their output is the resource on every exported span, log record, and metric.
 

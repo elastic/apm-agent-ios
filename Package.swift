@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
   name: "apm-agent-ios",
   platforms: [
-    .iOS(.v16),
+    .iOS(.v15),
     .macOS(.v13),
     .tvOS(.v16),
     .watchOS(.v10),

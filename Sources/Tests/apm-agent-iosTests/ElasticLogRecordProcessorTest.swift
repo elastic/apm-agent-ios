@@ -89,11 +89,11 @@ class ElasticLogRecordProcessorTest: XCTestCase {
    agentConfiguration.logFilters = [SignalFilter<ReadableLogRecord> { logRecord in
      logRecord.eventName == "myEvent"
    }]
-   agentConfiguration.logRecordAttributeInterceptor =  ClosureInterceptor<[String:AttributeValue]> { attributes in
+   agentConfiguration.logRecordAttributeInterceptor = AnyInterceptor(ClosureInterceptor<[String:AttributeValue]> { attributes in
      var newAttributes = attributes
      newAttributes["newAttribute"] = .string("addMe")
      return newAttributes
-   }
+   })
 
     let  factory = LoggerProviderSdk(
       logRecordProcessors: [ElasticLogRecordProcessor(logRecordExporter: waitingExporter,

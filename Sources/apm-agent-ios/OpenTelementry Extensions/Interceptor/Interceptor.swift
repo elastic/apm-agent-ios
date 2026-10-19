@@ -18,12 +18,14 @@ public protocol Interceptor<Item> {
 }
 
 extension Interceptor {
-  func join(_ other: any Interceptor<Item>) -> any Interceptor<Item> {
-    if self is NoopInterceptor<Item> { return other }
-    if other is NoopInterceptor<Item> { return self }
-    return MultiInterceptor([self, other])
+  func join(_ other: some Interceptor<Item>) -> AnyInterceptor<Item> {
+    let erasedSelf = AnyInterceptor(self)
+    let erasedOther = AnyInterceptor(other)
+    if erasedSelf.base is NoopInterceptor<Item> { return erasedOther }
+    if erasedOther.base is NoopInterceptor<Item> { return erasedSelf }
+    return AnyInterceptor(MultiInterceptor([erasedSelf, erasedOther]))
   }
-  func join(_ closure: @escaping (Item) -> (Item)) -> any Interceptor<Item> {
+  func join(_ closure: @escaping (Item) -> (Item)) -> AnyInterceptor<Item> {
     return self.join(ClosureInterceptor<Item>(closure))
   }
 }

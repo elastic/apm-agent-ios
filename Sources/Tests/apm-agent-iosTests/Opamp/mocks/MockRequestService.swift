@@ -20,7 +20,7 @@ public class MockRequestService: RequestService {
   var responderQueue = [(RequestServiceCallback, ElasticApm.OpampRequest) -> ()]()
 
   private var callback: RequestServiceCallback!
-  private var request: (any Supplier<OpampRequest>)!
+  private var request: AnySupplier<OpampRequest>!
 
   public func queueResponse(
     _ responder: @escaping (_ callback: RequestServiceCallback, _ request: ElasticApm.OpampRequest) -> ()
@@ -31,10 +31,10 @@ public class MockRequestService: RequestService {
 
   public func start(
     callback: any ElasticApm.RequestServiceCallback,
-    request: any ElasticApm.Supplier<ElasticApm.OpampRequest>
+    request: some ElasticApm.Supplier<ElasticApm.OpampRequest>
   ) {
     self.callback = callback
-    self.request = request
+    self.request = AnySupplier(request)
   }
 
   public func sendRequest() {

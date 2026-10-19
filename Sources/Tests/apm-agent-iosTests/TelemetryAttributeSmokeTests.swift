@@ -186,7 +186,7 @@ private final class SmokeTelemetryHarness {
 
   private let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-  init(useLegacyAttributeNames: Bool, resourceInterceptor: (any Interceptor<Resource>)?) {
+  init(useLegacyAttributeNames: Bool, resourceInterceptor: ClosureInterceptor<Resource>?) {
     var builder = AgentConfigBuilder()
       .withExportUrl(URL(string: "https://unused.invalid")!)
       .withRemoteManagement(false)
@@ -285,7 +285,7 @@ private struct DirectorySnapshot: Equatable {
 
 private func withSmokeTelemetry(
   useLegacyAttributeNames: Bool,
-  resourceInterceptor: (any Interceptor<Resource>)? = nil,
+  resourceInterceptor: ClosureInterceptor<Resource>? = nil,
   _ test: (SmokeTelemetryHarness) throws -> Void
 ) throws {
   XCTAssertNil(ProcessInfo.processInfo.environment[AgentEnvResource.otelResourceAttributesEnv])

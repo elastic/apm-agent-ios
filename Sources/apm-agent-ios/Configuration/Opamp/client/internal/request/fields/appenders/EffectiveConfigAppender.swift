@@ -16,9 +16,9 @@
 import Foundation
 
 public struct EffectiveConfigAppender: AgentToServerAppender {
-  let effectiveConfig: any Supplier<Opamp_Proto_EffectiveConfig>
-  public init(effectiveConfig: any Supplier<Opamp_Proto_EffectiveConfig>) {
-    self.effectiveConfig = effectiveConfig
+  let effectiveConfig: AnySupplier<Opamp_Proto_EffectiveConfig>
+  public init(effectiveConfig: some Supplier<Opamp_Proto_EffectiveConfig>) {
+    self.effectiveConfig = AnySupplier(effectiveConfig)
   }
   public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {
     agentToServer.effectiveConfig = effectiveConfig.get()

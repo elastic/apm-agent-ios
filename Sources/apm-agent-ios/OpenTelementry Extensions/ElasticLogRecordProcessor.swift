@@ -19,7 +19,7 @@ import OpenTelemetrySdk
 public struct ElasticLogRecordProcessor: LogRecordProcessor {
   var processor: BatchLogRecordProcessor
   var filters = [SignalFilter<ReadableLogRecord>]()
-  var attributeInterceptor: any Interceptor<[String: AttributeValue]>
+  var attributeInterceptor: AnyInterceptor<[String: AttributeValue]>
   internal init(
     logRecordExporter: LogRecordExporter,
     configuration: AgentConfiguration,

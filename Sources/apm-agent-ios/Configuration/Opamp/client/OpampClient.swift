@@ -21,7 +21,7 @@ public protocol OpampClientInterface {
   ///  attempts will be reported via the `Callback` `onConnectFailed` callback.
   /// - Parameter callback: The callback to be invoked when the client connects, fails to connect,
   ///                        or receives a message.
-  func start(_ callback: any OpampClientCallback<Client>)
+  func start(_ callback: some OpampClientCallback<Client>)
 
   /// Stops the OpAMP client. May only be called after `start`. May only be called once.
   /// After successful return it is garanteed that no callbacks will be called.

@@ -16,10 +16,10 @@
 import Foundation
 
 public struct InstanceUidAppender: AgentToServerAppender {
-  private let instanceUid: any Supplier<UUID>
+  private let instanceUid: AnySupplier<UUID>
 
-  public init(instanceUid: any Supplier<UUID>) {
-    self.instanceUid = instanceUid
+  public init(instanceUid: some Supplier<UUID>) {
+    self.instanceUid = AnySupplier(instanceUid)
   }
 
   public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {

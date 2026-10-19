@@ -30,9 +30,21 @@ class InterceptorTests : XCTestCase {
     )
     XCTAssert(nestedMultiInterceptor.interceptors.count == 1)
     XCTAssertFalse(
-      nestedMultiInterceptor.interceptors[0] is MultiInterceptor<String>
+      nestedMultiInterceptor.interceptors[0].base is MultiInterceptor<String>
     )
     XCTAssertEqual(nestedMultiInterceptor.intercept(""), "true")
+  }
+
+  func testNestedMultiInterceptorRunsAtItsPosition() {
+    let a = ClosureInterceptor<String> { s in return s + "a" }
+    let b = ClosureInterceptor<String> { s in return s + "b" }
+    let c = ClosureInterceptor<String> { s in return s + "c" }
+    let d = ClosureInterceptor<String> { s in return s + "d" }
+    let multiInterceptor = MultiInterceptor<String>(
+      [a, MultiInterceptor<String>([b, c]), d]
+    )
+    XCTAssertEqual(multiInterceptor.intercept(""), "abcd")
+    XCTAssertEqual(multiInterceptor.interceptors.count, 4)
   }
 
   func testSeveralInterceptors() {

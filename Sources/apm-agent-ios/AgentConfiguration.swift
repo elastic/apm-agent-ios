@@ -96,11 +96,11 @@ public struct AgentConfiguration {
   var spanFilters = [SignalFilter<ReadableSpan>]()
   var logFilters = [SignalFilter<ReadableLogRecord>]()
 
-  var spanAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
-  var logRecordAttributeInterceptor: any Interceptor<[String: AttributeValue]> = NoopInterceptor<[String: AttributeValue]>()
+  var spanAttributeInterceptor = AnyInterceptor(NoopInterceptor<[String: AttributeValue]>())
+  var logRecordAttributeInterceptor = AnyInterceptor(NoopInterceptor<[String: AttributeValue]>())
   /// Resource interceptors in the order they were added. `AgentResource`
   /// applies them one at a time so that it can guard each stage's output.
-  var resourceInterceptors: [any Interceptor<Resource>] = []
+  var resourceInterceptors: [AnyInterceptor<Resource>] = []
 
   mutating func setFullExportUrl(_ url: URL?) {
     fullExportUrl = url
