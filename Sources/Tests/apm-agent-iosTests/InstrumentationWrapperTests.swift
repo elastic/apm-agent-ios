@@ -41,6 +41,49 @@ final class InstrumentationWrapperTests: XCTestCase {
     }
   }
 
+  func testURLSessionStableErrorWithoutResponseRemovesStatusAndSetsErrorType() throws {
+    let span = try receiveURLSessionError(
+      status: 0,
+      statusKey: SemanticConventions.Http.responseStatusCode.rawValue,
+      useLegacyAttributeNames: false)
+
+    XCTAssertNil(span.attributes[SemanticConventions.Http.responseStatusCode.rawValue])
+    let errorType = try XCTUnwrap(
+      span.attributes[SemanticConventions.Error.type.rawValue]?.description)
+    XCTAssertEqual(errorType, String(describing: TestError.self))
+    let exception = try XCTUnwrap(span.events.first)
+    XCTAssertEqual(exception.name, SemanticConventions.Exception.exception.rawValue)
+    XCTAssertEqual(
+      exception.attributes[SemanticConventions.Exception.type.rawValue]?.description,
+      errorType)
+    XCTAssertEqual(span.events.count, 1)
+  }
+
+  func testURLSessionLegacyErrorWithoutResponseRemovesStatusAndSetsErrorType() throws {
+    let span = try receiveURLSessionError(
+      status: 0,
+      statusKey: "http.status_code",
+      useLegacyAttributeNames: true)
+
+    XCTAssertNil(span.attributes["http.status_code"])
+    XCTAssertEqual(
+      span.attributes[SemanticConventions.Error.type.rawValue]?.description,
+      String(describing: TestError.self))
+  }
+
+  func testURLSessionErrorWithResponseKeepsStatusWithoutSettingErrorType() throws {
+    let span = try receiveURLSessionError(
+      status: 503,
+      statusKey: SemanticConventions.Http.responseStatusCode.rawValue,
+      useLegacyAttributeNames: false)
+
+    XCTAssertEqual(
+      span.attributes[SemanticConventions.Http.responseStatusCode.rawValue]?.description,
+      "503")
+    XCTAssertNil(span.attributes[SemanticConventions.Error.type.rawValue])
+    XCTAssertEqual(span.events.count, 1)
+  }
+
   func testURLSessionConfigurationExcludesRegisteredHTTPSignalEndpoints() throws {
     let exportURL = URL(string: "https://export.example.com:4318/otlp")!
     let manager = makeManager(exportURL: exportURL)
@@ -180,6 +223,26 @@ final class InstrumentationWrapperTests: XCTestCase {
       config: makeManager(useLegacyAttributeNames: useLegacyAttributeNames))
   }
 
+  private func receiveURLSessionError(
+    status: Int,
+    statusKey: String,
+    useLegacyAttributeNames: Bool
+  ) throws -> SpanData {
+    let configuration = makeWrapper(useLegacyAttributeNames: useLegacyAttributeNames)
+      .makeURLSessionInstrumentationConfiguration()
+    let receivedError = try XCTUnwrap(configuration.receivedError)
+    let tracer = TracerProviderBuilder()
+      .build()
+      .get(instrumentationName: "InstrumentationWrapperTests")
+    let span = tracer.spanBuilder(spanName: "test-url-session-error")
+      .setAttribute(key: statusKey, value: .int(status))
+      .startSpan()
+
+    receivedError(TestError.failure, nil, status, span)
+
+    return try XCTUnwrap(span as? any ReadableSpan).toSpanData()
+  }
+
   private func makeManager(
     useLegacyAttributeNames: Bool = false,
     exportURL: URL? = nil,
@@ -239,4 +302,8 @@ final class InstrumentationWrapperTests: XCTestCase {
     }
     XCTAssertNoThrow(try group.syncShutdownGracefully())
   }
+}
+
+private enum TestError: Error {
+  case failure
 }

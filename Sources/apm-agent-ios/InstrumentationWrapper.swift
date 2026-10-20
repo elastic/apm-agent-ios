@@ -137,16 +137,24 @@ class InstrumentationWrapper {
         }
 
       },
-      receivedError: { error, _, _, span in
+      receivedError: { error, _, status, span in
+        let errorType = String(describing: type(of: error))
+        if status == 0 {
+          span.setAttribute(
+            key: SemanticConventions.Http.responseStatusCode.rawValue,
+            value: nil)
+          span.setAttribute(key: "http.status_code", value: nil)
+          span.setAttribute(
+            key: SemanticConventions.Error.type.rawValue,
+            value: .string(errorType))
+        }
         // swiftlint:disable line_length
         span
           .addEvent(
             name: SemanticConventions.Exception.exception.rawValue,
             attributes: [
               SemanticConventions.Exception.type.rawValue: AttributeValue
-                .string(
-                  String(describing: type(of: error))
-                ),
+                .string(errorType),
               SemanticConventions.Exception.message.rawValue: AttributeValue
                 .string(error.localizedDescription)
             ]

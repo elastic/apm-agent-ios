@@ -85,6 +85,50 @@
         applicationSpans.count,
         1,
         "Expected exactly one application client span, got: \(spans)")
+      let applicationSpan = try XCTUnwrap(applicationSpans.first)
+      XCTAssertEqual(
+        applicationSpan.attributes[
+          SemanticConventions.Http.responseStatusCode.rawValue
+        ]?.description,
+        "200")
+
+      let unavailableServer = LoopbackHTTPTestServer()
+      try unavailableServer.start()
+      let unavailableURL = unavailableServer.baseURL.appendingPathComponent("unavailable")
+      unavailableServer.stop()
+
+      let failureExpectation = expectation(description: "failed application request")
+      URLSession.shared.dataTask(with: unavailableURL) { _, response, error in
+        XCTAssertNil(response)
+        XCTAssertNotNil(error)
+        failureExpectation.fulfill()
+      }.resume()
+      wait(for: [failureExpectation], timeout: 10)
+
+      let failureSpans = try XCTUnwrap(
+        harness.waitForInstrumentedSpans(),
+        "No failed URLSession span was exported for \(unavailableURL)")
+        .filter {
+          $0.kind == .client && $0.targets(server: unavailableServer)
+        }
+      let failureSpan = try XCTUnwrap(
+        failureSpans.first,
+        "Expected one failed client span, got: \(failureSpans)")
+      XCTAssertEqual(failureSpans.count, 1)
+      guard case .error = failureSpan.status else {
+        return XCTFail("Expected failed client span status to be Error")
+      }
+      XCTAssertNil(
+        failureSpan.attributes[SemanticConventions.Http.responseStatusCode.rawValue])
+      let errorType = try XCTUnwrap(
+        failureSpan.attributes[SemanticConventions.Error.type.rawValue]?.description)
+      let exception = try XCTUnwrap(
+        failureSpan.events.first {
+          $0.name == SemanticConventions.Exception.exception.rawValue
+        })
+      XCTAssertEqual(
+        exception.attributes[SemanticConventions.Exception.type.rawValue]?.description,
+        errorType)
     }
   }
 
