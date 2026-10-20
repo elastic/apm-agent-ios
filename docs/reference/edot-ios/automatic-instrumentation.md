@@ -64,6 +64,8 @@ By default, EDOT iOS names spans using the HTTP method and destination host, for
 
 When a response has a status code from `400` through `599`, EDOT iOS adds an exception event with the status code and its localized description. Transport errors are also recorded as exception events.
 
+{applies_to}`edot_ios: ga 2.3.0` When a request ends before receiving an HTTP response, its span omits `http.response.status_code` and sets `error.type` to the exception type.
+
 URLSession spans include the current network connection type when it is available.
 
 URLSession instrumentation is provided by OpenTelemetry-Swift. Refer to the [URLSession instrumentation source](https://github.com/open-telemetry/opentelemetry-swift/tree/main/Sources/Instrumentation/URLSession) for upstream implementation details.
