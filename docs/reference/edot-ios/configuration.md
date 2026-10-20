@@ -183,9 +183,9 @@ Refer to [Central configuration](#central-configuration) for the complete setup.
 
 | Type | Default |
 | --- | --- |
-| `Bool` | `true` |
+| `Bool` | `false` |
 
-Controls whether EDOT iOS contacts central configuration for runtime configuration updates. Set it to `false` to turn off remote management entirely.
+Set to `true` to start the legacy central configuration poll when OpAMP is not enabled. This setting does not affect central configuration selected with `useOpAMP()`.
 
 ### Telemetry attribute compatibility [telemetry-attribute-compatibility]
 

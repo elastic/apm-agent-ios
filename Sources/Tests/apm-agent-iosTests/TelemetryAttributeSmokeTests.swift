@@ -189,7 +189,6 @@ private final class SmokeTelemetryHarness {
   init(useLegacyAttributeNames: Bool, resourceInterceptor: ClosureInterceptor<Resource>?) {
     var builder = AgentConfigBuilder()
       .withExportUrl(URL(string: "https://unused.invalid")!)
-      .withRemoteManagement(false)
       .useLegacyAttributeNames(useLegacyAttributeNames)
     if let resourceInterceptor {
       builder = builder.addResourceInterceptor(resourceInterceptor)
