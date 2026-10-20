@@ -26,13 +26,21 @@
   @testable import ElasticApm
 
   final class NTPClockConcurrencyTests: XCTestCase {
+    // One suite per test, so a storage write that lands after a test ends cannot reach the next one.
+    private let suiteName = "co.elastic.apm.tests.NTPClockConcurrencyTests." + UUID().uuidString
+    private lazy var defaults = emptyDefaults(suiteName: suiteName)
     private let iterations = 200
+
+    override func tearDown() {
+      defaults.removePersistentDomain(forName: suiteName)
+      super.tearDown()
+    }
 
     func testAnchorUpdatesOverlapTimestampReadsAndSignalCreation() throws {
       let transport = ScriptedSNTPTransport {
         .success(sntpReply(to: $0, serverAhead: 30 * nanosPerSecond))
       }
-      let synchronizer = NTPClockSynchronizer(transport: transport)
+      let synchronizer = NTPClockSynchronizer(transport: transport, userDefaults: defaults)
       let clock = NTPClock(synchronizer: synchronizer)
       let spanExporter = WaitingSpanExporter(numberToWaitFor: iterations)
       let logExporter = WaitingLogRecordExporter(numberToWaitFor: iterations)
@@ -92,6 +100,63 @@
         XCTAssertTrue((start...latest).contains(timestamp), "\(timestamp) is outside \(start)...\(latest)")
       }
       XCTAssertEqual(clock.now.timeIntervalSinceNow, 30, accuracy: 1)
+    }
+
+    func testRestoreAndTicksOverlapTimestampReads() throws {
+      let continuousClock = ManualContinuousClock()
+      let wallClock = ManualWallClock()
+      let transport = ScriptedSNTPTransport {
+        .success(sntpReply(to: $0, serverAhead: 30 * nanosPerSecond))
+      }
+      let makeSynchronizer = { (tick: RepeatingTick) in
+        NTPClockSynchronizer(
+          transport: transport,
+          userDefaults: self.defaults,
+          tick: tick,
+          continuousClock: continuousClock.read,
+          wallClock: wallClock.read)
+      }
+      // A previous launch in this boot saves the anchor that the next start restores.
+      let previousLaunch = makeSynchronizer(ManualTick())
+      previousLaunch.synchronize()
+      let previousAnchor = try XCTUnwrap(previousLaunch.anchor)
+      let store = NTPAnchorStore(userDefaults: defaults)
+      waitUntil {
+        if case let .saved(record) = store.load() {
+          return record.anchor == previousAnchor
+        }
+        return false
+      }
+      let tick = ManualTick()
+      let synchronizer = makeSynchronizer(tick)
+      let day = 24 * 3_600 * nanosPerSecond
+
+      DispatchQueue.concurrentPerform(iterations: 3) { worker in
+        switch worker {
+        case 0:
+          synchronizer.start()
+          // Each tick finds the anchor a day old, discards it, and synchronizes again.
+          for _ in 0..<iterations {
+            continuousClock.advance(by: day)
+            wallClock.advance(by: TimeInterval(day / nanosPerSecond))
+            tick.fire()
+          }
+        case 1:
+          for _ in 0..<iterations * 10 { _ = synchronizer.now }
+        default:
+          for _ in 0..<iterations * 10 { _ = synchronizer.anchor }
+        }
+      }
+
+      XCTAssertTrue(tick.isStarted)
+      XCTAssertEqual(transport.requests.count, 1 + iterations)
+      let finalAnchor = try XCTUnwrap(synchronizer.anchor)
+      waitUntil {
+        if case let .saved(record) = store.load() {
+          return record.anchor == finalAnchor
+        }
+        return false
+      }
     }
   }
 
