@@ -34,6 +34,7 @@ class SessionSpanProcessorTest: XCTestCase {
 
   @discardableResult private func createSampledHttpSpan(spanName: String) -> ReadableSpan {
     let span = tracer.spanBuilder(spanName: spanName).setNoParent()
+      .setSpanKind(spanKind: .client)
       .setAttribute(key: SemanticAttributes.httpUrl.rawValue, value: "http://localhost")
       .setAttribute(key: SemanticConventions.Url.full.rawValue, value: "http://localhost")
       .startSpan()
@@ -80,8 +81,8 @@ class SessionSpanProcessorTest: XCTestCase {
     XCTAssertEqual(exported?.count, 1)
   }
 
-  func testHttpSpansAreIntercepted() {
-    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
+  func testHttpSpansAreIntercepted() throws {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
     let config = AgentConfigBuilder()
       .addSpanAttributeInterceptor(ClosureInterceptor { attributes in
         var attributes = attributes
@@ -97,13 +98,37 @@ class SessionSpanProcessorTest: XCTestCase {
         )
       )
     _ = createSampledHttpSpan(spanName: spanName1)
-    let exported = waitingSpanExporter.waitForExport()
-    XCTAssertEqual(exported?.count, 2)
-    XCTAssertNotNil(exported?[0].attributes["test"])
-    XCTAssertNotNil(exported?[1].attributes["test"])
+    let exported = try XCTUnwrap(waitingSpanExporter.waitForExport())
+    XCTAssertEqual(exported.count, 1)
+    XCTAssertEqual(exported.first?.attributes["test"], .bool(true))
   }
 
-  func testOrphanHttpSpans() {
+  func testOrphanHttpSpans() throws {
+    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
+    let config = AgentConfiguration()
+    tracerSdkFactory
+      .addSpanProcessor(
+        ElasticSpanProcessor(
+          spanExporter: waitingSpanExporter,
+          agentConfiguration: config, scheduleDelay: maxScheduleDelay
+        )
+      )
+    let created = createSampledHttpSpan(spanName: spanName1)
+    let exported = try XCTUnwrap(waitingSpanExporter.waitForExport())
+    XCTAssertEqual(exported.count, 1)
+    let httpSpan = try XCTUnwrap(exported.first)
+    XCTAssertNil(httpSpan.parentSpanId)
+    XCTAssertEqual(httpSpan.spanId, created.context.spanId)
+    XCTAssertEqual(httpSpan.traceId, created.context.traceId)
+    XCTAssertEqual(httpSpan.name, created.name)
+    XCTAssertEqual(httpSpan.kind, created.kind)
+    XCTAssertEqual(httpSpan.attributes, created.getAttributes())
+    XCTAssertNotNil(httpSpan.attributes["session.id"])
+    XCTAssertEqual(httpSpan.attributes["type"], .string("mobile"))
+    XCTAssertNil(waitingSpanExporter.waitForExport(timeout: maxScheduleDelay * 2))
+  }
+
+  func testHttpSpansWithParent() throws {
     let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 2)
     let config = AgentConfiguration()
     tracerSdkFactory
@@ -113,35 +138,31 @@ class SessionSpanProcessorTest: XCTestCase {
           agentConfiguration: config, scheduleDelay: maxScheduleDelay
         )
       )
-    _ = createSampledHttpSpan(spanName: spanName1)
-    let exported = waitingSpanExporter.waitForExport()
-    XCTAssertEqual(exported?.count, 2)
-    XCTAssertNotNil(exported?[0].attributes["session.id"])
-    XCTAssertNotNil(exported?[1].attributes["session.id"])
-    XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
-  }
-  func testHttpSpansWithParent() {
-    let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
-    let config = AgentConfiguration()
-    tracerSdkFactory
-      .addSpanProcessor(
-        ElasticSpanProcessor(
-          spanExporter: waitingSpanExporter,
-          agentConfiguration: config, scheduleDelay: maxScheduleDelay
-        )
-      )
-    _ = createSampledHttpSpan(spanName: spanName1)
-    let exported = waitingSpanExporter.waitForExport()
-    XCTAssertEqual(exported?.count, 2)
-    XCTAssertNotNil(exported?[0].attributes["session.id"])
-    XCTAssertNotNil(exported?[1].attributes["session.id"])
-    XCTAssertEqual(exported?[0].traceId, exported?[1].traceId)
+    let parent = tracer.spanBuilder(spanName: "Parent").setNoParent().startSpan()
+    let child = tracer.spanBuilder(spanName: spanName1)
+      .setParent(parent)
+      .setSpanKind(spanKind: .client)
+      .setAttribute(key: SemanticAttributes.httpUrl.rawValue, value: "http://localhost")
+      .setAttribute(key: SemanticConventions.Url.full.rawValue, value: "http://localhost")
+      .startSpan()
+    child.end()
+    parent.end()
+
+    let exported = try XCTUnwrap(waitingSpanExporter.waitForExport())
+    XCTAssertEqual(exported.count, 2)
+    let parentSpan = try XCTUnwrap(exported.first { $0.spanId == parent.context.spanId })
+    let httpSpan = try XCTUnwrap(exported.first { $0.spanId == child.context.spanId })
+    XCTAssertNil(parentSpan.parentSpanId)
+    XCTAssertEqual(httpSpan.parentSpanId, parentSpan.spanId)
+    XCTAssertEqual(httpSpan.traceId, parentSpan.traceId)
+    XCTAssertEqual(httpSpan.name, spanName1)
+    XCTAssertEqual(httpSpan.kind, .client)
   }
 
   func testSpanInterceptors() {
     let waitingSpanExporter = WaitingSpanExporter(numberToWaitFor: 1)
     var config = AgentConfiguration()
-    config.spanAttributeInterceptor = AnyInterceptor(ClosureInterceptor<[String:AttributeValue]> { attribute in
+    config.spanAttributeInterceptor = AnyInterceptor(ClosureInterceptor<[String: AttributeValue]> { attribute in
       var newAttributes = attribute
       newAttributes["foo"] = .string("bar")
       return newAttributes
