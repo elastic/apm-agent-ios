@@ -1,0 +1,8 @@
+API breakage: func OpampClientInterface.start(_:) has parameter 0 type change from any ElasticApm.OpampClientCallback<Self.Client> to some ElasticApm.OpampClientCallback<Self.Client>
+API breakage: func OpampClientImpl.start(_:) has parameter 0 type change from any ElasticApm.OpampClientCallback<ElasticApm.OpampClientImpl> to some ElasticApm.OpampClientCallback<ElasticApm.OpampClientImpl>
+API breakage: constructor EffectiveConfigAppender.init(effectiveConfig:) has parameter 0 type change from any ElasticApm.Supplier<ElasticApm.Opamp_Proto_EffectiveConfig> to some ElasticApm.Supplier<ElasticApm.Opamp_Proto_EffectiveConfig>
+API breakage: constructor InstanceUidAppender.init(instanceUid:) has parameter 0 type change from any ElasticApm.Supplier<Foundation.UUID> to some ElasticApm.Supplier<Foundation.UUID>
+API breakage: constructor RemoteConfigStatusAppender.init(config:) has parameter 0 type change from any ElasticApm.Supplier<ElasticApm.Opamp_Proto_RemoteConfigStatus> to some ElasticApm.Supplier<ElasticApm.Opamp_Proto_RemoteConfigStatus>
+API breakage: constructor SequenceNumberAppender.init(sequenceNumber:) has parameter 0 type change from any ElasticApm.Supplier<Swift.UInt64> to some ElasticApm.Supplier<Swift.UInt64>
+API breakage: func OpampHttpRequestService.start(callback:request:) has parameter 1 type change from any ElasticApm.Supplier<ElasticApm.OpampRequest> to some ElasticApm.Supplier<ElasticApm.OpampRequest>
+API breakage: func RequestService.start(callback:request:) has parameter 1 type change from any ElasticApm.Supplier<ElasticApm.OpampRequest> to some ElasticApm.Supplier<ElasticApm.OpampRequest>

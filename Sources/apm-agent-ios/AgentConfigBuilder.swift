@@ -34,9 +34,9 @@ public class AgentConfigBuilder {
   private var spanFilters = [SignalFilter<ReadableSpan>]()
   private var logFilters = [SignalFilter<ReadableLogRecord>]()
 
-  private var spanAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
-  private var logRecordAttributeInterceptors: [any Interceptor<[String: AttributeValue]>] = []
-  private var resourceInterceptors: [any Interceptor<Resource>] = []
+  private var spanAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
+  private var logRecordAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
+  private var resourceInterceptors: [AnyInterceptor<Resource>] = []
   public init() {}
 
   public func disableAgent() -> Self {
@@ -110,19 +110,37 @@ public class AgentConfigBuilder {
     return self
   }
 
+  public func addSpanAttributeInterceptor(_ interceptor: some Interceptor<[String: AttributeValue]>) -> Self {
+    self.spanAttributeInterceptors.append(AnyInterceptor(interceptor))
+    return self
+  }
+
+  @_disfavoredOverload
+  @available(iOS 16, *)
   public func addSpanAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
-    self.spanAttributeInterceptors.append(interceptor)
+    return addSpanAttributeInterceptor(AnyInterceptor(interceptor))
+  }
+
+  public func addLogRecordAttributeInterceptor(_ interceptor: some Interceptor<[String: AttributeValue]>) -> Self {
+    self.logRecordAttributeInterceptors.append(AnyInterceptor(interceptor))
     return self
   }
 
+  @_disfavoredOverload
+  @available(iOS 16, *)
   public func addLogRecordAttributeInterceptor(_ interceptor: any Interceptor<[String: AttributeValue]>) -> Self {
-    self.logRecordAttributeInterceptors.append(interceptor)
+    return addLogRecordAttributeInterceptor(AnyInterceptor(interceptor))
+  }
+
+  public func addResourceInterceptor(_ interceptor: some Interceptor<Resource>) -> Self {
+    self.resourceInterceptors.append(AnyInterceptor(interceptor))
     return self
   }
 
+  @_disfavoredOverload
+  @available(iOS 16, *)
   public func addResourceInterceptor(_ interceptor: any Interceptor<Resource>) -> Self {
-    self.resourceInterceptors.append(interceptor)
-    return self
+    return addResourceInterceptor(AnyInterceptor(interceptor))
   }
 
   public func build() -> AgentConfiguration {
@@ -163,15 +181,15 @@ public class AgentConfigBuilder {
   /// Returns `nil` when no interceptor was added, the single interceptor
   /// itself, or a `MultiInterceptor` that runs them in the order they were added.
   private static func combine<Item>(
-    _ interceptors: [any Interceptor<Item>]
-  ) -> (any Interceptor<Item>)? {
+    _ interceptors: [AnyInterceptor<Item>]
+  ) -> AnyInterceptor<Item>? {
     switch interceptors.count {
     case 0:
       return nil
     case 1:
       return interceptors[0]
     default:
-      return MultiInterceptor(interceptors)
+      return AnyInterceptor(MultiInterceptor(interceptors))
     }
   }
 }

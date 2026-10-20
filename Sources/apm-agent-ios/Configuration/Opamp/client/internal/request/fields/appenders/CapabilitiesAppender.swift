@@ -16,9 +16,9 @@
 import Foundation
 
 public struct CapabilitiesAppender: AgentToServerAppender {
-  private let capabilities: any Supplier<UInt64>
-  init(capabilities: any Supplier<UInt64>) {
-    self.capabilities = capabilities
+  private let capabilities: AnySupplier<UInt64>
+  init(capabilities: some Supplier<UInt64>) {
+    self.capabilities = AnySupplier(capabilities)
   }
 
   public func append(to agentToServer: inout Opamp_Proto_AgentToServer) {

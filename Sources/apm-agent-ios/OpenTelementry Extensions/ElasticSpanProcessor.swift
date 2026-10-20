@@ -22,7 +22,7 @@ public struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
   var exporter: SpanExporter
   var filters = [SignalFilter<any ReadableSpan>]()
-  var attributeInterceptor: any Interceptor<[String: AttributeValue]>
+  var attributeInterceptor: AnyInterceptor<[String: AttributeValue]>
   public let isStartRequired: Bool
   public let isEndRequired: Bool
 

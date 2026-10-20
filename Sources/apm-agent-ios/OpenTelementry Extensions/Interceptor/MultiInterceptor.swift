@@ -13,18 +13,24 @@
 //   limitations under the License.
 
 public struct MultiInterceptor<T>: Interceptor {
-  var interceptors: [any Interceptor<T>] = []
+  var interceptors: [AnyInterceptor<T>] = []
 
   /// Runs `interceptors` in the given order. A nested `MultiInterceptor` is
   /// flattened at its position, and `NoopInterceptor`s are dropped.
-  public init(_ interceptors: [any Interceptor<T>]) {
+  public init(_ interceptors: [AnyInterceptor<T>]) {
     for interceptor in interceptors {
-      if let multiInterceptor = interceptor as? MultiInterceptor<T> {
+      if let multiInterceptor = interceptor.base as? MultiInterceptor<T> {
         self.interceptors.append(contentsOf: multiInterceptor.interceptors)
-      } else if !(interceptor is NoopInterceptor<T>) {
+      } else if !(interceptor.base is NoopInterceptor<T>) {
         self.interceptors.append(interceptor)
       }
     }
+  }
+
+  @_disfavoredOverload
+  @available(iOS 16, *)
+  public init(_ interceptors: [any Interceptor<T>]) {
+    self.init(interceptors.map { AnyInterceptor($0) })
   }
 
   public func intercept(_ item: T) -> T {
