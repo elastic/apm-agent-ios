@@ -183,10 +183,7 @@ Refer to [Central configuration](#central-configuration) for the complete setup.
 
 | Type | Default |
 | --- | --- |
-| `Bool` | Depends on the SDK version |
-
-- {applies_to}`edot_ios: ga 1.3-2.2` `true`
-- {applies_to}`edot_ios: ga 2.3.0+` `false`
+| `Bool` | {applies_to}`edot_ios: ga 2.3.0+` `false`<br><br>{applies_to}`edot_ios: ga 1.3-2.2` `true` |
 
 Set to `true` to start the legacy central configuration poll when OpAMP is not enabled. This setting does not affect central configuration selected with `useOpAMP()`.
 
