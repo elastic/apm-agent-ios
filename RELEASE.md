@@ -20,11 +20,18 @@ changed. Update the OpenTelemetry-Swift compatibility sentence under
 **SDK compatibility** in `docs/reference/edot-ios/automatic-instrumentation.md`
 when supported versions changed. Merge these changes through ordinary PRs.
 
-Open the
-[Prepare release workflow](https://github.com/elastic/apm-agent-ios/actions/workflows/prepare-release.yml)
-on `main` and provide the release-note JSON.
+Use either path:
 
-The workflow verifies that `Version.swift` holds the next minor `-SNAPSHOT` version after
+- Ask an agent to prepare the release with the
+  [`ios-release-wizard`](skills/ios-release-wizard/SKILL.md)
+  skill. It proposes the notes and resulting version, then dispatches after
+  you approve.
+- Open the
+  [Prepare release workflow](https://github.com/elastic/apm-agent-ios/actions/workflows/prepare-release.yml)
+  on `main` and provide the release-note JSON.
+
+Both paths dispatch the same workflow with the same input. The workflow
+verifies that `Version.swift` holds the next minor `-SNAPSHOT` version after
 the highest `X.Y.Z` tag, and that every package dependency resolves to a
 version. It creates two branches from the dispatched `main` commit:
 
@@ -113,10 +120,11 @@ already deleted `patching/x.y.z` and `releasing/x.y.z`.
 
 ## Patch release
 
-Open the
+Use the release wizard or the
 [Start patch workflow](https://github.com/elastic/apm-agent-ios/actions/workflows/start-patch.yml)
 on `main`. Supply the `X.Y` release line and, optionally, merged `main` pull
 requests to cherry-pick, as numbers separated by commas, such as `1135,527`.
+The wizard proposes `bug`-labeled candidates merged after the source tag.
 
 Start patch selects the highest `X.Y.Z` tag, creates
 `patching/X.Y.(Z+1)` from it, and cherry-picks the selected fixes. It pushes
@@ -128,7 +136,8 @@ request into the patch branch.
 
 The branch releases with the workflows of its tag.
 
-Draft release notes by dispatching the Draft release notes workflow on `patching/x.y.z`; the draft then covers only that branch's
+Draft release notes with the wizard or by dispatching the Draft release notes
+workflow on `patching/x.y.z`; the draft then covers only that branch's
 changes. Approve them, then dispatch Prepare release from that branch. Patch
 preparation leaves `applies_to` metadata unchanged. Review and merge the
 preparation PR to publish. Finally, merge the notes-only PR into `main`.
