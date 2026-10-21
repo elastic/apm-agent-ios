@@ -59,7 +59,6 @@
           resource: Resource(),
           config: AgentConfigBuilder()
             .withExportUrl(URL(string: "http://127.0.0.1:9")!)
-            .withRemoteManagement(false)
             .build(),
           instrumentationConfig: InstrumentationConfigBuilder()
             .withLifecycleEvents(false)

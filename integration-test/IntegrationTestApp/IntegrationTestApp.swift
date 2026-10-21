@@ -18,7 +18,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     // on the simulator host's loopback address.
     let agentConfiguration = AgentConfigBuilder()
       .withExportUrl(URL(string: "http://127.0.0.1:4318")!)
-      .withRemoteManagement(false)
       .build()
 
     ElasticApmAgent.start(with: agentConfiguration)

@@ -124,6 +124,7 @@ class AgentConfigManager {
         resource: resource,
         config: config,
         instrumentationConfig: instrumentationConfig,
+        endpointRegistry: endpointRegistry,
         logger: logger
       )
     }

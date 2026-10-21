@@ -37,6 +37,7 @@ class ElasticAgentConfigManager: CentralConfigManager {
   init(resource: Resource,
        config: AgentConfiguration,
        instrumentationConfig: InstrumentationConfiguration,
+       endpointRegistry: SDKEndpointRegistry,
        logger: Logging.Logger = Logging.Logger(label: "co.elastic.centralConfigFetcher") { _ in
     SwiftLogNoOpLogHandler()
   }) {
@@ -55,7 +56,11 @@ class ElasticAgentConfigManager: CentralConfigManager {
       serviceName = ""
     }
 
-    if config.enableRemoteManagement {
+    if config.remoteManagementEnabled {
+      // The fetcher's initializer activates its timer, so register before creating it.
+      if let managementURL = config.managementUrlComponents().url {
+        endpointRegistry.register(managementURL)
+      }
       fetcher = CentralConfigFetcher(serviceName: serviceName,
                                      environment: serviceEnvironment,
                                      agentConfig: config, {  data in

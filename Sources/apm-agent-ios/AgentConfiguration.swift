@@ -24,7 +24,16 @@ public struct AgentConfiguration {
 
   init() {}
   public var enableAgent = true
-  public var enableRemoteManagement = true
+  var remoteManagementEnabled = false
+  @available(
+    *,
+    deprecated,
+    message: "The legacy central configuration poll will be removed. Use useOpAMP() to select central configuration."
+  )
+  public var enableRemoteManagement: Bool {
+    get { remoteManagementEnabled }
+    set { remoteManagementEnabled = newValue }
+  }
   public var enableOpAMP = false
   public var managementUrl: URL?
 

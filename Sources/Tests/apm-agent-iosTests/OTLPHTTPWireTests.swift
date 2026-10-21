@@ -305,7 +305,6 @@
 
       let builder = AgentConfigBuilder()
         .withExportUrl(server.baseURL)
-        .withRemoteManagement(false)
       authentication.apply(to: builder)
       let configuration = builder.build()
       let resource = AgentResource.get().merging(other: AgentEnvResource.get())

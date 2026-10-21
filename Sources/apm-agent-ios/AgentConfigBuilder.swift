@@ -22,7 +22,7 @@ public class AgentConfigBuilder {
   private var serverUrl: URL?
   private var exportUrl: URL?
   private var managementUrl: URL?
-  private var enableRemoteManagement: Bool = true
+  private var enableRemoteManagement: Bool?
   private var auth: String?
   private var enableOpAPM: Bool = false
   private static let bearer = "Bearer"
@@ -65,6 +65,11 @@ public class AgentConfigBuilder {
     return self
   }
 
+  @available(
+    *,
+    deprecated,
+    message: "The legacy central configuration poll will be removed. Use useOpAMP() to select central configuration."
+  )
   public func withRemoteManagement(_ enabled: Bool) -> Self {
     enableRemoteManagement = enabled
     return self
@@ -151,7 +156,9 @@ public class AgentConfigBuilder {
     config.spanFilters = spanFilters
     config.connectionType = connectionType
     config.managementUrl = self.managementUrl
-    config.enableRemoteManagement = enableRemoteManagement
+    if let enableRemoteManagement {
+      config.remoteManagementEnabled = enableRemoteManagement
+    }
     config.useLegacyAttributeNames = legacyAttributeNames
 
     if let interceptor = Self.combine(spanAttributeInterceptors) {

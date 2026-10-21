@@ -22,11 +22,91 @@
   import OpenTelemetryProtocolExporterCommon
   import OpenTelemetryProtocolExporterHttp
   import OpenTelemetrySdk
+  import URLSessionInstrumentation
   import XCTest
 
   @testable import ElasticApm
 
   final class URLSessionExporterExclusionTests: XCTestCase {
+    func testLegacyPollIsExcludedAndDefaultConfigurationDoesNotPoll() throws {
+      let enabledServer = LoopbackHTTPTestServer()
+      let defaultServer = LoopbackHTTPTestServer()
+      try enabledServer.start()
+      try defaultServer.start()
+      defer {
+        defaultServer.stop()
+        enabledServer.stop()
+      }
+
+      let pollPath = "/otlp/config/v1/agents"
+      let firstPollElapsed: TimeInterval
+      do {
+        let exportURL = enabledServer.baseURL.appendingPathComponent("otlp")
+        let harness = URLSessionExclusionHarness(exportURL: exportURL)
+        defer { harness.shutDown() }
+
+        // Install instrumentation before starting the timer to cover the first poll.
+        let start = Date()
+        let manager = AgentConfigManager(
+          resource: Resource(),
+          config: AgentConfigBuilder()
+            .withExportUrl(exportURL)
+            .withRemoteManagement(true)
+            .build(),
+          instrumentationConfig: InstrumentationConfigBuilder().build(),
+          endpointRegistry: harness.endpointRegistry)
+        XCTAssertNotNil(
+          enabledServer.waitForRequest(timeout: 5) {
+            $0.method == "GET" && $0.path.split(separator: "?").first == Substring(pollPath)
+          },
+          enabledServer.diagnostics)
+        firstPollElapsed = Date().timeIntervalSince(start)
+
+        let legacyManager = try XCTUnwrap(manager.centralConfigManager as? ElasticAgentConfigManager)
+        let fetcher = try XCTUnwrap(legacyManager.fetcher)
+        let task = try XCTUnwrap(fetcher.fetchQueue.sync { fetcher.task })
+        let pollFinished = XCTNSPredicateExpectation(
+          predicate: NSPredicate { _, _ in task.state == .completed },
+          object: nil)
+        wait(for: [pollFinished], timeout: 10)
+
+        let applicationRequest = expectation(description: "application request on the export host")
+        URLSession.shared.dataTask(
+          with: enabledServer.baseURL.appendingPathComponent("application")
+        ) { _, response, error in
+          XCTAssertNil(error)
+          XCTAssertEqual((response as? HTTPURLResponse)?.statusCode, 200)
+          applicationRequest.fulfill()
+        }.resume()
+        wait(for: [applicationRequest], timeout: 10)
+
+        let provider = try XCTUnwrap(OpenTelemetry.instance.tracerProvider as? TracerProviderSdk)
+        provider.forceFlush()
+        let spans = try XCTUnwrap(harness.waitForInstrumentedSpans())
+        let pollSpans = spans.filter {
+          $0.targets(server: enabledServer)
+            && $0.attributes[SemanticConventions.Url.path.rawValue]?.description == pollPath
+        }
+        XCTAssertTrue(pollSpans.isEmpty, "Legacy poll requests produced spans: \(pollSpans)")
+        XCTAssertEqual(
+          spans.filter {
+            $0.kind == .client && $0.targets(server: enabledServer)
+              && $0.attributes[SemanticConventions.Url.path.rawValue]?.description == "/application"
+          }.count,
+          1,
+          "Ordinary application traffic on the export host must remain instrumented: \(spans)")
+      }
+
+      let harness = URLSessionExclusionHarness(
+        exportURL: defaultServer.baseURL.appendingPathComponent("otlp"))
+      defer { harness.shutDown() }
+      XCTAssertNil(
+        defaultServer.waitForRequest(timeout: max(1, firstPollElapsed + 0.5)) {
+          $0.path.split(separator: "?").first == Substring(pollPath)
+        },
+        "Default configuration started a legacy poll: \(defaultServer.diagnostics)")
+    }
+
     func testExporterRequestsAreExcludedWhileApplicationRequestIsInstrumented() throws {
       let exportServer = LoopbackHTTPTestServer()
       let applicationServer = LoopbackHTTPTestServer()
@@ -133,15 +213,16 @@
   }
 
   private final class URLSessionExclusionHarness {
+    private static var instrumentation: URLSessionInstrumentation?
     private let spanExporter = WaitingSpanExporter(numberToWaitFor: 1)
     private let logExporter = WaitingLogRecordExporter(numberToWaitFor: 1)
     private let metricExporter = WaitingMetricExporter(numberToWaitFor: 1)
     private let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     private let wrapper: InstrumentationWrapper
+    let endpointRegistry = SDKEndpointRegistry()
     let traceEndpoint: URL
 
     init(exportURL: URL) {
-      let endpointRegistry = SDKEndpointRegistry()
       let initializer = OpenTelemetryInitializer(
         group: group,
         sessionSampler: SessionSampler { 1.0 },
@@ -154,7 +235,6 @@
         resource: Resource(),
         config: AgentConfigBuilder()
           .withExportUrl(exportURL)
-          .withRemoteManagement(false)
           .build(),
         instrumentationConfig: InstrumentationConfigBuilder()
           .withLifecycleEvents(false)
@@ -166,7 +246,13 @@
 
       traceEndpoint = URL(string: exportURL.absoluteString + "/v1/traces")!
       wrapper = InstrumentationWrapper(config: configManager)
-      wrapper.initalize()
+      // Upstream installs once per process; subsequent harnesses update that instance.
+      if let instrumentation = Self.instrumentation {
+        instrumentation.configuration = wrapper.makeURLSessionInstrumentationConfiguration()
+      } else {
+        wrapper.initalize()
+        Self.instrumentation = wrapper.urlSessionInstrumentation
+      }
     }
 
     func makeSeedSpan() throws -> SpanData {

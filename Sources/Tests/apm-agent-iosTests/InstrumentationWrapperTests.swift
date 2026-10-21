@@ -250,7 +250,6 @@ final class InstrumentationWrapperTests: XCTestCase {
     enableOpAMP: Bool = false
   ) -> AgentConfigManager {
     let builder = AgentConfigBuilder()
-      .withRemoteManagement(false)
       .useLegacyAttributeNames(useLegacyAttributeNames)
     if let exportURL {
       _ = builder.withExportUrl(exportURL)
