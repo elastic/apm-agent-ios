@@ -20,7 +20,6 @@ import os.log
 
 public struct ElasticSpanProcessor: SpanProcessor {
   var processor: SpanProcessor
-  var exporter: SpanExporter
   var filters = [SignalFilter<any ReadableSpan>]()
   var attributeInterceptor: AnyInterceptor<[String: AttributeValue]>
   public let isStartRequired: Bool
@@ -58,7 +57,6 @@ public struct ElasticSpanProcessor: SpanProcessor {
       willExportCallback: willExportCallback)
     isStartRequired = processor.isStartRequired
     isEndRequired = processor.isEndRequired
-    exporter = spanExporter
     self.filters = agentConfiguration.spanFilters
     self.attributeInterceptor = agentConfiguration.spanAttributeInterceptor
       .join { attributes in
@@ -98,50 +96,6 @@ public struct ElasticSpanProcessor: SpanProcessor {
       return
     }
 
-    if span.isHttpSpan() {
-      var spanData = span.toSpanData()
-      if spanData.parentSpanId == nil, let transactionSpan = span as? SpanSdk {
-
-        var newAttributes = AttributesDictionary(capacity: spanData.attributes.count)
-        newAttributes.updateValue(value: .string("mobile"), forKey: "type")
-        newAttributes.updateValue(
-          value: AttributeValue.string(SessionManager.instance.session()),
-          forKey: SemanticConventions.Session.id.rawValue)
-        let parentSpanContext = SpanContext.create(
-          traceId: span.context.traceId, spanId: SpanId.random(), traceFlags: TraceFlags(),
-          traceState: TraceState())
-
-        let parentSpan = SpanSdk.startSpan(
-          context: parentSpanContext,
-          name: spanData.name,
-          instrumentationScopeInfo: span.instrumentationScopeInfo,
-          kind: span.kind,
-          parentContext: nil,
-          hasRemoteParent: false,
-          spanLimits: transactionSpan.spanLimits,
-          spanProcessor: NoopSpanProcessor(),
-          clock: transactionSpan.clock,
-          resource: transactionSpan.resource,
-          attributes: newAttributes,
-          links: transactionSpan.links,
-          totalRecordedLinks: transactionSpan.totalRecordedLinks,
-          startTime: transactionSpan.startTime)
-
-        parentSpan
-          .setAttributes(
-            attributeInterceptor.intercept(parentSpan.getAttributes())
-          )
-
-        parentSpan.end(time: transactionSpan.endTime!)
-
-        spanData.settingParentSpanId(parentSpanContext.spanId)
-
-       _ = exporter.export(spans: [spanData, parentSpan.toSpanData()])
-
-        return
-      }
-    }
-
     processor.onEnd(span: span)
   }
 
@@ -153,19 +107,4 @@ public struct ElasticSpanProcessor: SpanProcessor {
     processor.forceFlush(timeout: timeout)
   }
 
-}
-
-internal struct NoopSpanProcessor: SpanProcessor {
-  init() {}
-
-  let isStartRequired = false
-  let isEndRequired = false
-
-  func onStart(parentContext: SpanContext?, span: ReadableSpan) {}
-
-  func onEnd(span: ReadableSpan) {}
-
-  func shutdown(explicitTimeout: TimeInterval? = nil) {}
-
-  func forceFlush(timeout: TimeInterval? = nil) {}
 }
