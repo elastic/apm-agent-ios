@@ -1,0 +1,41 @@
+---
+name: Draft release notes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  draft:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Draft release-note JSON
+        id: draft
+        uses: elastic/oblt-actions/edot-release/draft-release-notes@v1
+
+      - name: Show release-note JSON
+        env:
+          NOTES: ${{ steps.draft.outputs.notes }}
+        run: |
+          jq . <<<"$NOTES" >"$RUNNER_TEMP/release-notes.json"
+          cat "$RUNNER_TEMP/release-notes.json"
+          {
+            echo '### Draft release-note JSON'
+            echo
+            echo '```json'
+            cat "$RUNNER_TEMP/release-notes.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release-note JSON
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-notes
+          path: ${{ runner.temp }}/release-notes.json

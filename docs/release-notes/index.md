@@ -30,6 +30,7 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-ios-agent-versionext-fixes]
 
+% next_release_notes
 ## 2.2.0 [elastic-apm-220-release-notes]
 
 **Release date:** October 15, 2026

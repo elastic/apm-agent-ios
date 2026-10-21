@@ -71,21 +71,28 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: Resolve latest release
-        id: baseline
+      - name: Determine API release line
+        id: api-line
         shell: bash
+        env:
+          API_TARGET_REF: ${{ github.base_ref || github.ref_name }}
         run: |
-          baseline="$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)"
-          if [[ -z "$baseline" ]]; then
-            echo "::error::No plain-semver release tag is available for the API stability baseline."
-            exit 1
+          line=
+          if [[ $API_TARGET_REF =~ ^(patching|releasing)/([0-9]+\.[0-9]+)\.([1-9][0-9]*)$ ]]; then
+            line=${BASH_REMATCH[2]}
           fi
-          echo "tag=$baseline" >> "$GITHUB_OUTPUT"
+          echo "line=$line" >> "$GITHUB_OUTPUT"
+      - name: Resolve API baseline
+        id: baseline
+        uses: elastic/oblt-actions/edot-release/version@v1
+        with:
+          command: highest-tag
+          line: ${{ steps.api-line.outputs.line }}
       # The macOS host compares only API that is buildable on macOS. API inside
       # iOS-only conditional blocks is outside this gate.
       - name: Diagnose API breaking changes
         env:
-          BASELINE_TAG: ${{ steps.baseline.outputs.tag }}
+          BASELINE_TAG: ${{ steps.baseline.outputs.value }}
         shell: bash
         run: |
           allowlist_args=()

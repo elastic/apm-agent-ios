@@ -1,0 +1,50 @@
+---
+name: Start patch
+
+on:
+  workflow_dispatch:
+    inputs:
+      line:
+        description: Release line in X.Y form.
+        required: true
+        type: string
+      pull_requests:
+        description: Optional main PR numbers separated by commas, such as 1135,527.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  start-patch:
+    name: Start patch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Get automation token
+        id: token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.OBS_AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
+          permission-contents: write
+          permission-pull-requests: read
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ steps.token.outputs.token }}
+
+      - uses: elastic/oblt-actions/git/setup@v1
+        with:
+          github-token: ${{ steps.token.outputs.token }}
+
+      - name: Start patch
+        uses: elastic/oblt-actions/edot-release/start-patch@v1
+        with:
+          line: ${{ inputs.line }}
+          pull-requests: ${{ inputs.pull_requests }}
+          github-token: ${{ steps.token.outputs.token }}
