@@ -21,7 +21,9 @@ concurrency:
 jobs:
   prepare-release:
     name: Prepare release
-    runs-on: ubuntu-latest
+    # The package resolves only on Apple platforms: OpenTelemetry-Swift
+    # declares products such as ResourceExtension only when Darwin is available.
+    runs-on: macos-latest
     permissions:
       contents: write
       pull-requests: write
