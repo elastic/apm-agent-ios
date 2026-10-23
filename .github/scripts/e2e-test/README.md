@@ -41,6 +41,19 @@ The first run downloads the pinned Elasticsearch and Elastic Agent archives to
 the ignored `.ci-cache/` directory. Set `ELASTIC_VERSION` to test another
 matching version.
 
+## Hosted budget and timing
+
+The hosted E2E job has a 60-minute budget, including setup, the Release build,
+telemetry assertions, cleanup, and artifact upload. Other script deadlines
+remain independent of that job budget.
+
+UTC `START` and `END` markers bracket build/install and each cleanup phase:
+simulator teardown, owned service-process shutdown, and temporary build/runtime
+removal. Each `END` includes elapsed seconds. Success is printed before the
+EXIT trap runs; use the cleanup markers to account for time after assertions.
+A start marker without its end can locate an interrupted phase. Forced runner
+termination can prevent cleanup completion and artifact upload.
+
 ## Artifacts
 
 Results and diagnostics remain under `build/e2e/` after the run. They include:
