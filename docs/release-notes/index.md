@@ -31,6 +31,19 @@ To check for security updates, go to [Security announcements for the Elastic sta
 % ### Fixes [elastic-apm-ios-agent-versionext-fixes]
 
 % next_release_notes
+## 2.3.0 [elastic-apm-230-release-notes]
+**Release date:** October 23, 2026
+
+### Features and enhancements [elastic-apm-ios-agent-230-features-enhancements]
+
+* Lower the minimum supported iOS version to 15: [#405](https://github.com/elastic/apm-agent-ios/pull/405)
+
+### Fixes [elastic-apm-ios-agent-230-fixes]
+
+* Fix a data race in clock synchronization during span and log creation by replacing the Kronos dependency with a built-in SNTP client. Apps that imported Kronos through EDOT iOS must now declare it as their own dependency: [#401](https://github.com/elastic/apm-agent-ios/pull/401)
+* Export HTTP client spans that have no parent without creating a synthetic parent span: [#406](https://github.com/elastic/apm-agent-ios/pull/406)
+* Omit HTTP response status attributes from URLSession spans when a request fails before receiving a response, and set `error.type` to the exception type: [#407](https://github.com/elastic/apm-agent-ios/pull/407)
+
 ## 2.2.0 [elastic-apm-220-release-notes]
 
 **Release date:** October 15, 2026
