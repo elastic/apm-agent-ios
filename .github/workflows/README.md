@@ -26,9 +26,7 @@ Every time there is a merge to main or any release branches the whole workflow w
 
 ### Release process
 
-Release versions, Git tags, and GitHub release names use the semantic version
-format `<major>.<minor>.<patch>`. See [`RELEASE.md`](../../RELEASE.md) for the
-complete release process.
+Release versions and Git tags use `X.Y.Z`; see [`RELEASE.md`](../../RELEASE.md) for the release process.
 
 ### OpenTelemetry
 

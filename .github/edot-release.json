@@ -1,0 +1,11 @@
+{
+  "tagPrefix": "",
+  "productName": "EDOT iOS",
+  "versionFile": "Sources/apm-agent-ios/Version.swift",
+  "versionLine": "  public static let elasticSwiftAgentVersion: String = \"{version}\"",
+  "appliesToKey": "edot_ios",
+  "headingAnchorPrefix": "elastic-apm-",
+  "subsectionAnchorPrefix": "elastic-apm-ios-agent-",
+  "docsUrl": "https://www.elastic.co/docs/release-notes/edot/sdks/ios",
+  "stagePaths": ["Sources/apm-agent-ios/Version.swift", "docs"]
+}

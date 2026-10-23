@@ -1,0 +1,98 @@
+---
+name: Publish release
+
+# Runs when a preparation PR is merged into its releasing/x.y.z branch.
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - "releasing/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-release-${{ github.event.pull_request.base.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish-release:
+    name: Publish release
+    if: >-
+      github.event.pull_request.merged == true
+      && startsWith(github.event.pull_request.head.ref, 'prepare/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      SLACK_CHANNEL: "#apm-agent-mobile"
+    steps:
+      - name: Get automation token
+        id: token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.OBS_AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # Pin to the merged commit so the release configuration the steps below
+      # read is the reviewed one, not whatever the releasing branch points at
+      # when the job starts.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          token: ${{ steps.token.outputs.token }}
+
+      - uses: elastic/oblt-actions/git/setup@v1
+        with:
+          github-token: ${{ steps.token.outputs.token }}
+
+      - name: Guard merged release
+        id: guard
+        uses: elastic/oblt-actions/edot-release/publish-guard@v1
+
+      # A notification failure must not stop the release.
+      - name: Report release start
+        continue-on-error: true
+        uses: elastic/oblt-actions/slack/send@v1
+        with:
+          bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: ${{ env.SLACK_CHANNEL }}
+          message: |
+            :rocket: [${{ github.repository }}] EDOT iOS ${{ steps.guard.outputs.version }} ${{ steps.guard.outputs.tag-exists == 'false' && 'release started' || 'release finalization resumed' }}.
+            Merged by ${{ github.event.pull_request.merged_by.login }} from ${{ github.event.pull_request.html_url }} into ${{ github.event.pull_request.base.ref }}.
+            Commit: ${{ github.event.pull_request.merge_commit_sha }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Finalize release
+        id: finalize
+        uses: elastic/oblt-actions/edot-release/finalize@v1
+        with:
+          release: ${{ steps.guard.outputs.release }}
+          github-token: ${{ steps.token.outputs.token }}
+
+      - name: Report release success
+        if: success()
+        continue-on-error: true
+        uses: elastic/oblt-actions/slack/send@v1
+        with:
+          bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: ${{ env.SLACK_CHANNEL }}
+          message: |
+            :tada: [${{ github.repository }}] EDOT iOS ${{ steps.guard.outputs.version }} was released.
+            Release: ${{ steps.finalize.outputs.release-url }}
+            PR into main: ${{ steps.finalize.outputs.main-pull-request-url }}
+
+      - name: Report release failure to Slack
+        if: failure()
+        uses: elastic/oblt-actions/slack/send@v1
+        with:
+          bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: ${{ env.SLACK_CHANNEL }}
+          message: |
+            :ghost: [${{ github.repository }}] EDOT iOS release automation failed.
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Recovery: ${{ github.server_url }}/${{ github.repository }}/blob/main/RELEASE.md#failure-and-recovery
