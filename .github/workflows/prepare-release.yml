@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       release_notes:
-        description: Release-note JSON. Use the draft workflow.
+        description: Release-note JSON. Use the draft workflow or the release wizard.
         required: true
         type: string
 
