@@ -77,7 +77,7 @@ fi
 # Prefix filenames with ./ so option-like names are passed as paths. Arrays preserve whitespace.
 # The container performs no Git operations and cannot change the checkout.
 trap - ERR
-exec docker run --rm --platform linux/amd64 \
+docker run --rm --platform linux/amd64 \
   --volume "$repo_root:/work:ro" --workdir /work \
   --entrypoint /usr/local/bin/swiftlint "$SWIFTLINT_IMAGE" \
   lint --config .swiftlint.yml --strict --force-exclude --no-cache ${files[@]+"${files[@]}"}

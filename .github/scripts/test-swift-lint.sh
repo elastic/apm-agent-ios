@@ -8,7 +8,8 @@ FIXTURE_ROOT=$(mktemp -d)
 trap 'rm -rf "$FIXTURE_ROOT"' EXIT
 mkdir -p "$FIXTURE_ROOT/bin"
 REAL_GIT=$(command -v git)
-export REAL_GIT
+REAL_MKTEMP=$(command -v mktemp)
+export REAL_GIT REAL_MKTEMP
 cat > "$FIXTURE_ROOT/bin/docker" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\0' "$@" > "$LINT_CALL"
@@ -22,11 +23,20 @@ if [[ "${FAIL_GIT_COMMAND:-}" == "$1" ]]; then
 fi
 exec "$REAL_GIT" "$@"
 STUB
-chmod +x "$FIXTURE_ROOT/bin/docker" "$FIXTURE_ROOT/bin/git"
+# Observe real temporary-file creation without depending on the platform's TMPDIR policy.
+cat > "$FIXTURE_ROOT/bin/mktemp" <<'OBSERVER'
+#!/usr/bin/env bash
+set -euo pipefail
+path=$("$REAL_MKTEMP" "$@")
+printf '%s\n' "$path" >> "$LINT_TEMP_PATHS"
+printf '%s\n' "$path"
+OBSERVER
+chmod +x "$FIXTURE_ROOT/bin/docker" "$FIXTURE_ROOT/bin/git" "$FIXTURE_ROOT/bin/mktemp"
 export PATH="$FIXTURE_ROOT/bin:$PATH"
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
 export LINT_CALL="$FIXTURE_ROOT/lint-call"
+export LINT_TEMP_PATHS="$FIXTURE_ROOT/lint-temp-paths"
 output="$FIXTURE_ROOT/output"
 
 fail() { echo "FAIL: $*" >&2; cat "$output" >&2; exit 1; }
@@ -35,7 +45,12 @@ assert_arg() { tr '\0' '\n' < "$LINT_CALL" | grep -Fx -- "$1" >/dev/null || fail
 run_lint() {
   rm -f "$LINT_CALL"
   result=0
+  : > "$LINT_TEMP_PATHS"
   bash "$LINT_SCRIPT" > "$output" 2>&1 || result=$?
+  local temporary_file
+  while IFS= read -r temporary_file; do
+    [[ ! -e "$temporary_file" ]] || fail "Lint left a temporary file: $temporary_file"
+  done < "$LINT_TEMP_PATHS"
 }
 assert_lint() { [[ "$result" == 0 && -f "$LINT_CALL" ]] || fail 'Expected successful lint invocation'; }
 assert_noop() {
@@ -77,12 +92,15 @@ assert_arg '--strict'
 assert_arg '.swiftlint.yml'
 assert_arg '--force-exclude'
 echo 'PASS push changed Swift, spaces, and option-like filename'
+[[ -s "$LINT_TEMP_PATHS" ]] || fail 'Changed-file lint created no observed comparison file'
+echo 'PASS successful lint cleans comparison file'
 
 export LINTER_EXIT=37
 run_lint
 [[ "$result" == 37 ]] || fail 'Linter status was not preserved'
 unset LINTER_EXIT
-echo 'PASS linter failure status'
+[[ -s "$LINT_TEMP_PATHS" ]] || fail 'Failed lint created no observed comparison file'
+echo 'PASS failed lint preserves exit 37 and cleans comparison file'
 
 printf 'documentation\n' > README.md
 git add README.md

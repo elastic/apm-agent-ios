@@ -157,6 +157,7 @@
       }
       assertConcurrentReads(synchronizer, anchors: [finalAnchor], dates: [wallClock.read().addingTimeInterval(42)])
       XCTAssertEqual(store.load(), .saved(.init(anchor: refreshed, bootNanos: bootNanos)))
+      // Unblock persistence now; defer also covers early returns.
       storage.allowRemoval.signal()
       waitForSaved(finalAnchor, bootNanos: bootNanos, store: store, storage: storage)
       XCTAssertEqual(storage.writes, [
