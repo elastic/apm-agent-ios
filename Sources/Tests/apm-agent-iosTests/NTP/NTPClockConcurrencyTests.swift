@@ -104,58 +104,139 @@
     func testRestoreAndTicksOverlapTimestampReads() throws {
       let continuousClock = ManualContinuousClock()
       let wallClock = ManualWallClock()
-      let transport = ScriptedSNTPTransport {
-        .success(sntpReply(to: $0, serverAhead: 30 * nanosPerSecond))
-      }
-      let makeSynchronizer = { (tick: RepeatingTick) in
-        NTPClockSynchronizer(
-          transport: transport,
-          userDefaults: self.defaults,
-          tick: tick,
-          continuousClock: continuousClock.read,
-          wallClock: wallClock.read)
-      }
-      // A previous launch in this boot saves the anchor that the next start restores.
-      let previousLaunch = makeSynchronizer(ManualTick())
-      previousLaunch.synchronize()
-      let previousAnchor = try XCTUnwrap(previousLaunch.anchor)
-      let store = NTPAnchorStore(userDefaults: defaults)
-      waitUntil {
-        if case let .saved(record) = store.load() {
-          return record.anchor == previousAnchor
-        }
-        return false
-      }
+      let storage = GatedAnchorDefaults(suiteName: suiteName)!
+      let store = NTPAnchorStore(userDefaults: storage)
+      let initialAnchor = NTPClockSynchronizer.Anchor(
+        unixNanos: Int64(wallClock.read().timeIntervalSince1970 * 1e9) + 30 * nanosPerSecond,
+        continuousNanos: continuousClock.read())
+      let bootNanos = Int64(wallClock.read().timeIntervalSince1970 * 1e9)
+        - Int64(continuousClock.read())
+      store.save(.init(anchor: initialAnchor, bootNanos: bootNanos))
+      let transport = ScriptedSNTPTransport { _ in nil }
       let tick = ManualTick()
-      let synchronizer = makeSynchronizer(tick)
-      let day = 24 * 3_600 * nanosPerSecond
+      let synchronizer = NTPClockSynchronizer(
+        transport: transport, userDefaults: storage, tick: tick,
+        continuousClock: continuousClock.read, wallClock: wallClock.read)
 
-      DispatchQueue.concurrentPerform(iterations: 3) { worker in
-        switch worker {
-        case 0:
-          synchronizer.start()
-          // Each tick finds the anchor a day old, discards it, and synchronizes again.
-          for _ in 0..<iterations {
-            continuousClock.advance(by: day)
-            wallClock.advance(by: TimeInterval(day / nanosPerSecond))
-            tick.fire()
-          }
-        case 1:
-          for _ in 0..<iterations * 10 { _ = synchronizer.now }
-        default:
-          for _ in 0..<iterations * 10 { _ = synchronizer.anchor }
-        }
-      }
-
+      // An hour-old restored anchor remains readable while its startup refresh is pending.
+      continuousClock.advance(by: 3_600 * nanosPerSecond)
+      wallClock.advance(by: 3_600)
+      synchronizer.start()
       XCTAssertTrue(tick.isStarted)
-      XCTAssertEqual(transport.requests.count, 1 + iterations)
-      let finalAnchor = try XCTUnwrap(synchronizer.anchor)
-      waitUntil {
-        if case let .saved(record) = store.load() {
-          return record.anchor == finalAnchor
-        }
-        return false
+      XCTAssertEqual(transport.requests.count, 1)
+      assertConcurrentReads(synchronizer, anchors: [initialAnchor], dates: [wallClock.read().addingTimeInterval(30)])
+      transport.completeHeld(with: .success(sntpReply(to: transport.requests[0], serverAhead: 30 * nanosPerSecond)))
+      let refreshed = try XCTUnwrap(synchronizer.anchor)
+      waitForSaved(refreshed, bootNanos: bootNanos, store: store, storage: storage)
+
+      // Hold the real storage removal. Timestamp readers and the next reply must finish first.
+      defer { storage.allowRemoval.signal() }
+      continuousClock.advance(by: 24 * 3_600 * nanosPerSecond)
+      wallClock.advance(by: 24 * 3_600)
+      tick.fire()
+      guard storage.removalStarted.wait(timeout: .now() + 2) == .success else {
+        XCTFail("Expiry did not reach storage removal; observed \(store.load())")
+        return
       }
+      XCTAssertEqual(transport.requests.count, 2)
+      assertConcurrentReads(synchronizer, anchors: [nil], dates: [wallClock.read()])
+      let finalAnchor = NTPClockSynchronizer.Anchor(
+        unixNanos: Int64(wallClock.read().timeIntervalSince1970 * 1e9) + 42 * nanosPerSecond,
+        continuousNanos: continuousClock.read())
+      let replyFinished = expectation(description: "refresh callback finishes with persistence held")
+      DispatchQueue.global().async {
+        transport.completeHeld(with: .success(sntpReply(to: transport.requests[1], serverAhead: 42 * nanosPerSecond)))
+        replyFinished.fulfill()
+      }
+      assertConcurrentReads(
+        synchronizer, anchors: [nil, finalAnchor],
+        dates: [wallClock.read(), wallClock.read().addingTimeInterval(42)])
+      guard XCTWaiter.wait(for: [replyFinished], timeout: 2) == .completed else {
+        XCTFail("Refresh callback waited for persistence")
+        return
+      }
+      assertConcurrentReads(synchronizer, anchors: [finalAnchor], dates: [wallClock.read().addingTimeInterval(42)])
+      XCTAssertEqual(store.load(), .saved(.init(anchor: refreshed, bootNanos: bootNanos)))
+      // Unblock persistence now; defer also covers early returns.
+      storage.allowRemoval.signal()
+      waitForSaved(finalAnchor, bootNanos: bootNanos, store: store, storage: storage)
+      XCTAssertEqual(storage.writes, [
+        .saved(.init(anchor: initialAnchor, bootNanos: bootNanos)),
+        .saved(.init(anchor: refreshed, bootNanos: bootNanos)),
+        .absent,
+        .saved(.init(anchor: finalAnchor, bootNanos: bootNanos))
+      ])
+    }
+
+    private func assertConcurrentReads(
+      _ synchronizer: NTPClockSynchronizer,
+      anchors: [NTPClockSynchronizer.Anchor?],
+      dates: [Date],
+      file: StaticString = #filePath, line: UInt = #line
+    ) {
+      let readers = (0..<2).map { expectation(description: "timestamp reader \($0) finishes") }
+      for reader in readers {
+        DispatchQueue.global().async {
+          for _ in 0..<32 {
+            XCTAssertTrue(anchors.contains(synchronizer.anchor), "Incomplete or unexpected anchor", file: file, line: line)
+            let timestamp = synchronizer.now
+            XCTAssertTrue(dates.contains { abs($0.timeIntervalSince(timestamp)) < 1e-6 },
+                          "Unexpected timestamp \(timestamp); expected one of \(dates)", file: file, line: line)
+          }
+          reader.fulfill()
+        }
+      }
+      XCTAssertEqual(XCTWaiter.wait(for: readers, timeout: 2), .completed,
+                     "Timestamp readers waited for pending work", file: file, line: line)
+    }
+
+    private func waitForSaved(
+      _ anchor: NTPClockSynchronizer.Anchor, bootNanos: Int64,
+      store: NTPAnchorStore, storage: GatedAnchorDefaults,
+      file: StaticString = #filePath, line: UInt = #line
+    ) {
+      let expected = NTPAnchorStore.Loaded.saved(.init(anchor: anchor, bootNanos: bootNanos))
+      // Only three asynchronous writes are queued; retain the existing two-second deadline.
+      waitUntil("Expected \(expected); observed \(store.load()); completed writes: \(storage.writes)", file: file, line: line) {
+        store.load() == expected && storage.writes.last == expected
+      }
+    }
+  }
+
+  /// Uses real suite persistence, holding expiry removal to prove reads never wait for storage.
+  private final class GatedAnchorDefaults: UserDefaults {
+    let removalStarted = DispatchSemaphore(value: 0)
+    let allowRemoval = DispatchSemaphore(value: 0)
+    private let writeLock = NSLock()
+    private var completedWrites: [NTPAnchorStore.Loaded] = []
+
+    var writes: [NTPAnchorStore.Loaded] {
+      writeLock.lock()
+      defer { writeLock.unlock() }
+      return completedWrites
+    }
+
+    override func set(_ value: Any?, forKey key: String) {
+      super.set(value, forKey: key)
+      if key == NTPAnchorStore.key { recordWrite() }
+    }
+
+    override func removeObject(forKey key: String) {
+      if key == NTPAnchorStore.key {
+        removalStarted.signal()
+        // A broken test must release its worker even if the test's cleanup cannot run.
+        XCTAssertEqual(allowRemoval.wait(timeout: .now() + 10), .success, "Test did not release storage removal")
+      }
+      super.removeObject(forKey: key)
+      if key == NTPAnchorStore.key { recordWrite() }
+    }
+
+    private func recordWrite() {
+      let value = NTPAnchorStore(userDefaults: self).load()
+      writeLock.lock()
+      // UserDefaults can implement removal through set(nil); record state transitions.
+      if completedWrites.last != value { completedWrites.append(value) }
+      writeLock.unlock()
     }
   }
 

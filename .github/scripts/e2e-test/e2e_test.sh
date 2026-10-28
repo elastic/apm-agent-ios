@@ -406,19 +406,35 @@ print_failure_diagnostics() {
   echo "=== End E2E failure diagnostics ===" >&2
 }
 
+# Each start marker remains useful when the runner terminates before completion.
+phase_start() {
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] START $1"
+}
+
+phase_end() {
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] END $1 ($((SECONDS - $2))s)"
+}
+
 cleanup() {
   local exit_code=$?
   trap - EXIT
+  # Cleanup and logging failures must not replace the original test result.
+  set +e
 
   if [ "$exit_code" -ne 0 ]; then
     print_failure_diagnostics
   fi
 
+  local phase_seconds=$SECONDS
+  phase_start 'cleanup: simulator teardown'
   if [ -n "$simulator_udid" ]; then
     xcrun simctl shutdown "$simulator_udid" >/dev/null 2>&1 || true
     xcrun simctl delete "$simulator_udid" >/dev/null 2>&1 || true
   fi
+  phase_end 'cleanup: simulator teardown' "$phase_seconds"
 
+  phase_seconds=$SECONDS
+  phase_start 'cleanup: owned service processes'
   local pid
   for pid in "$collector_pid" "$elasticsearch_pid"; do
     if [ -n "$pid" ]; then
@@ -426,8 +442,12 @@ cleanup() {
       wait "$pid" >/dev/null 2>&1 || true
     fi
   done
+  phase_end 'cleanup: owned service processes' "$phase_seconds"
 
+  phase_seconds=$SECONDS
+  phase_start 'cleanup: temporary build and runtime files'
   rm -rf "$RUNTIME_DIR" "$DERIVED_DATA_DIR" "$SOURCE_PACKAGES_DIR"
+  phase_end 'cleanup: temporary build and runtime files' "$phase_seconds"
   exit "$exit_code"
 }
 
@@ -513,7 +533,8 @@ simulator_udid=$(
 xcrun simctl boot "$simulator_udid"
 xcrun simctl bootstatus "$simulator_udid" -b
 
-echo "Building and installing integration app..."
+build_install_seconds=$SECONDS
+phase_start 'build/install integration app'
 xcodebuild -quiet \
   -project "$REPO_ROOT/integration-test/IntegrationTestApp.xcodeproj" \
   -scheme IntegrationTestApp \
@@ -535,6 +556,7 @@ APP_VERSION=$(
 [ -n "$APP_VERSION" ] || fail "Built app has no CFBundleShortVersionString"
 
 xcrun simctl install "$simulator_udid" "$app_path"
+phase_end 'build/install integration app' "$build_install_seconds"
 
 echo "Launching integration app..."
 launch_app "" app >/dev/null

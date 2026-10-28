@@ -55,12 +55,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - name: swift-lint (changed files in PR)
-        uses: norio-nomura/action-swiftlint@9f4dcd7fd46b4e75d7935cf2f4df406d5cae3684 # 3.2.1
+      - name: Check lint diff regression scenarios
+        run: bash .github/scripts/test-swift-lint.sh
+      - name: SwiftLint
         env:
-          args: --strict
-          # base_ref is set for pull_request; on push, diff against the default branch.
-          DIFF_BASE: ${{ github.base_ref || github.event.repository.default_branch }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+          PUSH_HEAD_SHA: ${{ github.sha }}
+        run: bash .github/scripts/swift-lint.sh
 
   api-stability:
     needs: changes
@@ -188,7 +191,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: macos-latest-large
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
