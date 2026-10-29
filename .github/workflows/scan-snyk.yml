@@ -61,7 +61,7 @@ jobs:
             echo "Security: Manual trigger - proceeding with secret access"
           fi
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7
         with:
           # Use immutable commit SHA to prevent TOCTOU attacks
           # For workflow_run: use head_commit.sha
