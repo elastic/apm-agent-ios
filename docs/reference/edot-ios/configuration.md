@@ -587,3 +587,60 @@ Refer to [Central configuration for EDOT SDKs](opentelemetry://reference/central
 | --- | --- | --- | --- |
 | Recording | `recording` | Whether EDOT iOS processes and exports log records. | Dynamic |
 | Session sample rate | `session_sample_rate` | The probability that spans from a new session are sampled. | Dynamic |
+
+## Data stream routing [data-stream-routing]
+
+EDOT iOS sets the resource attribute `data_stream.dataset` to `ios`
+before applying resource customization. Other resource attributes, including
+`data_stream.namespace`, keep their existing behavior.
+
+With default Elastic OTel-native routing, traces and logs use
+`traces-ios.otel-<namespace>` and `logs-ios.otel-<namespace>`.
+Metrics exported with the same resource use `metrics-ios.otel-<namespace>`.
+This setting does not enable metrics collection. The namespace is `default`
+unless another value is configured. Scope or record routing attributes and
+ingest configuration can change the destination.
+
+Use a dataset value without the `.otel` suffix. Elastic OTel-native routing
+adds that suffix. This is an Elastic routing attribute, not an OpenTelemetry
+semantic convention.
+
+To override the dataset, set `OTEL_RESOURCE_ATTRIBUTES` in the process
+environment or `Info.plist`, for example:
+
+```text
+data_stream.dataset=storefront,data_stream.namespace=production
+```
+
+Process environment values
+override `Info.plist` values. For a code-based override, use
+[`addResourceInterceptor(_:)`](#addResourceInterceptor):
+
+```swift
+import ElasticApm
+import OpenTelemetryApi
+import OpenTelemetrySdk
+
+let interceptor = ClosureInterceptor<Resource> { resource in
+  resource.merging(other: Resource(attributes: [
+    "data_stream.dataset": .string("storefront"),
+    "data_stream.namespace": .string("production")
+  ]))
+}
+let configuration = AgentConfigBuilder()
+  .addResourceInterceptor(interceptor)
+  .build()
+```
+
+Resource interceptors run after environment and bundle configuration, in the
+order they were added. A later interceptor can replace an earlier value.
+
+### Migration
+
+New telemetry moves to the new dataset unless you configure an override.
+Existing data stays in its original streams. Check ingest and read permissions,
+dashboards, queries, and retention settings that target only the previous
+streams. Include both old and new streams when querying across the upgrade.
+
+To retain the previous ingest default, explicitly set `data_stream.dataset`
+to `generic`. To retain a custom destination, keep its explicit dataset value.
