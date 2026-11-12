@@ -57,6 +57,7 @@ public class AgentResource {
   static func get(useLegacyAttributeNames: Bool) -> Resource {
     let defaultResource = DefaultResources().get()
     var overridingAttributes = [
+      "data_stream.dataset": AttributeValue.string("ios"),
       SemanticConventions.Telemetry.sdkName.rawValue: AttributeValue
         .string("iOS")
     ]
