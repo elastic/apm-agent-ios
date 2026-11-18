@@ -23,6 +23,39 @@ import XCTest
 final class ResourceInterceptorTests: XCTestCase {
   private let emptyEnvironment = AgentEnvResource.get([:])
 
+  func testDatasetDefaultAndOverridesInBothAttributeNameModes() {
+    let environmentDatasets: [String?] = [nil, "generic", "environment_custom"]
+    let configuredDatasets: [String?] = [nil, "generic", "storefront", "react_native"]
+    for legacy in [false, true] {
+      let detected = AgentResource.get(useLegacyAttributeNames: legacy)
+      XCTAssertEqual(detected.attributes["data_stream.dataset"], .string("ios"))
+      for environmentDataset in environmentDatasets {
+        for configuredDataset in configuredDatasets {
+          var environmentAttributes = "data_stream.namespace=production"
+          if let environmentDataset {
+            environmentAttributes += ",data_stream.dataset=\(environmentDataset)"
+          }
+          let environment = AgentEnvResource.get([
+            AgentEnvResource.otelResourceAttributesEnv: environmentAttributes
+          ])
+          let builder = AgentConfigBuilder()
+            .useLegacyAttributeNames(legacy)
+            .addResourceInterceptor(setting("custom.other", to: "preserved"))
+          if let configuredDataset {
+            _ = builder.addResourceInterceptor(setting("data_stream.dataset", to: configuredDataset))
+          }
+          let resource = AgentResource.get(
+            configuration: builder.build(), environmentResource: environment)
+          var expected = detected.attributes
+          expected["data_stream.dataset"] = .string(configuredDataset ?? environmentDataset ?? "ios")
+          expected["data_stream.namespace"] = .string("production")
+          expected["custom.other"] = .string("preserved")
+          XCTAssertEqual(resource.attributes, expected)
+        }
+      }
+    }
+  }
+
   func testBuilderWithoutResourceInterceptorConfiguresNone() {
     let configuration = AgentConfigBuilder().build()
 

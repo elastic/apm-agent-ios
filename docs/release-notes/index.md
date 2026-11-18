@@ -31,6 +31,13 @@ To check for security updates, go to [Security announcements for the Elastic sta
 % ### Fixes [elastic-apm-ios-agent-versionext-fixes]
 
 % next_release_notes
+
+## Next version [elastic-apm-ios-dataset-release-notes]
+
+### Breaking changes
+
+* Set `data_stream.dataset` to `ios` by default. Explicit resource customization can override this value. With default Elastic OTel-native routing, new telemetry uses the `ios.otel` dataset. Existing data stays in its original streams. Check stream-specific permissions, queries, and retention settings. Set the dataset to `generic` to retain the previous ingest default. Refer to [Data stream routing](../reference/edot-ios/configuration.md#data-stream-routing).
+
 ## 2.3.0 [elastic-apm-230-release-notes]
 **Release date:** October 23, 2026
 
