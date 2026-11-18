@@ -327,6 +327,7 @@ private func expectedResourceAttributes(
   let installationId = InstallationIdProvider().get()
   let operatingSystem = OperatingSystemDataSource()
   var expected: [String: AttributeValue] = [
+    "data_stream.dataset": .string("ios"),
     "app.installation.id": .string(installationId),
     "service.name": .string(
       application.name ?? "unknown_service:\(ProcessInfo.processInfo.processName)"),
