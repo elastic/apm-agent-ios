@@ -4,6 +4,12 @@ updates:
   # GitHub actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    labels:
+      - "dependencies"
+      - "github_actions"
+      - "oblt-aw/ai/merge-ready"
+    exclude-paths:
+      - ".github/workflows/trigger-*-aw-*.yml"
     schedule:
       interval: "weekly"
       day: "sunday"
@@ -14,6 +20,10 @@ updates:
           - "*"
   - package-ecosystem: "swift"
     directory: "/"
+    labels:
+      - "dependencies"
+      - "swift_package_manager"
+      - "oblt-aw/ai/merge-ready"
     schedule:
       interval: "daily"
     groups:
