@@ -1,4 +1,5 @@
 {
+  "repository": "elastic/apm-agent-ios",
   "tagPrefix": "",
   "productName": "EDOT iOS",
   "versionFile": "Sources/apm-agent-ios/Version.swift",
