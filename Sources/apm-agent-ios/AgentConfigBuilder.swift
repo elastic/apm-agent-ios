@@ -101,16 +101,8 @@ public class AgentConfigBuilder {
     return self
   }
 
-  /// Sets the interceptor used immediately before each OTLP export, replacing any earlier setter.
-  ///
-  /// The input contains freshly generated application headers, including configured authorization.
-  /// Return the complete application-header map to send; omitted headers are removed. Header names
-  /// are case-insensitive on the wire, so return only one spelling of each name. Exporters retain
-  /// control of protocol headers. Environment-provided OTLP headers bypass this interceptor.
-  ///
-  /// Calls are synchronous and may overlap across signals, flushes, and persistence replay. The
-  /// interceptor must synchronize mutable state, return a complete credential snapshot promptly,
-  /// and perform no network I/O. Custom export headers do not apply to management requests.
+  /// Sets an interceptor that customizes the headers sent with each OTLP export.
+  /// It can run concurrently, so it must be fast and thread-safe.
   public func withExportHeadersInterceptor(_ interceptor: some Interceptor<[String: String]>) -> Self {
     exportHeadersInterceptor = AnyInterceptor(interceptor)
     return self

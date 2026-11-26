@@ -14,15 +14,8 @@
 
 import OpenTelemetryProtocolExporterCommon
 
-/// Resolves application headers for OTLP only. Management requests retain their existing
-/// `OpenTelemetryHelper.generateExporterHeaders` and legacy-poll authentication paths.
-///
-/// The public Interceptor protocol predates Sendable. This narrow adapter is immutable after
-/// initialization: it owns a copied auth value and a fixed type-erased callback, and each call
-/// creates its own map. No SDK state is mutated or lock held while user code runs. As documented
-/// on the setter, the application must make the interceptor and its captures safe for overlapping
-/// calls. The unchecked conformance bridges that explicit callback contract without changing
-/// the concurrency requirements of unrelated public interceptors.
+/// Unchecked `Sendable` is safe because this type is immutable; the setter documents that the
+/// application's interceptor must be thread-safe.
 final class ExportHeadersProvider: @unchecked Sendable {
   private let auth: String?
   private let interceptor: AnyInterceptor<[String: String]>?
@@ -33,8 +26,8 @@ final class ExportHeadersProvider: @unchecked Sendable {
   }
 
   var configuration: OtlpConfiguration {
-    // Keep all application headers in the provider. Static headers would be merged back by
-    // upstream when an interceptor intentionally removes authorization or returns an empty map.
+    // Pass all headers through the provider: upstream merges static headers back in, which
+    // would restore any header the interceptor removes.
     OtlpConfiguration(headersProvider: { [self] in
       let generated = Dictionary(
         uniqueKeysWithValues: OpenTelemetryHelper.generateExporterHeaders(auth) ?? [])
