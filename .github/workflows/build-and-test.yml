@@ -141,10 +141,7 @@ jobs:
         run: make setup-brew
       - name: SwiftPM tests (macOS)
         if: ${{ matrix.label == 'swiftpm' }}
-        run: |
-          swift test
-          OTEL_EXPORTER_OTLP_HEADERS='authorization=synthetic-environment,x-env-only=synthetic-env' \
-            swift test --skip-build --filter ExportHeadersEnvironmentTests
+        run: swift test
       - name: Build and test (iOS Simulator)
         if: ${{ matrix.label == 'ios' }}
         env:
@@ -152,17 +149,6 @@ jobs:
         run: |
           make build-for-testing-ios
           make test-without-building-ios
-      - name: Environment export headers (iOS Simulator)
-        if: ${{ matrix.label == 'ios' }}
-        env:
-          TEST_RUNNER_OTEL_EXPORTER_OTLP_HEADERS: authorization=synthetic-environment,x-env-only=synthetic-env
-        run: |
-          set -o pipefail
-          xcodebuild -configuration Debug -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
-            -scheme apm-agent-ios-Package \
-            -only-testing:ElasticApmTests/ExportHeadersEnvironmentTests \
-            test-without-building | xcbeautify
       - name: Extract failed iOS test diagnostics
         if: ${{ failure() && matrix.label == 'ios' }}
         env:

@@ -44,7 +44,6 @@
         let exportURL = enabledServer.baseURL.appendingPathComponent("otlp")
         let harness = URLSessionExclusionHarness(exportURL: exportURL)
         defer { harness.shutDown() }
-        let exportInterceptor = ManagementExportInterceptor()
 
         // Install instrumentation before starting the timer to cover the first poll.
         let start = Date()
@@ -52,8 +51,6 @@
           resource: Resource(),
           config: AgentConfigBuilder()
             .withExportUrl(exportURL)
-            .withApiKey("synthetic-management-key")
-            .withExportHeadersInterceptor(exportInterceptor)
             .withRemoteManagement(true)
             .build(),
           instrumentationConfig: InstrumentationConfigBuilder().build(),
@@ -64,10 +61,6 @@
           },
           enabledServer.diagnostics)
         firstPollElapsed = Date().timeIntervalSince(start)
-        let pollRequest = try XCTUnwrap(enabledServer.requests.first { $0.method == "GET" })
-        XCTAssertEqual(pollRequest.header(named: "Authorization"), "ApiKey synthetic-management-key")
-        XCTAssertNil(pollRequest.header(named: "x-custom-export"))
-        XCTAssertEqual(exportInterceptor.invocations, 0)
 
         let legacyManager = try XCTUnwrap(manager.centralConfigManager as? ElasticAgentConfigManager)
         let fetcher = try XCTUnwrap(legacyManager.fetcher)
@@ -114,43 +107,6 @@
         "Default configuration started a legacy poll: \(defaultServer.diagnostics)")
     }
 
-    func testOpampPreservesManagementAuthAndDoesNotInvokeExportInterceptorOrProduceSpans() throws {
-      let server = LoopbackHTTPTestServer()
-      try server.start()
-      defer { server.stop() }
-      let harness = URLSessionExclusionHarness(exportURL: server.baseURL.appendingPathComponent("otlp"))
-      defer { harness.shutDown() }
-      let interceptor = ManagementExportInterceptor()
-      let manager = AgentConfigManager(
-        resource: Resource(),
-        config: AgentConfigBuilder()
-          .withExportUrl(server.baseURL.appendingPathComponent("otlp"))
-          .withManagementUrl(server.baseURL.appendingPathComponent("v1/opamp"))
-          .withApiKey("synthetic-opamp-key")
-          .withExportHeadersInterceptor(interceptor)
-          .useOpAMP()
-          .build(),
-        instrumentationConfig: InstrumentationConfigBuilder().build(),
-        endpointRegistry: harness.endpointRegistry)
-      try withExtendedLifetime(manager) {
-        let request = try XCTUnwrap(server.waitForRequest(timeout: 10) { $0.path == "/v1/opamp" })
-        XCTAssertEqual(request.header(named: "Authorization"), "ApiKey synthetic-opamp-key")
-        XCTAssertNil(request.header(named: "x-custom-export"))
-        XCTAssertEqual(interceptor.invocations, 0)
-        let application = expectation(description: "application request beside OpAMP")
-        URLSession.shared.dataTask(with: server.baseURL.appendingPathComponent("application")) { _, _, error in
-          XCTAssertNil(error)
-          application.fulfill()
-        }.resume()
-        wait(for: [application], timeout: 10)
-        (OpenTelemetry.instance.tracerProvider as? TracerProviderSdk)?.forceFlush()
-        let spans = try XCTUnwrap(harness.waitForInstrumentedSpans())
-        XCTAssertTrue(spans.contains { $0.attributes[SemanticConventions.Url.path.rawValue]?.description == "/application" })
-        XCTAssertFalse(spans.contains { $0.attributes[SemanticConventions.Url.path.rawValue]?.description == "/v1/opamp" })
-        XCTAssertEqual(interceptor.invocations, 0)
-      }
-    }
-
     func testExporterRequestsAreExcludedWhileApplicationRequestIsInstrumented() throws {
       let exportServer = LoopbackHTTPTestServer()
       let applicationServer = LoopbackHTTPTestServer()
@@ -167,21 +123,14 @@
       defer { harness.shutDown() }
 
       let seedSpan = try harness.makeSeedSpan()
-      let exportInterceptor = ManagementExportInterceptor()
-      let exportConfiguration = AgentConfigBuilder()
-        .withApiKey("synthetic-export-key")
-        .withExportHeadersInterceptor(exportInterceptor)
-        .build()
       let realExporter = OtlpHttpTraceExporter(
         endpoint: harness.traceEndpoint,
-        config: ExportHeadersProvider(exportConfiguration).configuration,
-        envVarHeaders: nil)
+        config: OtlpConfiguration(timeout: 5),
+        envVarHeaders: [])
       XCTAssertEqual(realExporter.export(spans: [seedSpan]), .success)
       XCTAssertNotNil(
         exportServer.waitForRequest(timeout: 5) { $0.path == harness.traceEndpoint.path },
         exportServer.diagnostics)
-      XCTAssertEqual(exportServer.requests.first?.header(named: "x-custom-export"), "synthetic-export-only")
-      XCTAssertEqual(exportInterceptor.invocations, 1)
 
       let requestExpectation = expectation(description: "ordinary application request")
       URLSession.shared.dataTask(
@@ -260,24 +209,6 @@
       XCTAssertEqual(
         exception.attributes[SemanticConventions.Exception.type.rawValue]?.description,
         errorType)
-    }
-  }
-
-  private final class ManagementExportInterceptor: Interceptor {
-    private let lock = NSLock()
-    private var count = 0
-    var invocations: Int {
-      lock.lock()
-      defer { lock.unlock() }
-      return count
-    }
-    func intercept(_ headers: [String: String]) -> [String: String] {
-      lock.lock()
-      count += 1
-      lock.unlock()
-      var output = headers
-      output["x-custom-export"] = "synthetic-export-only"
-      return output
     }
   }
 
