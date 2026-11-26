@@ -20,9 +20,9 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.2.4"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift", from: "2.4.1"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift", from: "2.5.2"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift-core", from: "2.3.0"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift-core", from: "2.5.1"),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.12.0")),
     .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),

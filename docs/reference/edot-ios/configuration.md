@@ -147,6 +147,104 @@ let configuration = AgentConfigBuilder()
 
 Refer to [APM secret tokens](docs-content://solutions/observability/apm/secret-token.md) for deployment requirements.
 
+#### `withExportHeadersInterceptor(_:)` [withExportHeadersInterceptor]
+
+```{applies_to}
+product:
+  edot_ios: ga 2.4.0
+```
+
+| Type | Default |
+| --- | --- |
+| `Interceptor<[String: String]>` | Generated application headers |
+
+Customizes the headers sent with traces, logs, and metrics over OTLP/HTTP or
+OTLP/gRPC. For example, add a fixed header alongside API-key authentication:
+
+```swift
+import ElasticApm
+import Foundation
+
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withApiKey("your-api-key")
+  .withExportHeadersInterceptor(ClosureInterceptor<[String: String]> { headers in
+    var result = headers
+    result["x-project-id"] = "your-project-id"
+    return result
+  })
+  .build()
+```
+
+The interceptor runs synchronously immediately before each export, including
+replay of buffered telemetry. Every invocation starts with freshly generated
+application headers, including the authorization configured with `withApiKey`
+or `withSecretToken`. Return the complete map of application headers to send.
+You can add, replace, or remove authorization; returning an empty map removes
+all application headers. Header names are case-insensitive on the wire. Return
+one spelling of each name, removing an existing spelling before adding another.
+Calling the setter again replaces the previous interceptor.
+
+Exporters control protocol headers such as `Content-Type`, compression, and
+`User-Agent`. When `OTEL_EXPORTER_OTLP_HEADERS` supplies valid headers, those
+headers take precedence over configured application headers and the interceptor
+is bypassed. Configure that environment variable before starting the process.
+OpAMP and legacy central configuration requests keep their configured
+authentication separately; custom export headers apply to telemetry export.
+
+Calls can overlap across signals, flushes, and persistence replay. Synchronize
+any mutable state captured by the interceptor and return one complete
+credential snapshot promptly. Refresh credentials outside the interceptor;
+performing network I/O in it delays export.
+
+For example, protect a rotating API key with a lock:
+
+```swift
+import ElasticApm
+import Foundation
+
+final class ExportCredentials {
+  private let lock = NSLock()
+  private var apiKey: String
+
+  init(apiKey: String) {
+    self.apiKey = apiKey
+  }
+
+  func update(apiKey: String) {
+    lock.lock()
+    self.apiKey = apiKey
+    lock.unlock()
+  }
+
+  func snapshot() -> String {
+    lock.lock()
+    defer { lock.unlock() }
+    return apiKey
+  }
+}
+
+let credentials = ExportCredentials(apiKey: "your-initial-api-key")
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withExportHeadersInterceptor(ClosureInterceptor<[String: String]> { headers in
+    let apiKey = credentials.snapshot()
+    var result = headers.filter { $0.key.lowercased() != "authorization" }
+    result["Authorization"] = "ApiKey \(apiKey)"
+    return result
+  })
+  .build()
+
+ElasticApmAgent.start(with: configuration)
+
+// Call after your application obtains a replacement credential.
+credentials.update(apiKey: "your-replacement-api-key")
+```
+
+Header resolution that starts after `update(apiKey:)` returns uses the updated
+key. An export that already took its snapshot can finish with the earlier key.
+Keep credentials in application memory rather than telemetry attributes or logs.
+
 ### Remote management connectivity [remote-management-connectivity]
 
 EDOT iOS retrieves central configuration from a central configuration (OpAMP) endpoint.

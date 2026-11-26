@@ -37,6 +37,7 @@ public class AgentConfigBuilder {
   private var spanAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
   private var logRecordAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
   private var resourceInterceptors: [AnyInterceptor<Resource>] = []
+  private var exportHeadersInterceptor: AnyInterceptor<[String: String]>?
   public init() {}
 
   public func disableAgent() -> Self {
@@ -97,6 +98,21 @@ public class AgentConfigBuilder {
 
   public func withApiKey(_ key: String) -> Self {
     self.auth = "\(Self.api) \(key)"
+    return self
+  }
+
+  /// Sets the interceptor used immediately before each OTLP export, replacing any earlier setter.
+  ///
+  /// The input contains freshly generated application headers, including configured authorization.
+  /// Return the complete application-header map to send; omitted headers are removed. Header names
+  /// are case-insensitive on the wire, so return only one spelling of each name. Exporters retain
+  /// control of protocol headers. Environment-provided OTLP headers bypass this interceptor.
+  ///
+  /// Calls are synchronous and may overlap across signals, flushes, and persistence replay. The
+  /// interceptor must synchronize mutable state, return a complete credential snapshot promptly,
+  /// and perform no network I/O. Custom export headers do not apply to management requests.
+  public func withExportHeadersInterceptor(_ interceptor: some Interceptor<[String: String]>) -> Self {
+    exportHeadersInterceptor = AnyInterceptor(interceptor)
     return self
   }
 
@@ -168,6 +184,7 @@ public class AgentConfigBuilder {
       config.logRecordAttributeInterceptor = interceptor
     }
     config.resourceInterceptors = resourceInterceptors
+    config.exportHeadersInterceptor = exportHeadersInterceptor
 
     let endpointUrl = self.exportUrl ?? self.serverUrl
     config.setFullExportUrl(endpointUrl)

@@ -183,9 +183,7 @@ class OpenTelemetryInitializer {
         exporters: exporters)
     }
 
-    let otlpConfiguration = OtlpConfiguration(
-      timeout: OtlpConfiguration.DefaultTimeoutInterval,
-      headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
+    let otlpConfiguration = ExportHeadersProvider(configuration.agent).configuration
     guard let channelTarget = OpenTelemetryHelper.channelTarget(with: configuration.agent) else {
       os_log(
         "%{public}@",
@@ -300,9 +298,7 @@ class OpenTelemetryInitializer {
       return NoopLogRecordExporter.instance
     }
 
-    let otlpConfiguration = OtlpConfiguration(
-      timeout: OtlpConfiguration.DefaultTimeoutInterval,
-      headers: OpenTelemetryHelper.generateExporterHeaders(configuration.agent.auth))
+    let otlpConfiguration = ExportHeadersProvider(configuration.agent).configuration
 
     let metricExporter = {
       let defaultExporter = Self.makeHttpMetricExporter(

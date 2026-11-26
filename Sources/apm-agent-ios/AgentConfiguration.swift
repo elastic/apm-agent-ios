@@ -110,6 +110,7 @@ public struct AgentConfiguration {
   /// Resource interceptors in the order they were added. `AgentResource`
   /// applies them one at a time so that it can guard each stage's output.
   var resourceInterceptors: [AnyInterceptor<Resource>] = []
+  var exportHeadersInterceptor: AnyInterceptor<[String: String]>?
 
   mutating func setFullExportUrl(_ url: URL?) {
     fullExportUrl = url
