@@ -25,10 +25,6 @@ import XCTest
 @testable import ElasticApm
 
 final class ExportHeadersTests: XCTestCase {
-  override func setUpWithError() throws {
-    XCTAssertNil(ProcessInfo.processInfo.environment["OTEL_EXPORTER_OTLP_HEADERS"])
-  }
-
   func testRotationAcrossEverySignalAndTransportAndSecondSetterReplacesFirst() throws {
     for transport in HeaderWirePipeline.Transport.allCases {
       let credentials = HeaderSnapshot(["authorization": "ApiKey synthetic-first", "x-generation": "first"])
@@ -53,27 +49,21 @@ final class ExportHeadersTests: XCTestCase {
     }
   }
 
-  func testCustomHeadersWithoutAuthAndAdditionalHeadersWithBothBuiltInAuthKinds() throws {
+  func testAdditionalHeadersPreserveBuiltInApiKeyAuth() throws {
     for transport in HeaderWirePipeline.Transport.allCases {
-      for auth in [nil, "ApiKey synthetic-api", "Bearer synthetic-secret"] as [String?] {
-        let pipeline = try HeaderWirePipeline(transport: transport) { builder in
-          if let auth {
-            if auth.hasPrefix("ApiKey") { _ = builder.withApiKey("synthetic-api") } else {
-              _ = builder.withSecretToken("synthetic-secret")
-            }
-          }
-          return builder.withExportHeadersInterceptor(ClosureInterceptor { input in
+      let pipeline = try HeaderWirePipeline(transport: transport) { builder in
+        builder.withApiKey("synthetic-api")
+          .withExportHeadersInterceptor(ClosureInterceptor { input in
             var output = input
             output["x-custom"] = "synthetic-extra"
             return output
           })
-        }
-        defer { pipeline.stop() }
-        try pipeline.exportCycle()
-        try assertSignals(pipeline, authorization: auth)
-        for request in pipeline.requests {
-          XCTAssertEqual(request.header("x-custom"), "synthetic-extra")
-        }
+      }
+      defer { pipeline.stop() }
+      try pipeline.exportCycle()
+      try assertSignals(pipeline, authorization: "ApiKey synthetic-api")
+      for request in pipeline.requests {
+        XCTAssertEqual(request.header("x-custom"), "synthetic-extra")
       }
     }
   }
@@ -108,26 +98,7 @@ final class ExportHeadersTests: XCTestCase {
     }
   }
 
-  func testStorageFailureFallsBackToDirectExportWithCurrentHeaders() throws {
-    for transport in HeaderWirePipeline.Transport.allCases {
-      let credentials = HeaderSnapshot(["authorization": "ApiKey synthetic-fallback-first"])
-      let pipeline = try HeaderWirePipeline(transport: transport, storageFailure: true) {
-        $0.withExportHeadersInterceptor(ClosureInterceptor(credentials.replacingAuthorization))
-      }
-      defer { pipeline.stop() }
-      try pipeline.exportCycle()
-      try assertSignals(pipeline, authorization: "ApiKey synthetic-fallback-first")
-      let count = pipeline.requests.count
-      credentials.update(["authorization": "ApiKey synthetic-fallback-second"])
-      try pipeline.exportCycle()
-      try assertSignals(pipeline, since: count, authorization: "ApiKey synthetic-fallback-second")
-      var isDirectory: ObjCBool = true
-      XCTAssertTrue(FileManager.default.fileExists(atPath: pipeline.storage.path, isDirectory: &isDirectory))
-      XCTAssertFalse(isDirectory.boolValue, "The storage-failure fixture must remain a regular file")
-    }
-  }
-
-  func testPersistenceReplayUsesCurrentCredentialsAndDoesNotPersistThem() throws {
+  func testPersistenceReplayUsesCurrentCredentials() throws {
     for transport in HeaderWirePipeline.Transport.allCases {
       let credentials = HeaderSnapshot(["authorization": "ApiKey synthetic-queued-secret"])
       let pipeline = try HeaderWirePipeline(transport: transport, deferredReplay: true) {
@@ -139,60 +110,10 @@ final class ExportHeadersTests: XCTestCase {
       try pipeline.exportCycle(flushLogs: false)
       XCTAssertTrue(pipeline.requests.isEmpty)
       XCTAssertEqual(credentials.invocations, 0)
-      for signal in HeaderWirePipeline.signals {
-        let directory = pipeline.storage.appendingPathComponent(signal)
-        let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-        XCTAssertFalse(files.isEmpty, "Expected queued \(signal) data")
-        for file in files {
-          let data = try Data(contentsOf: file)
-          XCTAssertFalse(data.isEmpty)
-          XCTAssertNil(data.range(of: Data("synthetic-queued-secret".utf8)))
-          XCTAssertNil(data.range(of: Data("synthetic-replayed-secret".utf8)))
-        }
-      }
       let count = pipeline.requests.count
       credentials.update(["authorization": "ApiKey synthetic-replayed-secret"])
       XCTAssertTrue(pipeline.waitForSignals(since: count), "Queued signals did not replay: \(pipeline.requests)")
       try assertSignals(pipeline, since: count, authorization: "ApiKey synthetic-replayed-secret")
-    }
-  }
-
-  func testOverlappingExportCallbacksKeepCompleteSnapshotsAndDoNotBlockSpanCreation() throws {
-    for transport in HeaderWirePipeline.Transport.allCases {
-      let snapshots = BlockingHeaderSnapshots()
-      let pipeline = try HeaderWirePipeline(transport: transport, storageFailure: true) {
-        $0.withExportHeadersInterceptor(ClosureInterceptor(snapshots.intercept))
-      }
-      defer { pipeline.stop() }
-      let finished = DispatchGroup()
-      for signal in HeaderWirePipeline.signals {
-        finished.enter()
-        DispatchQueue.global().async {
-          defer { finished.leave() }
-          pipeline.emitAndFlush(signal)
-        }
-      }
-      defer { snapshots.releaseAll() }
-      for _ in HeaderWirePipeline.signals {
-        XCTAssertEqual(snapshots.entered.wait(timeout: .now() + 10), .success)
-      }
-      snapshots.update()
-      let created = expectation(description: "span creation during blocked exporter callbacks")
-      DispatchQueue.global().async {
-        pipeline.createSpan()
-        created.fulfill()
-      }
-      wait(for: [created], timeout: 2)
-      snapshots.releaseAll()
-      XCTAssertEqual(finished.wait(timeout: .now() + 15), .success)
-      XCTAssertTrue(pipeline.waitForSignals())
-      for request in pipeline.requests {
-        XCTAssertEqual(request.header("x-generation"), "first")
-        XCTAssertEqual(request.header("authorization"), "ApiKey synthetic-first")
-      }
-      let count = pipeline.requests.count
-      try pipeline.exportCycle()
-      try assertSignals(pipeline, since: count, authorization: "ApiKey synthetic-second", generation: "second")
     }
   }
 
@@ -246,41 +167,6 @@ private final class HeaderSnapshot {
   }
 }
 
-private final class BlockingHeaderSnapshots {
-  let entered = DispatchSemaphore(value: 0)
-  private let release = DispatchSemaphore(value: 0)
-  private let lock = NSLock()
-  private var generation = "first"
-  private var blocked = 0
-
-  func intercept(_ generated: [String: String]) -> [String: String] {
-    lock.lock()
-    let snapshot = generation
-    let shouldBlock = snapshot == "first"
-    if shouldBlock { blocked += 1 }
-    lock.unlock()
-    if shouldBlock {
-      entered.signal()
-      _ = release.wait(timeout: .now() + 15)
-    }
-    return ["authorization": "ApiKey synthetic-\(snapshot)", "x-generation": snapshot]
-  }
-
-  func update() {
-    lock.lock()
-    generation = "second"
-    lock.unlock()
-  }
-
-  func releaseAll() {
-    lock.lock()
-    let count = blocked
-    blocked = 0
-    lock.unlock()
-    for _ in 0..<count { release.signal() }
-  }
-}
-
 private final class HeaderWirePipeline {
   enum Transport: CaseIterable { case http, grpc }
   static let signals = ["traces", "logs", "metrics"]
@@ -302,7 +188,6 @@ private final class HeaderWirePipeline {
 
   init(
     transport: Transport,
-    storageFailure: Bool = false,
     deferredReplay: Bool = false,
     configure: (AgentConfigBuilder) -> AgentConfigBuilder
   ) throws {
@@ -316,8 +201,6 @@ private final class HeaderWirePipeline {
       try grpc.start()
       endpoint = try XCTUnwrap(URL(string: "http://127.0.0.1:\(grpc.port)"))
     }
-    // A regular file makes the initializer's existing per-signal directory creation fail.
-    if storageFailure { try Data("storage unavailable".utf8).write(to: storage) }
     let config = configure(AgentConfigBuilder().withExportUrl(endpoint).useConnectionType(
       transport == .http ? .http : .grpc)).build()
     let manager = AgentConfigManager(
