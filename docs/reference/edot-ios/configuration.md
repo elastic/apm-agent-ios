@@ -77,6 +77,37 @@ and `http` uses plaintext. Make sure the endpoint supports the selected
 transport. An Elastic OTLP endpoint commonly listens on port `4317` for
 gRPC and `4318` for HTTP.
 
+#### `withExportHeadersInterceptor(_:)` [withExportHeadersInterceptor]
+
+```{applies_to}
+product:
+  edot_ios: ga 2.4.0
+```
+
+| Type | Default |
+| --- | --- |
+| `Interceptor<[String: String]>` | Not set |
+
+Customizes the headers sent with exported traces, logs, and metrics. The
+interceptor receives the headers EDOT iOS would send and returns the headers to
+send:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withApiKey("your-api-key")
+  .withExportHeadersInterceptor(ClosureInterceptor<[String: String]> { headers in
+    var result = headers
+    result["x-project-id"] = "your-project-id"
+    return result
+  })
+  .build()
+```
+
+The interceptor runs before each export, so it can return credentials that
+change while the app runs. It can run concurrently, so keep it fast and
+thread-safe.
+
 #### `withServerUrl(_:)` [withServerUrl]
 
 ```{applies_to}
@@ -146,36 +177,6 @@ let configuration = AgentConfigBuilder()
 ```
 
 Refer to [APM secret tokens](docs-content://solutions/observability/apm/secret-token.md) for deployment requirements.
-
-#### `withExportHeadersInterceptor(_:)` [withExportHeadersInterceptor]
-
-```{applies_to}
-product:
-  edot_ios: ga 2.4.0
-```
-
-| Type | Default |
-| --- | --- |
-| `Interceptor<[String: String]>` | None |
-
-Customizes the headers sent with exported traces, logs, and metrics. The
-interceptor receives the headers EDOT iOS would send and returns the headers to
-send:
-
-```swift
-let configuration = AgentConfigBuilder()
-  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
-  .withApiKey("your-api-key")
-  .withExportHeadersInterceptor(ClosureInterceptor<[String: String]> { headers in
-    var result = headers
-    result["x-project-id"] = "your-project-id"
-    return result
-  })
-  .build()
-```
-
-The interceptor runs before each export and can run concurrently, so keep it
-fast and thread-safe.
 
 ### Remote management connectivity [remote-management-connectivity]
 
