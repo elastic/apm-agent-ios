@@ -88,25 +88,25 @@ product:
 | --- | --- |
 | `Interceptor<[String: String]>` | Not set |
 
-Customizes the headers sent with exported traces, logs, and metrics. The
-interceptor receives the headers EDOT iOS would send and returns the headers to
-send:
+Adds, changes, or removes the headers EDOT iOS sends when it exports traces,
+metrics, and logs. The interceptor receives the headers EDOT iOS is about to
+send, including the `Authorization` header from `withApiKey(_:)` or
+`withSecretToken(_:)`, and returns the final set of headers:
 
 ```swift
 let configuration = AgentConfigBuilder()
   .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
   .withApiKey("your-api-key")
   .withExportHeadersInterceptor(ClosureInterceptor<[String: String]> { headers in
-    var result = headers
-    result["x-project-id"] = "your-project-id"
-    return result
+    var updatedHeaders = headers
+    updatedHeaders["x-project-id"] = "your-project-id"
+    return updatedHeaders
   })
   .build()
 ```
 
-The interceptor runs before each export, so it can return credentials that
-change while the app runs. It can run concurrently, so keep it fast and
-thread-safe.
+EDOT iOS calls the interceptor before each export, sometimes from several
+threads at once, so keep it fast and thread-safe.
 
 #### `withServerUrl(_:)` [withServerUrl]
 
