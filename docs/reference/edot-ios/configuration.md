@@ -77,6 +77,37 @@ and `http` uses plaintext. Make sure the endpoint supports the selected
 transport. An Elastic OTLP endpoint commonly listens on port `4317` for
 gRPC and `4318` for HTTP.
 
+#### `withExportHeadersInterceptor(_:)` [withExportHeadersInterceptor]
+
+```{applies_to}
+product:
+  edot_ios: ga 2.4.0
+```
+
+| Type | Default |
+| --- | --- |
+| `Interceptor<[String: String]>` | Not set |
+
+Adds, changes, or removes the headers EDOT iOS sends when it exports traces,
+metrics, and logs. The interceptor receives the headers EDOT iOS is about to
+send, including the `Authorization` header from `withApiKey(_:)` or
+`withSecretToken(_:)`, and returns the final set of headers:
+
+```swift
+let configuration = AgentConfigBuilder()
+  .withExportUrl(URL(string: "https://your-otlp-endpoint")!)
+  .withApiKey("your-api-key")
+  .withExportHeadersInterceptor(ClosureInterceptor<[String: String]> { headers in
+    var updatedHeaders = headers
+    updatedHeaders["x-project-id"] = "your-project-id"
+    return updatedHeaders
+  })
+  .build()
+```
+
+EDOT iOS calls the interceptor before each export, sometimes from several
+threads at once, so keep it fast and thread-safe.
+
 #### `withServerUrl(_:)` [withServerUrl]
 
 ```{applies_to}

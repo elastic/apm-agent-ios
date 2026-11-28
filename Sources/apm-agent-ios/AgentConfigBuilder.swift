@@ -37,6 +37,7 @@ public class AgentConfigBuilder {
   private var spanAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
   private var logRecordAttributeInterceptors: [AnyInterceptor<[String: AttributeValue]>] = []
   private var resourceInterceptors: [AnyInterceptor<Resource>] = []
+  private var exportHeadersInterceptor: AnyInterceptor<[String: String]>?
   public init() {}
 
   public func disableAgent() -> Self {
@@ -97,6 +98,13 @@ public class AgentConfigBuilder {
 
   public func withApiKey(_ key: String) -> Self {
     self.auth = "\(Self.api) \(key)"
+    return self
+  }
+
+  /// Sets an interceptor that customizes the headers sent with each OTLP export.
+  /// It can run concurrently, so it must be fast and thread-safe.
+  public func withExportHeadersInterceptor(_ interceptor: some Interceptor<[String: String]>) -> Self {
+    exportHeadersInterceptor = AnyInterceptor(interceptor)
     return self
   }
 
@@ -168,6 +176,7 @@ public class AgentConfigBuilder {
       config.logRecordAttributeInterceptor = interceptor
     }
     config.resourceInterceptors = resourceInterceptors
+    config.exportHeadersInterceptor = exportHeadersInterceptor
 
     let endpointUrl = self.exportUrl ?? self.serverUrl
     config.setFullExportUrl(endpointUrl)

@@ -22,6 +22,8 @@ public final class LoopbackHTTPTestServer {
     public let method: String
     public let path: String
     public let headers: [String: String]
+    public let headerNames: [String]
+    public let body: Data
 
     public func header(named name: String) -> String? {
       headers.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value
@@ -253,6 +255,7 @@ public final class LoopbackHTTPTestServer {
     }
 
     var headers: [String: String] = [:]
+    var headerNames: [String] = []
     for line in lines.dropFirst() {
       guard let separator = line.firstIndex(of: ":") else {
         continue
@@ -260,12 +263,14 @@ public final class LoopbackHTTPTestServer {
       let name = line[..<separator].trimmingCharacters(in: .whitespaces)
       let value = line[line.index(after: separator)...].trimmingCharacters(in: .whitespaces)
       headers[name] = value
+      headerNames.append(name)
     }
 
     let contentLength = headers.first {
       $0.key.caseInsensitiveCompare("Content-Length") == .orderedSame
     }.flatMap { Int($0.value) } ?? 0
     var receivedBodyBytes = data.count - headerRange.upperBound
+    var body = Data(data[headerRange.upperBound...])
     while receivedBodyBytes < contentLength {
       let result = receive(
         from: clientSocket,
@@ -280,12 +285,15 @@ public final class LoopbackHTTPTestServer {
         return
       }
       receivedBodyBytes += result.count
+      body.append(contentsOf: buffer.prefix(result.count))
     }
 
     let request = Request(
       method: String(requestLine[0]),
       path: String(requestLine[1]),
-      headers: headers
+      headers: headers,
+      headerNames: headerNames,
+      body: body
     )
     requestsQueue.sync {
       recordedRequests.append(request)

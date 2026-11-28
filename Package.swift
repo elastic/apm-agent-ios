@@ -1,4 +1,4 @@
-//swift-tools-version: 5.10
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,37 +9,37 @@ let package = Package(
     .iOS(.v15),
     .macOS(.v13),
     .tvOS(.v16),
-    .watchOS(.v10),
+    .watchOS(.v10)
   ],
   products: [
     // Products define the executables and libraries a package produces, and make them visible to other package.
     .library(name: "ElasticApm", type: .static, targets: ["ElasticApm"]),
     .library(name: "MemorySampler", type: .static, targets: ["MemorySampler"]),
-    .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"]),
+    .library(name: "CPUSampler", type: .static, targets: ["CPUSampler"])
   ],
   dependencies: [
     .package(url: "https://github.com/ashleymills/Reachability.swift", from: "5.2.4"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift", from: "2.4.1"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift", from: "2.5.2"),
     .package(
-      url: "https://github.com/open-telemetry/opentelemetry-swift-core", from: "2.3.0"),
+      url: "https://github.com/open-telemetry/opentelemetry-swift-core", from: "2.5.1"),
     .package(
       url: "https://github.com/microsoft/plcrashreporter.git", .upToNextMajor(from: "1.12.0")),
-    .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
+    .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2")
   ],
   targets: [
     .target(
       name: "MemorySampler",
       dependencies: [
         .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
-        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core"),
+        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core")
       ],
       path: "Sources/Instrumentation/MemorySampler"),
     .target(
       name: "CPUSampler",
       dependencies: [
         .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
-        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core"),
+        .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core")
       ],
       path: "Sources/Instrumentation/CPUSampler"),
     .target(
@@ -61,7 +61,7 @@ let package = Package(
           condition: .when(platforms: [.macOS, .iOS, .tvOS])
         ),
         "MemorySampler",
-        "CPUSampler",
+        "CPUSampler"
       ],
       path: "Sources/apm-agent-ios",
       resources: [
