@@ -23,7 +23,7 @@ when supported versions changed. Merge these changes through ordinary PRs.
 Use either path:
 
 - Ask an agent to prepare the release with the
-  [`ios-release-wizard`](skills/ios-release-wizard/SKILL.md)
+  [`ios-release-wizard`](.agents/skills/ios-release-wizard/SKILL.md)
   skill. It proposes the notes and resulting version, then dispatches after
   you approve.
 - Open the
